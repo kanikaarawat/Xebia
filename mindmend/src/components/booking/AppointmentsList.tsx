@@ -258,6 +258,47 @@ export default function AppointmentsList({
   // Apply limit if specified
   const displayAppointments = limit ? filteredAppointments.slice(0, limit) : filteredAppointments;
 
+  function formatTimeFromUTC(dateString: string) {
+    // This will convert the UTC timestamp to the user's local time
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  function formatDateTimeFromUTC(dateString: string) {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  function formatUTCDateTime(dateString: string) {
+    const date = new Date(dateString);
+    return (
+      date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        timeZone: 'UTC'
+      }) +
+      ', ' +
+      date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'UTC'
+      })
+    );
+  }
+
   if (loading) {
     return (
       <div className={`${showCard ? 'border-indigo-100 bg-white/80 shadow-md rounded-lg' : ''} ${className}`}>
@@ -348,7 +389,7 @@ export default function AppointmentsList({
             return (
               <div
                 key={appointment.id}
-                className={`appointment-item flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-xl p-3 sm:p-4 transition-colors ${
+                className={`flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-xl p-3 sm:p-4 transition-colors overflow-hidden ${
                   isUpcoming 
                     ? 'bg-blue-50 border border-blue-200 hover:bg-blue-100' 
                     : 'bg-slate-50 border border-slate-200 hover:bg-slate-100'
@@ -369,7 +410,7 @@ export default function AppointmentsList({
                     <div className="flex flex-wrap items-center gap-1 mt-1">
                       <span className="text-xs text-slate-500 hidden sm:inline">{date}</span>
                       <span className="text-xs text-slate-500 sm:hidden">{dateShort}</span>
-                      <span className="text-xs text-slate-500">at {time}</span>
+                      <span>{formatUTCDateTime(appointment.scheduled_at)}</span>
                       <span className="text-xs text-slate-500">{getDurationText(appointment.duration || 30)}</span>
                     </div>
                     {appointment.notes && (
