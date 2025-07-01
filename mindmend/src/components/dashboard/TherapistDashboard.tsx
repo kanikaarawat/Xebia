@@ -79,6 +79,7 @@ export default function TherapistDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   const [savingAvailability, setSavingAvailability] = useState(false);
+  const [now, setNow] = useState<number | null>(null);
 
   /* ── demo recent-patient list ──  */
   const recentPatients = [
@@ -105,7 +106,7 @@ export default function TherapistDashboard() {
     },
   ];
 
-  /* ── Helper Functions ── */
+  /* ── risk badge helper ── */
   const riskBadge = (level: string) => {
     switch (level) {
       case "low":
@@ -121,104 +122,40 @@ export default function TherapistDashboard() {
     }
   };
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  };
-
-  const getInitials = () => {
-    if (therapistProfile?.first_name && therapistProfile?.last_name) {
-      return `${therapistProfile.first_name[0]}${therapistProfile.last_name[0]}`.toUpperCase();
-    } else if (therapistProfile?.first_name) {
-      return therapistProfile.first_name[0].toUpperCase();
-    } else if (therapistProfile?.email) {
-      return therapistProfile.email[0].toUpperCase();
-    }
-    return 'T';
-  };
-
+  // Move these two functions above the first useEffect
   const initializeAvailabilitySlots = () => {
-    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    return days.map(day => ({
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const defaultSlots = days.map(day => ({
       day_of_week: day,
       start_time: '09:00',
       end_time: '17:00',
       is_available: false
     }));
+    setAvailabilitySlots(defaultSlots);
   };
 
   const loadAvailabilitySlots = async () => {
+    if (!therapistProfile) return;
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) return;
-
       const { data, error } = await supabase
         .from('therapist_availability')
         .select('*')
-        .eq('therapist_id', session.user.id);
-
+        .eq('therapist_id', therapistProfile.id);
       if (error) {
         console.error('Error loading availability:', error);
-        setAvailabilitySlots(initializeAvailabilitySlots());
+        initializeAvailabilitySlots();
+      } else if (data && data.length > 0) {
+        setAvailabilitySlots(data);
       } else {
-        setAvailabilitySlots(data || initializeAvailabilitySlots());
+        initializeAvailabilitySlots();
       }
     } catch (error) {
       console.error('Error loading availability:', error);
-      setAvailabilitySlots(initializeAvailabilitySlots());
+      initializeAvailabilitySlots();
     }
   };
 
-  const saveAvailabilitySlots = async () => {
-    setSavingAvailability(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) return;
-
-      // Delete existing slots
-      await supabase
-        .from('therapist_availability')
-        .delete()
-        .eq('therapist_id', session.user.id);
-
-      // Insert new slots
-      const slotsToSave = availabilitySlots.map(slot => ({
-        therapist_id: session.user.id,
-        day_of_week: slot.day_of_week,
-        start_time: slot.start_time,
-        end_time: slot.end_time,
-        is_available: slot.is_available
-      }));
-
-      const { error } = await supabase
-        .from('therapist_availability')
-        .insert(slotsToSave);
-
-      if (error) {
-        console.error('Error saving availability:', error);
-      } else {
-        console.log('✅ Availability saved successfully');
-      }
-    } catch (error) {
-      console.error('Error saving availability:', error);
-    } finally {
-      setSavingAvailability(false);
-    }
-  };
-
-  const updateAvailabilitySlot = (dayOfWeek: string, field: keyof AvailabilitySlot, value: any) => {
-    setAvailabilitySlots(prev => 
-      prev.map(slot => 
-        slot.day_of_week === dayOfWeek 
-          ? { ...slot, [field]: value }
-          : slot
-      )
-    );
-  };
-
-  /* ── Effects ── */
+  /* ── fetch therapist profile and appointments on mount ── */
   useEffect(() => {
     const fetchTherapistData = async () => {
       try {
@@ -335,7 +272,6 @@ export default function TherapistDashboard() {
           console.log('✅ Appointments loaded:', appointmentsData.length);
           setAppointments(appointmentsData);
         }
-
       } catch (error) {
         console.error('❌ Unexpected error in fetchTherapistData:', error);
       } finally {
@@ -346,14 +282,16 @@ export default function TherapistDashboard() {
     fetchTherapistData();
   }, []);
 
-  // Load availability when therapist profile is loaded
   useEffect(() => {
     if (therapistProfile) {
       loadAvailabilitySlots();
     }
   }, [therapistProfile]);
 
-  /* ── Render ── */
+  useEffect(() => {
+    setNow(Date.now());
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -389,6 +327,68 @@ export default function TherapistDashboard() {
       </div>
     );
   }
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
+  const getInitials = () => {
+    return `${therapistProfile.first_name?.[0] || ''}${therapistProfile.last_name?.[0] || ''}`.toUpperCase();
+  };
+
+  // Save availability slots to database
+  const saveAvailabilitySlots = async () => {
+    if (!therapistProfile) return;
+    
+    setSavingAvailability(true);
+    try {
+      // Delete existing slots
+      await supabase
+        .from('therapist_availability')
+        .delete()
+        .eq('therapist_id', therapistProfile.id);
+
+      // Insert new slots
+      const slotsToSave = availabilitySlots
+        .filter(slot => slot.is_available)
+        .map(slot => ({
+          therapist_id: therapistProfile.id,
+          day_of_week: slot.day_of_week,
+          start_time: slot.start_time,
+          end_time: slot.end_time
+        }));
+
+      if (slotsToSave.length > 0) {
+        const { error } = await supabase
+          .from('therapist_availability')
+          .insert(slotsToSave);
+
+        if (error) {
+          console.error('Error saving availability:', error);
+        } else {
+          console.log('✅ Availability saved successfully');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving availability:', error);
+    } finally {
+      setSavingAvailability(false);
+    }
+  };
+
+  // Update availability slot
+  const updateAvailabilitySlot = (dayOfWeek: string, field: keyof AvailabilitySlot, value: any) => {
+    setAvailabilitySlots(prev => 
+      prev.map(slot => 
+        slot.day_of_week === dayOfWeek 
+          ? { ...slot, [field]: value }
+          : slot
+      )
+    );
+  };
 
   /* ---------- UI ---------- */
   return (
