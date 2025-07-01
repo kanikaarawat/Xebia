@@ -57,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data: {
           role,
         },
+        emailRedirectTo: `${window.location.origin}/auth/confirm`,
       },
     });
     if (error) throw error;

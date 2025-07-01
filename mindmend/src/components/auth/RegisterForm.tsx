@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { useAuth } from './AuthProvider';
+import { useRouter } from 'next/navigation';
 
 export default function RegisterForm() {
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -12,6 +14,8 @@ export default function RegisterForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const { signUp } = useAuth();
+  const router = useRouter();
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +38,10 @@ export default function RegisterForm() {
     try {
       await signUp(email, password, role);
       setSuccess('Registration successful! Please check your email to verify your account.');
+      setTimeout(() => {
+        router.push("/setup-profile");
+      }, 1500); // short delay to show success message
+    
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
