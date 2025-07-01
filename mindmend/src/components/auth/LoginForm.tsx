@@ -82,13 +82,8 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await signInWithGoogle();
-      await new Promise((res) => setTimeout(res, 300));
-      const { data: userRes, error: userErr } = await supabase.auth.getUser();
-      if (userErr || !userRes.user) throw new Error(error);
-      await redirectBasedOnProfile(userRes.user.id, userRes.user.email!);
     } catch (err: any) {
       setError(err.message ?? 'An error occurred during Google sign-in');
-    } finally {
       setLoading(false);
     }
   };

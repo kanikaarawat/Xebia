@@ -55,6 +55,7 @@ export default function AuthCallback() {
             setLoading(false);
             console.error('❌ Error creating profile:', insertError);
             return;
+            
           } else {
             console.log('✅ Profile created with role:', user.user_metadata?.role || 'user');
           }
