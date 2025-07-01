@@ -17,7 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
-import { getFreeSlots } from '@/lib/freeSlots';
+import { getFreeSlotsFixed as getFreeSlots } from '@/lib/freeSlotsFixed';
+import { debugTimeConversion } from '@/lib/timeTest';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Calendar, Clock, User, MessageSquare } from 'lucide-react';
 
@@ -128,8 +129,30 @@ export default function BookSessionPage() {
         const { available, unavailable } = await getFreeSlots(therapistId, date, 30, duration);
         console.log("✅ Available slots for", date, "with", duration, "min duration:", available);
         console.log("❌ Unavailable slots:", unavailable);
-        setSlots(available);
-        setUnavailableSlots(unavailable);
+        
+        // Debug: Check for any overlap between available and unavailable slots
+        const availableTimes = available.map(slot => slot.start_time);
+        const unavailableTimes = unavailable.map(slot => slot.start_time);
+        const overlap = availableTimes.filter(time => unavailableTimes.includes(time));
+        
+        console.log("🔍 Debug - Slot overlap check:", {
+          availableTimes,
+          unavailableTimes,
+          overlap,
+          hasOverlap: overlap.length > 0
+        });
+        
+        // Filter out any slots that appear in both arrays (this shouldn't happen but just in case)
+        const filteredAvailable = available.filter(slot => !unavailableTimes.includes(slot.start_time));
+        const filteredUnavailable = unavailable.filter(slot => !availableTimes.includes(slot.start_time));
+        
+        console.log("🔧 After filtering:", {
+          filteredAvailable: filteredAvailable.map(s => s.start_time),
+          filteredUnavailable: filteredUnavailable.map(s => s.start_time)
+        });
+        
+        setSlots(filteredAvailable);
+        setUnavailableSlots(filteredUnavailable);
       } catch (err) {
         console.error('❌ Error fetching slots:', err);
         setError('Failed to load available slots');
@@ -641,21 +664,21 @@ export default function BookSessionPage() {
                         {unavailableSlots.map((slot, index) => (
                           <div
                             key={`unavailable-${index}`}
-                            className="relative p-4 rounded-lg border-2 border-slate-200 bg-slate-100 text-center opacity-60 cursor-not-allowed"
+                            className="relative p-4 rounded-lg border-2 border-red-300 bg-red-50 text-center cursor-not-allowed"
                           >
-                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
                               <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                               </svg>
                             </div>
                             <div className="space-y-1">
-                              <div className="font-semibold text-lg text-slate-500 line-through">
+                              <div className="font-semibold text-lg text-red-700 line-through">
                                 {slot.start_time}
                               </div>
-                              <div className="text-xs text-slate-400">
+                              <div className="text-xs text-red-500">
                                 {slot.end_time}
                               </div>
-                              <div className="text-xs font-medium text-red-500">
+                              <div className="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded">
                                 {slot.reason}
                               </div>
                             </div>
@@ -728,7 +751,7 @@ export default function BookSessionPage() {
                   />
                 </div>
 
-                Debug Info (remove in production)
+                {/* Debug Info */}
                 {process.env.NODE_ENV === 'development' && (
                   <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <h4 className="font-semibold text-yellow-700 mb-2">Debug Info</h4>
@@ -748,6 +771,13 @@ export default function BookSessionPage() {
                         </div>
                       )}
                     </div>
+                    <Button 
+                      onClick={() => debugTimeConversion()}
+                      className="mt-2 text-xs"
+                      variant="outline"
+                    >
+                      Test Time Conversion
+                    </Button>
                   </div>
                 )}
 

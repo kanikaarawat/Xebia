@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { getFreeSlots } from '@/lib/freeSlots';
+import { getFreeSlotsFixed as getFreeSlots } from '@/lib/freeSlotsFixed';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

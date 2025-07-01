@@ -105,7 +105,7 @@ export default function DebugPage() {
     try {
       const testTherapistId = info.therapists.data[0].id;
       const testDate = new Date().toISOString().split('T')[0]; // Today
-      const { getFreeSlots } = await import('@/lib/freeSlots');
+      const { getFreeSlotsFixed: getFreeSlots } = await import('@/lib/freeSlotsFixed');
       const freeSlots = await getFreeSlots(testTherapistId, testDate);
       
       info.freeSlotsTest = {

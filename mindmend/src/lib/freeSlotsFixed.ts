@@ -38,24 +38,38 @@ export async function getFreeSlotsFixed(therapist_id: string, date: string, inte
   // 3. Fetch unavailability for that date from therapist_unavailability table
   console.log('📅 Fetching unavailability for date:', date);
   
-  // Create date range for the entire day - FIXED: Use local timezone
-  const dateObj = new Date(date + 'T00:00:00'); // Create date in local timezone
-  const startOfDay = new Date(dateObj.getTime());
-  const endOfDay = new Date(dateObj.getTime() + 24 * 60 * 60 * 1000 - 1); // End of day
+  // Create date range for the entire day - FIXED: Use proper timezone handling
+  // Create the date in the user's local timezone and convert to UTC properly
+  const localDate = new Date(date + 'T00:00:00');
+  const utcStartOfDay = new Date(localDate.getTime() - (localDate.getTimezoneOffset() * 60000));
+  const utcEndOfDay = new Date(utcStartOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
   
   console.log('📅 Date range (local):', { 
-    startOfDay: startOfDay.toISOString(), 
-    endOfDay: endOfDay.toISOString(),
-    localStart: startOfDay.toLocaleString(),
-    localEnd: endOfDay.toLocaleString()
+    startOfDay: utcStartOfDay.toISOString(), 
+    endOfDay: utcEndOfDay.toISOString(),
+    localStart: utcStartOfDay.toLocaleString(),
+    localEnd: utcEndOfDay.toLocaleString()
+  });
+  
+  // Debug: Let's also check what unavailability data exists for this therapist
+  const { data: allUnavailability, error: allUnavailError } = await supabase
+    .from("therapist_unavailability")
+    .select("start_time, end_time, reason, appointment_id, therapist_id")
+    .eq("therapist_id", therapist_id);
+  
+  console.log('🔍 All unavailability for this therapist:', {
+    therapist_id: therapist_id,
+    allUnavailability,
+    error: allUnavailError,
+    count: allUnavailability?.length || 0
   });
   
   const { data: unavailability, error: unavailabilityError } = await supabase
     .from("therapist_unavailability")
     .select("start_time, end_time, reason, appointment_id")
     .eq("therapist_id", therapist_id)
-    .gte("start_time", startOfDay.toISOString())
-    .lt("start_time", endOfDay.toISOString());
+    .gte("start_time", utcStartOfDay.toISOString())
+    .lt("start_time", utcEndOfDay.toISOString());
 
   console.log('📊 Unavailability query result:', { 
     unavailability, 
@@ -72,6 +86,8 @@ export async function getFreeSlotsFixed(therapist_id: string, date: string, inte
   const unavailableSlots: { start_time: string; end_time: string; reason: string }[] = [];
 
   // Convert to date strings for comparison and account for unavailability duration
+  const processedSlots = new Set(); // Track processed slots to avoid duplicates
+  
   unavailability?.forEach((unavail, index) => {
     console.log(`🚫 Processing unavailability ${index + 1}:`, unavail);
     
@@ -90,18 +106,18 @@ export async function getFreeSlotsFixed(therapist_id: string, date: string, inte
         endDateLocal: endDate.toLocaleString()
       });
       
-      // FIXED: Extract time in local timezone (not UTC)
+      // FIXED: Extract time in UTC to get the original intended time
       startTime = startDate.toLocaleTimeString('en-US', { 
         hour12: false, 
         hour: '2-digit', 
-        minute: '2-digit'
-        // Removed timeZone: 'UTC' to use local timezone
+        minute: '2-digit',
+        timeZone: 'UTC' // Use UTC to get the original time
       });
       endTime = endDate.toLocaleTimeString('en-US', { 
         hour12: false, 
         hour: '2-digit', 
-        minute: '2-digit'
-        // Removed timeZone: 'UTC' to use local timezone
+        minute: '2-digit',
+        timeZone: 'UTC' // Use UTC to get the original time
       });
       
       console.log('🕐 Extracted times (local):', { startTime, endTime });
@@ -135,17 +151,21 @@ export async function getFreeSlotsFixed(therapist_id: string, date: string, inte
       const slotKey = `${hour}:${min}`;
       bookedSlots.add(slotKey);
       
-      // Add to unavailable slots if it's a 30-minute slot
+      // Add to unavailable slots if it's a 30-minute slot and not already processed
       if (current.getMinutes() % 30 === 0) {
         const slotEnd = new Date(current.getTime() + 30 * 60 * 1000);
         const endHour = String(slotEnd.getHours()).padStart(2, "0");
         const endMin = String(slotEnd.getMinutes()).padStart(2, "0");
+        const slotId = `${slotKey}-${endHour}:${endMin}`;
         
-        unavailableSlots.push({
-          start_time: slotKey,
-          end_time: `${endHour}:${endMin}`,
-          reason: unavail.reason || 'Booked'
-        });
+        if (!processedSlots.has(slotId)) {
+          processedSlots.add(slotId);
+          unavailableSlots.push({
+            start_time: slotKey,
+            end_time: `${endHour}:${endMin}`,
+            reason: unavail.reason || 'Booked'
+          });
+        }
       }
       
       current.setMinutes(current.getMinutes() + interval);
@@ -185,11 +205,15 @@ export async function getFreeSlotsFixed(therapist_id: string, date: string, inte
     if (!availableSlots.some(available => available.start_time === slot.start_time)) {
       const isBooked = bookedSlots.has(slot.start_time);
       if (!isBooked) {
-        unavailableSlots.push({
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-          reason: 'Insufficient time'
-        });
+        const slotId = `${slot.start_time}-${slot.end_time}-insufficient`;
+        if (!processedSlots.has(slotId)) {
+          processedSlots.add(slotId);
+          unavailableSlots.push({
+            start_time: slot.start_time,
+            end_time: slot.end_time,
+            reason: 'Insufficient time'
+          });
+        }
       }
     }
   });
