@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function RegisterForm() {
 
@@ -16,6 +17,87 @@ export default function RegisterForm() {
   const supabase = useSupabaseClient();
   const router = useRouter();
 
+  // Function to check if email already exists
+  const checkEmailExists = async (email: string): Promise<boolean> => {
+    try {
+      console.log('🔍 Checking email via API:', email);
+      
+      const response = await fetch('/api/check-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      console.log('📧 API response:', data);
+
+      if (!response.ok) {
+        console.error('❌ API error:', data.error);
+        return false;
+      }
+
+      return data.exists;
+    } catch (error) {
+      console.error('Error checking email:', error);
+      return false;
+    }
+  };
+
+  // Function to get user-friendly error message
+  const getErrorMessage = (error: any): string => {
+    if (!error) return 'An error occurred';
+    
+    const message = error.message || error.toString();
+    console.log('🔍 Error message:', message);
+    
+    // Check for specific Supabase auth errors
+    if (message.includes('User already registered')) {
+      return 'This email is already registered. Please try signing in instead.';
+    }
+    
+    if (message.includes('duplicate key value violates unique constraint')) {
+      return 'This email is already registered. Please try signing in instead.';
+    }
+    
+    if (message.includes('Invalid email')) {
+      return 'Please enter a valid email address.';
+    }
+    
+    if (message.includes('Password should be at least')) {
+      return 'Password must be at least 6 characters long.';
+    }
+    
+    if (message.includes('Unable to validate email address')) {
+      return 'Please enter a valid email address.';
+    }
+    
+    // Check for Supabase Auth specific errors
+    if (message.includes('Signup disabled')) {
+      return 'Registration is currently disabled. Please try again later.';
+    }
+    
+    if (message.includes('Email not confirmed')) {
+      return 'Please check your email and confirm your account before signing in.';
+    }
+    
+    // Check for more specific auth errors
+    if (message.includes('already been registered')) {
+      return 'This email is already registered. Please try signing in instead.';
+    }
+    
+    if (message.includes('already exists')) {
+      return 'This email is already registered. Please try signing in instead.';
+    }
+    
+    if (message.includes('already in use')) {
+      return 'This email is already registered. Please try signing in instead.';
+    }
+    
+    // Return the original message if no specific match
+    return message;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +118,20 @@ export default function RegisterForm() {
     }
 
     try {
+      console.log('🔍 Checking if email exists:', email);
+      
+      // Check if email already exists before attempting registration
+      const emailExists = await checkEmailExists(email);
+      console.log('📧 Email exists check result:', emailExists);
+      
+      if (emailExists) {
+        console.log('❌ Email already exists, showing error');
+        setError('This email is already registered. Please try signing in instead.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ Email is new, proceeding with registration');
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -44,14 +140,22 @@ export default function RegisterForm() {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-      if (error) throw error;
+      
+      if (error) {
+        console.log('❌ Supabase Auth error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Registration successful');
       setSuccess('Registration successful! Please check your email to verify your account.');
       setTimeout(() => {
         router.push("/setup-profile");
       }, 1500); // short delay to show success message
     
     } catch (error: any) {
-      setError(error instanceof Error ? error.message : 'An error occurred');
+      console.log('❌ Caught error in registration:', error);
+      const friendlyMessage = getErrorMessage(error);
+      setError(friendlyMessage);
     } finally {
       setLoading(false);
     }
@@ -151,7 +255,16 @@ export default function RegisterForm() {
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm text-center">{error}</div>
+            <div className="text-red-600 text-sm text-center">
+              {error}
+              {error.includes('already registered') && (
+                <div className="mt-2">
+                  <Link href="/login" className="text-indigo-600 hover:text-indigo-500 underline">
+                    Sign in here
+                  </Link>
+                </div>
+              )}
+            </div>
           )}
 
           {success && (
