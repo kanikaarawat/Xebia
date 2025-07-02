@@ -117,13 +117,16 @@ export default function AppointmentsList({
             console.log('❌ Error fetching therapists:', therapistsError);
             // Continue without therapist data
           } else {
-            therapistsData = therapistsResult?.map(t => ({
-              id: t.id,
-              first_name: t.profiles?.first_name || 'Unknown',
-              last_name: t.profiles?.last_name || 'Therapist',
-              specialization: t.specialization,
-              avatar_url: t.profiles?.avatar_url
-            })) || [];
+            therapistsData = therapistsResult?.map(t => {
+              const profile = Array.isArray(t.profiles) ? t.profiles[0] : t.profiles;
+              return {
+                id: t.id,
+                first_name: profile?.first_name || 'Unknown',
+                last_name: profile?.last_name || 'Therapist',
+                specialization: t.specialization,
+                avatar_url: profile?.avatar_url
+              };
+            }) || [];
             console.log('✅ Therapists loaded:', therapistsData);
           }
         } catch (therapistsErr) {
@@ -306,8 +309,14 @@ export default function AppointmentsList({
       <div className={`${showCard ? 'border-indigo-100 bg-white/80 shadow-md rounded-lg' : ''} ${className}`}>
         <div className="p-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-slate-600">Loading appointments...</p>
+            <div className="relative mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                <Calendar className="h-8 w-8 text-indigo-600" />
+              </div>
+              <div className="absolute inset-0 w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto"></div>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">Loading your appointments</h3>
+            <p className="text-slate-600">Please wait while we fetch your therapy sessions...</p>
           </div>
         </div>
       </div>
@@ -349,20 +358,28 @@ export default function AppointmentsList({
         )}
         <div className="p-8">
           <div className="text-center">
-            <Calendar className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">No appointments found</h3>
-            <p className="text-slate-600 mb-6">
+            <div className="relative mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-full flex items-center justify-center mx-auto">
+                <Calendar className="h-10 w-10 text-indigo-600" />
+              </div>
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs font-bold">0</span>
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-3">No appointments found</h3>
+            <p className="text-slate-600 mb-6 max-w-sm mx-auto">
               {showUpcoming && !showPast 
-                ? "You don't have any upcoming appointments."
+                ? "You don't have any upcoming appointments scheduled. Ready to start your therapy journey?"
                 : showPast && !showUpcoming
-                ? "You haven't completed any sessions yet."
-                : "You haven't booked any appointments yet."
+                ? "You haven't completed any sessions yet. Your therapy progress will appear here."
+                : "You haven't booked any appointments yet. Take the first step towards better mental health."
               }
             </p>
             <Button 
               onClick={() => router.push('/dashboard/book-session')}
-              className="bg-indigo-600 hover:bg-indigo-700"
+              className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             >
+              <Calendar className="w-4 h-4 mr-2" />
               Book Your First Session
             </Button>
           </div>
@@ -382,73 +399,123 @@ export default function AppointmentsList({
           {description && <p className="text-slate-600 mt-1">{description}</p>}
         </div>
       )}
-      <div className={`${showCard ? 'p-6' : ''} w-full overflow-hidden`}>
-        <div className="space-y-4 max-h-96 overflow-y-auto overflow-x-hidden custom-scrollbar max-w-full">
+      <div className={`${showCard ? 'p-6' : ''} w-full overflow-hidden max-w-full`}>
+        <div className="space-y-4 max-h-96 overflow-y-auto overflow-x-hidden custom-scrollbar">
           {displayAppointments.map((appointment) => {
             const { date, dateShort, time } = formatDateTime(appointment.scheduled_at);
             const isUpcoming = new Date(appointment.scheduled_at) > new Date();
             
             return (
-              <div
-                key={appointment.id}
-                className={`flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-xl p-3 sm:p-4 transition-colors overflow-hidden ${
-                  isUpcoming 
-                    ? 'bg-blue-50 border border-blue-200 hover:bg-blue-100' 
-                    : 'bg-slate-50 border border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                <div className="flex items-center space-x-2 sm:space-x-4 mb-2 sm:mb-0">
-                  <Avatar className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 flex-shrink-0">
-                    <AvatarImage src={appointment.therapist?.avatar_url} />
-                    <AvatarFallback className="bg-indigo-100 text-indigo-700 text-xs">
-                      {appointment.therapist?.first_name?.[0]}{appointment.therapist?.last_name?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-indigo-900 text-xs sm:text-sm lg:text-base truncate break-words">
-                      Dr. {appointment.therapist?.first_name} {appointment.therapist?.last_name}
-                    </h3>
-                    <p className="text-slate-600 text-xs truncate break-words">{appointment.therapist?.specialization}</p>
-                    <div className="flex flex-wrap items-center gap-1 mt-1">
-                      <span className="text-xs text-slate-500 hidden sm:inline">{date}</span>
-                      <span className="text-xs text-slate-500 sm:hidden">{dateShort}</span>
-                      <span>{formatUTCDateTime(appointment.scheduled_at)}</span>
-                      <span className="text-xs text-slate-500">{getDurationText(appointment.duration || 30)}</span>
+                              <div
+                  key={appointment.id}
+                  className={`appointment-card group relative overflow-hidden rounded-xl p-3 ${
+                    isUpcoming 
+                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 hover:border-blue-300' 
+                      : 'bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                {/* Decorative background pattern */}
+                <div className={`absolute inset-0 opacity-5 ${
+                  isUpcoming ? 'bg-blue-500' : 'bg-slate-500'
+                }`} style={{
+                  backgroundImage: `radial-gradient(circle at 20% 80%, currentColor 1px, transparent 1px),
+                                  radial-gradient(circle at 80% 20%, currentColor 1px, transparent 1px)`,
+                  backgroundSize: '20px 20px'
+                }}></div>
+                
+                <div className="relative flex flex-col space-y-3">
+                  <div className="flex items-center space-x-3">
+                    {/* Enhanced Avatar */}
+                    <div className="relative">
+                      <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 ring-2 ring-white shadow-md">
+                        <AvatarImage src={appointment.therapist?.avatar_url} />
+                        <AvatarFallback className={`text-sm font-semibold ${
+                          isUpcoming ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700'
+                        }`}>
+                          {appointment.therapist?.first_name?.[0]}{appointment.therapist?.last_name?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      {/* Status indicator */}
+                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                        isUpcoming ? 'bg-green-500' : 'bg-slate-400'
+                      }`}></div>
                     </div>
-                    {appointment.notes && (
-                      <p className="text-xs text-slate-500 mt-1 max-w-full truncate">
-                        "{appointment.notes}"
-                      </p>
+                    
+                    <div className="min-w-0 flex-1">
+                      {/* Therapist name with enhanced styling */}
+                      <h3 className="font-bold text-indigo-900 text-sm sm:text-base truncate break-words mb-1">
+                        Dr. {appointment.therapist?.first_name} {appointment.therapist?.last_name}
+                      </h3>
+                      
+                      {/* Specialization with icon */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                        <p className="text-slate-600 text-xs sm:text-sm font-medium truncate break-words">
+                          {appointment.therapist?.specialization}
+                        </p>
+                      </div>
+                      
+                      {/* Date and time with enhanced styling */}
+                      <div className="flex flex-col space-y-1 text-xs">
+                        <div className="flex items-center gap-1 text-slate-500">
+                          <Calendar className="w-3 h-3" />
+                          <span>{dateShort}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-slate-500">
+                          <Clock className="w-3 h-3" />
+                          <span>{formatUTCDateTime(appointment.scheduled_at)}</span>
+                          <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                          <span>{getDurationText(appointment.duration || 30)}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Notes with enhanced styling */}
+                      {appointment.notes && (
+                        <div className="mt-2 p-2 bg-white/60 rounded-lg border border-slate-200">
+                          <p className="text-xs text-slate-600 italic max-w-full truncate">
+                            "{appointment.notes}"
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Right side actions */}
+                  <div className="flex flex-wrap items-center gap-2 justify-start">
+                    {/* Session type with enhanced badge */}
+                    <div className="flex items-center space-x-1">
+                      {getSessionTypeIcon(appointment.type)}
+                      <span className="text-xs text-slate-600 font-medium">
+                        {appointment.type || 'Session'}
+                      </span>
+                    </div>
+                    
+                    {/* Enhanced status badge */}
+                    {getStatusBadge(appointment.status || 'upcoming')}
+                    
+                    {/* Appointment actions */}
+                    {isUpcoming && (appointment.status || 'upcoming') === 'upcoming' && (
+                      <AppointmentActions 
+                        appointment={{
+                          id: appointment.id,
+                          scheduled_at: appointment.scheduled_at,
+                          status: appointment.status || 'upcoming',
+                          type: appointment.type,
+                          duration: appointment.duration || 30,
+                          therapist: {
+                            profiles: {
+                              first_name: appointment.therapist?.first_name || 'Unknown',
+                              last_name: appointment.therapist?.last_name || 'Therapist'
+                            }
+                          }
+                        }}
+                        onActionComplete={() => {
+                          // Refresh appointments after action
+                          window.location.reload();
+                        }}
+                      />
                     )}
                   </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-1 justify-start sm:justify-end">
-                  <div className="flex items-center space-x-1">
-                    {getSessionTypeIcon(appointment.type)}
-                    <span className="text-xs text-slate-600 hidden sm:inline">{appointment.type || 'Session'}</span>
-                  </div>
-                  {getStatusBadge(appointment.status || 'upcoming')}
-                  {isUpcoming && (appointment.status || 'upcoming') === 'upcoming' && (
-                    <AppointmentActions 
-                      appointment={{
-                        id: appointment.id,
-                        scheduled_at: appointment.scheduled_at,
-                        status: appointment.status || 'upcoming',
-                        type: appointment.type,
-                        duration: appointment.duration || 30,
-                        therapist: {
-                          profiles: {
-                            first_name: appointment.therapist?.first_name || 'Unknown',
-                            last_name: appointment.therapist?.last_name || 'Therapist'
-                          }
-                        }
-                      }}
-                      onActionComplete={() => {
-                        // Refresh appointments after action
-                        window.location.reload();
-                      }}
-                    />
-                  )}
                 </div>
               </div>
             );
@@ -460,9 +527,13 @@ export default function AppointmentsList({
             <Button 
               variant="outline"
               onClick={onViewAll || (() => router.push('/dashboard/appointments'))}
-              className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+              className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-300 px-6 py-2 font-medium"
             >
+              <Calendar className="w-4 h-4 mr-2" />
               View All Appointments
+              <span className="ml-2 bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded-full">
+                {filteredAppointments.length}
+              </span>
             </Button>
           </div>
         )}

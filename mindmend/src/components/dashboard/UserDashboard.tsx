@@ -432,7 +432,12 @@ export default function UserDashboard() {
             <Button variant="ghost" size="sm" className="text-indigo-600 p-2">
               <Bell className="h-4 w-4 lg:h-5 lg:w-5" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-indigo-600 p-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-indigo-600 p-2"
+              onClick={() => router.push('/dashboard/settings')}
+            >
               <Settings className="h-4 w-4 lg:h-5 lg:w-5" />
             </Button>
             <Button
@@ -508,12 +513,19 @@ export default function UserDashboard() {
           onValueChange={setActiveTab}
           className="space-y-6 lg:space-y-8"
         >
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 rounded-xl bg-white/70 backdrop-blur p-1 h-12 lg:h-14">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 rounded-xl bg-white/70 backdrop-blur p-1 h-12 lg:h-14">
             <TabsTrigger value="overview" className="rounded-lg text-sm lg:text-base font-medium">Overview</TabsTrigger>
             <TabsTrigger value="appointments" className="rounded-lg text-sm lg:text-base font-medium">Appointments</TabsTrigger>
             <TabsTrigger value="therapists" className="rounded-lg text-sm lg:text-base font-medium">Find Therapists</TabsTrigger>
             <TabsTrigger value="mood" className="rounded-lg text-sm lg:text-base font-medium">Mood Tracking</TabsTrigger>
             <TabsTrigger value="progress" className="rounded-lg text-sm lg:text-base font-medium">Progress</TabsTrigger>
+            <TabsTrigger 
+              value="settings" 
+              className="rounded-lg text-sm lg:text-base font-medium"
+              onClick={() => router.push('/dashboard/settings')}
+            >
+              Settings
+            </TabsTrigger>
           </TabsList>
 
           {/* ── Overview tab ── */}
@@ -726,14 +738,19 @@ export default function UserDashboard() {
               {/* Right sidebar */}
               <div className="space-y-6 lg:space-y-8">
                 {/* Upcoming Appointments */}
-                <Card className="border-indigo-100 bg-white/80 shadow-md">
+                <Card className="border-indigo-100 bg-gradient-to-br from-white to-indigo-50/30 shadow-lg hover:shadow-xl transition-all duration-300">
                   <CardHeader className="pb-4 lg:pb-6">
                     <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
-                      <Calendar className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                      <div className="p-2 bg-indigo-100 rounded-lg">
+                        <Calendar className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                      </div>
                       Upcoming Sessions
                     </CardTitle>
+                    <CardDescription className="text-slate-600">
+                      Your next therapy appointments
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3 lg:space-y-4">
+                  <CardContent className="space-y-4">
                     <AppointmentsList 
                       showUpcoming={true}
                       showPast={false}
@@ -743,6 +760,18 @@ export default function UserDashboard() {
                       description=""
                       onViewAll={() => setActiveTab('appointments')}
                     />
+                    
+                    {/* Quick action button */}
+                    <div className="pt-2 border-t border-slate-200">
+                      <Button 
+                        variant="outline"
+                        className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
+                        onClick={() => router.push('/dashboard/book-session')}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Book New Session
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -789,13 +818,6 @@ export default function UserDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3 lg:space-y-4">
-                    <Button 
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm lg:text-base"
-                      onClick={() => router.push('/dashboard/book-session')}
-                    >
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Book New Session
-                    </Button>
                     <Button 
                       variant="outline"
                       className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 text-sm lg:text-base"
