@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,10 +41,12 @@ import {
   Video as VideoIcon,
   MessageCircle as MessageIcon,
 } from "lucide-react";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import AppointmentsList from "@/components/booking/AppointmentsList";
+import UserSessionStats from "@/components/booking/UserSessionStats";
+import { useSessionCounts } from "@/lib/hooks/useSessionCounts";
+import { Textarea } from "@/components/ui/textarea";
+import { format, subDays } from 'date-fns';
 
 interface UserProfile {
   id: string;
@@ -67,28 +70,114 @@ interface Therapist {
   rating?: number;
 }
 
+// SVG face icons for moods 1-5
+const MoodFaces = [
+  // 1: Very Sad
+  () => { return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" fill="#fecaca" />
+      <circle cx="9" cy="11" r="1" fill="#991b1b" />
+      <circle cx="15" cy="11" r="1" fill="#991b1b" />
+      <path d="M9 17c1-1 3-1 6 0" stroke="#991b1b" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ); },
+  // 2: Sad
+  () => { return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" fill="#fca5a5" />
+      <circle cx="9" cy="11" r="1" fill="#b91c1c" />
+      <circle cx="15" cy="11" r="1" fill="#b91c1c" />
+      <path d="M9 16c1-0.5 3-0.5 6 0" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ); },
+  // 3: Neutral
+  () => { return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" fill="#fef08a" />
+      <circle cx="9" cy="11" r="1" fill="#b45309" />
+      <circle cx="15" cy="11" r="1" fill="#b45309" />
+      <path d="M9 16h6" stroke="#b45309" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ); },
+  // 4: Happy
+  () => { return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" fill="#bbf7d0" />
+      <circle cx="9" cy="11" r="1" fill="#166534" />
+      <circle cx="15" cy="11" r="1" fill="#166534" />
+      <path d="M9 15c1 1 3 1 6 0" stroke="#166534" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ); },
+  // 5: Very Happy
+  () => { return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" fill="#a7f3d0" />
+      <circle cx="9" cy="11" r="1" fill="#065f46" />
+      <circle cx="15" cy="11" r="1" fill="#065f46" />
+      <path d="M9 14c1.5 2 4.5 2 6 0" stroke="#065f46" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ); },
+];
+
 export default function UserDashboard() {
-  const { user, loading: authLoading } = useAuth();
+  const user = useUser();
+  const session = useSession();
+  const supabase = useSupabaseClient();
+  const router = useRouter();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [currentMood, setCurrentMood] = useState<"happy" | "neutral" | "sad" | null>(null);
+  const [selectedMoodScore, setSelectedMoodScore] = useState<number | null>(null);
+  const [moodLogSuccess, setMoodLogSuccess] = useState<string | null>(null);
   const [insight, setInsight] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [therapists, setTherapists] = useState<Therapist[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
-  const router = useRouter();
+  const [moodNotes, setMoodNotes] = useState("");
+  
+  // Use the custom hook for session counts
+  const { upcomingCount, completedCount, loading: sessionCountsLoading, error: sessionCountsError } = useSessionCounts(userProfile?.id);
 
-  const moodData = [
-    { day: "Mon", mood: 7 },
-    { day: "Tue", mood: 6 },
-    { day: "Wed", mood: 8 },
-    { day: "Thu", mood: 5 },
-    { day: "Fri", mood: 7 },
-    { day: "Sat", mood: 9 },
-    { day: "Sun", mood: 8 },
-  ];
+  // Mood log state
+  const [moodData, setMoodData] = useState<{ day: string; mood: number | null }[]>([]);
+  const [moodLoading, setMoodLoading] = useState(false);
+  const [moodError, setMoodError] = useState<string | null>(null);
+  const [averageMood, setAverageMood] = useState<number | null>(null);
+
+  // Fetch mood logs for the last 7 days
+  useEffect(() => {
+    if (!user) return;
+    setMoodLoading(true);
+    setMoodError(null);
+    const fetchMoodLogs = async () => {
+      try {
+        const res = await fetch(`/api/mood-insights/history?userId=${user.id}`);
+        if (!res.ok) throw new Error('Failed to fetch mood logs');
+        const { moods, average_mood, error } = await res.json();
+        if (error) throw new Error(error);
+        setAverageMood(average_mood);
+        console.log('Mood API Response:', { moods, average_mood });
+        // Build last 7 days array
+        const days = Array.from({ length: 7 }).map((_, i) => {
+          const date = subDays(new Date(), 6 - i);
+          const dayLabel = format(date, 'EEE');
+          const dateStr = format(date, 'yyyy-MM-dd');
+          console.log(`Checking date ${dateStr} for day ${dayLabel}`);
+          const entry = moods?.find((d: any) => d.logged_at && d.logged_at.slice(0, 10) === dateStr);
+          console.log(`Found entry for ${dateStr}:`, entry);
+          return { day: dayLabel, mood: entry ? entry.mood_score : null };
+        });
+        console.log('Final moodData:', days);
+        setMoodData(days);
+      } catch (err: any) {
+        setMoodError(err.message || 'Could not load mood data');
+      } finally {
+        setMoodLoading(false);
+      }
+    };
+    fetchMoodLogs();
+  }, [user]);
 
   // Map mood to score
   const moodToScore = (mood: "happy" | "neutral" | "sad") => {
@@ -189,21 +278,49 @@ export default function UserDashboard() {
   }, []);
 
   const handleLogMood = async () => {
-    if (!currentMood) return;
+    if (!selectedMoodScore) return;
     setLoading(true);
     setError(null);
     setInsight(null);
+    setMoodLogSuccess(null);
+
     try {
-      const res = await fetch("/api/mood-insights", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood_score: moodToScore(currentMood) }),
+      // 1. Get Supabase session (to optionally use access_token)
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log("session", session);
+      // 2. Build headers safely
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        ...(session?.access_token && {
+          Authorization: `Bearer ${session.access_token}`,
+        }),
+      };
+
+      // 3. Make the request
+      const res = await fetch('/api/mood-insights', {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          mood_score: selectedMoodScore,
+          notes: moodNotes,
+        }),
       });
-      if (!res.ok) throw new Error("Failed to fetch insight");
-      const data = await res.json();
-      setInsight(data.message);
+
+      // 4. Handle response
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('API error:', errorData);
+        setError(errorData.error || 'Failed to log mood');
+      } else {
+        const data = await res.json();
+        setMoodLogSuccess('Mood logged successfully!');
+        setInsight(data.message || null);
+        setSelectedMoodScore(null);
+        setMoodNotes("");
+      }
     } catch (err: any) {
-      setError(err.message || "Something went wrong");
+      setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -259,7 +376,7 @@ export default function UserDashboard() {
     return therapist?.specialization || 'General Therapy';
   };
 
-  if (authLoading || profileLoading) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
@@ -317,6 +434,17 @@ export default function UserDashboard() {
             </Button>
             <Button variant="ghost" size="sm" className="text-indigo-600 p-2">
               <Settings className="h-4 w-4 lg:h-5 lg:w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600 border-red-200 hover:bg-red-50 ml-2"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                router.push('/login');
+              }}
+            >
+              Sign Out
             </Button>
             <Avatar className="h-8 w-8 lg:h-10 lg:w-10">
               <AvatarImage src={userProfile.avatar_url} />
@@ -395,21 +523,29 @@ export default function UserDashboard() {
               <div className="space-y-6 lg:space-y-8 xl:col-span-2">
                 {/* Quick stats */}
                 <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {[
+                  {sessionCountsLoading ? (
+                    <div className="col-span-3 flex justify-center items-center h-24">
+                      <span className="text-slate-600 text-lg">Loading session stats...</span>
+                    </div>
+                  ) : sessionCountsError ? (
+                    <div className="col-span-3 flex justify-center items-center h-24">
+                      <span className="text-red-600 text-lg">{sessionCountsError}</span>
+                    </div>
+                  ) : ([
                     {
                       icon: Calendar,
-                      value: "7",
+                      value: sessionCountsLoading ? "..." : (upcomingCount === null ? "0" : upcomingCount),
                       label: "Upcoming Sessions",
                     },
                     {
                       icon: Users,
-                      value: "5",
+                      value: sessionCountsLoading ? "..." : (completedCount === null ? "0" : completedCount),
                       label: "Completed Sessions",
                     },
                     {
                       icon: Star,
-                      value: "7.1",
-                      label: "Avg Mood Score",
+                      value: moodLoading ? "..." : (averageMood !== null ? averageMood.toFixed(1) : "0"),
+                      label: "Mood Score",
                     },
                   ].map(({ icon: Icon, value, label }) => (
                     <Card
@@ -421,14 +557,41 @@ export default function UserDashboard() {
                           <Icon className="h-6 w-6 lg:h-7 lg:w-7 text-indigo-600" />
                         </span>
                         <div>
-                          <p className="text-2xl lg:text-3xl font-bold text-indigo-800 mb-1">
+                          <p className={`text-2xl lg:text-3xl font-bold mb-1 ${
+                            label === "Mood Score" && averageMood !== null
+                              ? averageMood >= 4 ? 'text-green-600'
+                              : averageMood >= 3 ? 'text-yellow-600'
+                              : 'text-red-600'
+                              : 'text-indigo-800'
+                          }`}>
                             {value}
                           </p>
                           <p className="text-sm text-slate-600 font-medium">{label}</p>
+                          {label === "Mood Score" && (
+                            <div className="space-y-1 mt-1">
+                              <div className="flex items-center gap-1">
+                                <p className="text-xs text-slate-500">out of 5</p>
+                                {averageMood !== null && (
+                                  <span className={`text-xs px-1 py-0.5 rounded ${
+                                    averageMood >= 4 ? 'bg-green-100 text-green-700'
+                                    : averageMood >= 3 ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-red-100 text-red-700'
+                                  }`}>
+                                    {averageMood >= 4 ? 'Great' : averageMood >= 3 ? 'Good' : 'Needs attention'}
+                                  </span>
+                                )}
+                              </div>
+                              {moodData.filter(d => typeof d.mood === 'number').length > 0 && (
+                                <p className="text-xs text-slate-400">
+                                  Based on {moodData.filter(d => typeof d.mood === 'number').length} days
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+                  )))}
                 </div>
 
                 {/* Quick Mood Check */}
@@ -440,74 +603,77 @@ export default function UserDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 lg:space-y-6">
-                    <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 lg:space-x-8">
-                      <Button
-                        variant={currentMood === "happy" ? "default" : "outline"}
-                        size="lg"
-                        onClick={() => setCurrentMood("happy")}
-                        className={`flex flex-col items-center space-y-2 h-auto py-4 px-6 lg:py-6 lg:px-8 ${
-                          currentMood === "happy"
-                            ? "bg-green-500 hover:bg-green-600 text-white"
-                            : "border-green-200 hover:bg-green-50 text-green-600"
-                        }`}
-                      >
-                        <Smile className="w-8 h-8 lg:w-10 lg:h-10" />
-                        <span className="text-base lg:text-lg font-medium">Good</span>
-                      </Button>
-                      <Button
-                        variant={currentMood === "neutral" ? "default" : "outline"}
-                        size="lg"
-                        onClick={() => setCurrentMood("neutral")}
-                        className={`flex flex-col items-center space-y-2 h-auto py-4 px-6 lg:py-6 lg:px-8 ${
-                          currentMood === "neutral"
-                            ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                            : "border-yellow-200 hover:bg-yellow-50 text-yellow-600"
-                        }`}
-                      >
-                        <Meh className="w-8 h-8 lg:w-10 lg:h-10" />
-                        <span className="text-base lg:text-lg font-medium">Okay</span>
-                      </Button>
-                      <Button
-                        variant={currentMood === "sad" ? "default" : "outline"}
-                        size="lg"
-                        onClick={() => setCurrentMood("sad")}
-                        className={`flex flex-col items-center space-y-2 h-auto py-4 px-6 lg:py-6 lg:px-8 ${
-                          currentMood === "sad"
-                            ? "bg-blue-500 hover:bg-blue-600 text-white"
-                            : "border-blue-200 hover:bg-blue-50 text-blue-600"
-                        }`}
-                      >
-                        <Frown className="w-8 h-8 lg:w-10 lg:h-10" />
-                        <span className="text-base lg:text-lg font-medium">Struggling</span>
-                      </Button>
+                    <div className="flex flex-wrap justify-center gap-2 lg:gap-3">
+                      {[...Array(5)].map((_, i) => {
+                        const score = i + 1;
+                        const isSelected = selectedMoodScore === score;
+                        // Use a neutral background and colored border for each mood
+                        const borderColor =
+                          score === 1
+                            ? "border-red-300"
+                            : score === 2
+                            ? "border-orange-300"
+                            : score === 3
+                            ? "border-yellow-300"
+                            : score === 4
+                            ? "border-green-300"
+                            : "border-emerald-300";
+                        const ringColor = isSelected ? "ring-4 ring-indigo-400 scale-110" : "";
+                        return (
+                          <button
+                            key={score}
+                            type="button"
+                            className={`w-12 h-16 lg:w-14 lg:h-20 rounded-xl font-bold flex flex-col items-center justify-center border-2 bg-gray-50 hover:bg-purple-100 transition-all duration-150 focus:outline-none text-lg lg:text-xl ${borderColor} ${ringColor}`}
+                            onClick={() => setSelectedMoodScore(score)}
+                            aria-label={`Mood score ${score}`}
+                          >
+                            <span className="mb-1">{MoodFaces[i]()}</span>
+                            <span className="text-xs lg:text-sm">{score}</span>
+                          </button>
+                        );
+                      })}
                     </div>
-                    {currentMood && (
-                      <div className="text-center space-y-4">
-                        <Button
-                          className="bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white px-6 py-2 lg:px-8 lg:py-3 text-base lg:text-lg"
-                          onClick={handleLogMood}
-                          disabled={loading}
-                        >
-                          {loading ? "Logging..." : "Log My Mood"}
-                        </Button>
-                        {insight && (
-                          <div className="p-4 bg-indigo-50 rounded-lg text-indigo-800 border border-indigo-100">
-                            <p className="font-medium">💡 Insight:</p>
-                            <p>{insight}</p>
-                          </div>
-                        )}
-                        {error && (
-                          <div className="p-4 bg-red-50 rounded-lg text-red-800 border border-red-100">
-                            <p className="font-medium">⚠️ Error:</p>
-                            <p>{error}</p>
-                          </div>
-                        )}
+                    <div className="text-center space-y-4">
+                      <div>
+                        <Label htmlFor="mood-notes" className="block text-left mb-2 text-slate-700 font-medium">Notes (optional)</Label>
+                        <Textarea
+                          id="mood-notes"
+                          value={moodNotes}
+                          onChange={e => setMoodNotes(e.target.value)}
+                          placeholder="Add any notes about your mood today..."
+                          className="mb-4 min-h-[60px]"
+                          maxLength={300}
+                        />
                       </div>
-                    )}
+                      <Button
+                        className="bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white px-6 py-2 lg:px-8 lg:py-3 text-base lg:text-lg"
+                        onClick={handleLogMood}
+                        disabled={loading || !selectedMoodScore}
+                      >
+                        {loading ? "Logging..." : "Log My Mood"}
+                      </Button>
+                      {moodLogSuccess && (
+                        <div className="p-4 bg-green-50 rounded-lg text-green-800 border border-green-100">
+                          <p className="font-medium">✅ {moodLogSuccess}</p>
+                        </div>
+                      )}
+                      {insight && (
+                        <div className="p-4 bg-indigo-50 rounded-lg text-indigo-800 border border-indigo-100">
+                          <p className="font-medium">💡 Insight:</p>
+                          <p>{insight}</p>
+                        </div>
+                      )}
+                      {error && (
+                        <div className="p-4 bg-red-50 rounded-lg text-red-800 border border-red-100">
+                          <p className="font-medium">⚠️ Error:</p>
+                          <p>{error}</p>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Mood Trends */}
+                {/* Mood Trends (Bar Chart) */}
                 <Card className="border-indigo-100 bg-white/80 shadow-md">
                   <CardHeader className="pb-4 lg:pb-6">
                     <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
@@ -516,21 +682,43 @@ export default function UserDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-end justify-between h-32 lg:h-40 space-x-2">
-                      {moodData.map((data, index) => (
-                        <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
-                          <div
-                            className="w-full bg-gradient-to-t from-indigo-400 to-pink-400 rounded-t-lg transition-all duration-300"
-                            style={{ height: `${(data.mood / 10) * 100}%` }}
-                          />
-                          <span className="text-xs lg:text-sm text-slate-600 font-medium">{data.day}</span>
+                    {moodLoading ? (
+                      <div className="flex items-center justify-center h-32">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+                      </div>
+                    ) : moodError ? (
+                      <div className="text-center text-red-600">{moodError}</div>
+                    ) : (
+                      <>
+                        <div className="flex items-end justify-between h-32 lg:h-40 space-x-2">
+                          {moodData.map((data, index) => {
+                            const maxHeight = 120; // 120px max height
+                            const height = typeof data.mood === 'number' ? (data.mood / 5) * maxHeight : 20;
+                            const minHeight = typeof data.mood === 'number' ? Math.max(height, 20) : 20;
+                            console.log(`Bar ${index} (${data.day}): mood=${data.mood}, height=${height}px, minHeight=${minHeight}px`);
+                            return (
+                              <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
+                                <div
+                                  className={`w-full rounded-t-lg transition-all duration-300 border-2 border-purple-500 ${typeof data.mood === 'number' ? 'bg-gradient-to-t from-indigo-400 to-pink-400' : 'bg-slate-200'}`}
+                                  style={{ 
+                                    height: `${minHeight}px`,
+                                    backgroundColor: typeof data.mood === 'number' ? '#8b5cf6' : '#e2e8f0'
+                                  }}
+                                />
+                                <span className="text-xs lg:text-sm text-slate-600 font-medium">{data.day}</span>
+                              </div>
+                            );
+                          })}
                         </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 lg:mt-6 flex items-center justify-between text-xs lg:text-sm text-slate-600">
-                      <span className="font-medium">Average: 7.1/10</span>
-                      <Badge className="bg-green-100 text-green-700">+0.8 from last week</Badge>
-                    </div>
+                    
+                        <div className="mt-4 lg:mt-6 flex items-center justify-between text-xs lg:text-sm text-slate-600">
+                          <span className="font-medium">
+                            Average: {averageMood !== null ? averageMood.toFixed(2) : '--'}/5
+                          </span>
+                          {/* Placeholder for trend badge */}
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -689,7 +877,7 @@ export default function UserDashboard() {
                         </div>
                         <Button 
                           onClick={() => router.push(`/dashboard/book-session?therapist=${therapist.id}`)}
-                          className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 lg:px-6 lg:py-3 text-sm lg:text-base w-full sm:w-auto"
+                          className="bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white px-6 py-2 lg:px-8 lg:py-3 text-base lg:text-lg"
                         >
                           Book Session
                         </Button>
@@ -721,20 +909,34 @@ export default function UserDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6 lg:space-y-8">
-                  {/* Mood Chart */}
+                  {/* Mood Chart (Bar Graph) */}
                   <div className="bg-slate-50 rounded-xl p-4 lg:p-6">
                     <h3 className="text-base lg:text-lg font-semibold text-indigo-800 mb-4">Weekly Mood Chart</h3>
-                    <div className="flex items-end justify-between h-32 lg:h-48 space-x-2">
-                      {moodData.map((data, index) => (
-                        <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
-                          <div
-                            className="w-full bg-gradient-to-t from-indigo-400 to-pink-400 rounded-t-lg transition-all duration-300"
-                            style={{ height: `${(data.mood / 10) * 100}%` }}
-                          />
-                          <span className="text-xs lg:text-sm text-slate-600 font-medium">{data.day}</span>
-                        </div>
-                      ))}
-                    </div>
+                    {moodLoading ? (
+                      <div className="flex items-center justify-center h-32">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+                      </div>
+                    ) : moodError ? (
+                      <div className="text-center text-red-600">{moodError}</div>
+                    ) : (
+                      <div className="flex items-end justify-between h-32 lg:h-48 space-x-2">
+                        {moodData.map((data, index) => {
+                          const maxHeight = 120; // 120px max height
+                          const height = typeof data.mood === 'number' ? (data.mood / 5) * maxHeight : 20;
+                          const minHeight = typeof data.mood === 'number' ? Math.max(height, 20) : 20;
+                          console.log(`Bar ${index} (${data.day}): mood=${data.mood}, height=${height}px, minHeight=${minHeight}px`);
+                          return (
+                            <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
+                              <div
+                                className={`w-full rounded-t-lg transition-all duration-300 ${typeof data.mood === 'number' ? 'bg-gradient-to-t from-indigo-400 to-pink-400' : 'bg-slate-200'}`}
+                                style={{ height: `${minHeight}px` }}
+                              />
+                              <span className="text-xs lg:text-sm text-slate-600 font-medium">{data.day}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Mood Insights */}
@@ -781,68 +983,291 @@ export default function UserDashboard() {
                   <div className="space-y-3 lg:space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-xs lg:text-sm text-slate-600">Mood Improvement</span>
-                      <span className="text-xs lg:text-sm font-medium">75%</span>
+                      <span className="text-xs lg:text-sm font-medium">
+                        {averageMood !== null ? Math.round((averageMood / 5) * 100) : 0}%
+                      </span>
                     </div>
-                    <Progress value={75} className="h-2 lg:h-3" />
+                    <Progress value={averageMood !== null ? (averageMood / 5) * 100 : 0} className="h-2 lg:h-3" />
                   </div>
                   
                   <div className="space-y-3 lg:space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-xs lg:text-sm text-slate-600">Sessions Completed</span>
-                      <span className="text-xs lg:text-sm font-medium">5</span>
+                      <span className="text-xs lg:text-sm font-medium">{completedCount || 0}</span>
                     </div>
-                    <Progress value={Math.min(5 * 20, 100)} className="h-2 lg:h-3" />
+                    <Progress value={Math.min((completedCount || 0) * 20, 100)} className="h-2 lg:h-3" />
                   </div>
 
                   <div className="space-y-3 lg:space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs lg:text-sm text-slate-600">Self-Care Activities</span>
-                      <span className="text-xs lg:text-sm font-medium">60%</span>
+                      <span className="text-xs lg:text-sm text-slate-600">Mood Tracking Streak</span>
+                      <span className="text-xs lg:text-sm font-medium">
+                        {moodData.filter(d => typeof d.mood === 'number').length} days
+                      </span>
                     </div>
-                    <Progress value={60} className="h-2 lg:h-3" />
+                    <Progress value={Math.min((moodData.filter(d => typeof d.mood === 'number').length / 7) * 100, 100)} className="h-2 lg:h-3" />
+                  </div>
+
+                  <div className="space-y-3 lg:space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs lg:text-sm text-slate-600">Overall Wellness Score</span>
+                      <span className="text-xs lg:text-sm font-medium">
+                        {averageMood !== null ? Math.round((averageMood / 5) * 100) : 0}%
+                      </span>
+                    </div>
+                    <Progress value={averageMood !== null ? (averageMood / 5) * 100 : 0} className="h-2 lg:h-3" />
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Achievements */}
+              {/* Mood Trends Analysis */}
               <Card className="border-indigo-100 bg-white/80 shadow-md">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
-                    <Star className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
-                    Achievements
+                    <Heart className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                    Mood Trends
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4 lg:space-y-6">
                   <div className="space-y-3 lg:space-y-4">
-                    <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                      <CheckCircle className="w-4 h-4 lg:w-5 lg:h-5 text-green-600" />
-                      <div>
-                        <p className="font-medium text-green-800 text-sm lg:text-base">First Session</p>
-                        <p className="text-xs lg:text-sm text-green-600">Completed your first therapy session</p>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs lg:text-sm text-slate-600">Average Mood This Week</span>
+                      <span className="text-xs lg:text-sm font-medium">
+                        {averageMood !== null ? averageMood.toFixed(1) : '--'}/5
+                      </span>
                     </div>
-                    
-                    <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                      <CheckCircle className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600" />
-                      <div>
-                        <p className="font-medium text-blue-800 text-sm lg:text-base">Mood Tracker</p>
-                        <p className="text-xs lg:text-sm text-blue-600">Logged mood for 7 consecutive days</p>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs lg:text-sm text-slate-600">Best Day</span>
+                      <span className="text-xs lg:text-sm font-medium">
+                        {moodData.length > 0 ? 
+                          moodData.reduce((max, day) => 
+                            (typeof day.mood === 'number' && day.mood > (typeof max.mood === 'number' ? max.mood : 0)) ? day : max
+                          ).day : '--'
+                        }
+                      </span>
                     </div>
-                    
-                    <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                      <CheckCircle className="w-4 h-4 lg:w-5 lg:h-5 text-purple-600" />
-                      <div>
-                        <p className="font-medium text-purple-800 text-sm lg:text-base">Consistent</p>
-                        <p className="text-xs lg:text-sm text-purple-600">Attended 3 sessions in a row</p>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs lg:text-sm text-slate-600">Days Tracked</span>
+                      <span className="text-xs lg:text-sm font-medium">
+                        {moodData.filter(d => typeof d.mood === 'number').length}/7
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-3 lg:pt-4 border-t border-slate-200">
+                    <h4 className="font-semibold text-indigo-800 mb-2 text-sm lg:text-base">This Week's Pattern</h4>
+                    <div className="flex space-x-1">
+                      {moodData.map((day, index) => (
+                        <div
+                          key={index}
+                          className={`flex-1 h-8 rounded ${
+                            typeof day.mood === 'number' 
+                              ? day.mood >= 4 ? 'bg-green-400' 
+                              : day.mood >= 3 ? 'bg-yellow-400' 
+                              : 'bg-red-400'
+                              : 'bg-slate-200'
+                          }`}
+                          title={`${day.day}: ${day.mood || 'No data'}/5`}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-500 mt-1">
+                      <span>Mon</span>
+                      <span>Sun</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Achievements Section */}
+            <Card className="border-indigo-100 bg-white/80 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
+                  <Star className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                  Achievements & Milestones
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 lg:gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {/* First Session Achievement */}
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${
+                    (completedCount || 0) >= 1 ? 'bg-green-50 border border-green-200' : 'bg-slate-50 border border-slate-200'
+                  }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
+                      (completedCount || 0) >= 1 ? 'text-green-600' : 'text-slate-400'
+                    }`} />
+                    <div>
+                      <p className={`font-medium text-sm lg:text-base ${
+                        (completedCount || 0) >= 1 ? 'text-green-800' : 'text-slate-600'
+                      }`}>First Session</p>
+                      <p className={`text-xs lg:text-sm ${
+                        (completedCount || 0) >= 1 ? 'text-green-600' : 'text-slate-500'
+                      }`}>Complete your first therapy session</p>
+                    </div>
+                  </div>
+                  
+                  {/* Mood Tracker Achievement */}
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${
+                    moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50 border border-slate-200'
+                  }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
+                      moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'text-blue-600' : 'text-slate-400'
+                    }`} />
+                    <div>
+                      <p className={`font-medium text-sm lg:text-base ${
+                        moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'text-blue-800' : 'text-slate-600'
+                      }`}>Mood Tracker</p>
+                      <p className={`text-xs lg:text-sm ${
+                        moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'text-blue-600' : 'text-slate-500'
+                      }`}>Log mood for 7 consecutive days</p>
+                    </div>
+                  </div>
+                  
+                  {/* Consistent Achievement */}
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${
+                    (completedCount || 0) >= 3 ? 'bg-purple-50 border border-purple-200' : 'bg-slate-50 border border-slate-200'
+                  }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
+                      (completedCount || 0) >= 3 ? 'text-purple-600' : 'text-slate-400'
+                    }`} />
+                    <div>
+                      <p className={`font-medium text-sm lg:text-base ${
+                        (completedCount || 0) >= 3 ? 'text-purple-800' : 'text-slate-600'
+                      }`}>Consistent</p>
+                      <p className={`text-xs lg:text-sm ${
+                        (completedCount || 0) >= 3 ? 'text-purple-600' : 'text-slate-500'
+                      }`}>Attend 3 sessions</p>
+                    </div>
+                  </div>
+
+                  {/* High Mood Achievement */}
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${
+                    averageMood !== null && averageMood >= 4 ? 'bg-yellow-50 border border-yellow-200' : 'bg-slate-50 border border-slate-200'
+                  }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
+                      averageMood !== null && averageMood >= 4 ? 'text-yellow-600' : 'text-slate-400'
+                    }`} />
+                    <div>
+                      <p className={`font-medium text-sm lg:text-base ${
+                        averageMood !== null && averageMood >= 4 ? 'text-yellow-800' : 'text-slate-600'
+                      }`}>Positive Vibes</p>
+                      <p className={`text-xs lg:text-sm ${
+                        averageMood !== null && averageMood >= 4 ? 'text-yellow-600' : 'text-slate-500'
+                      }`}>Maintain high mood average</p>
+                    </div>
+                  </div>
+
+                  {/* Progress Maker Achievement */}
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${
+                    (completedCount || 0) >= 5 ? 'bg-indigo-50 border border-indigo-200' : 'bg-slate-50 border border-slate-200'
+                  }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
+                      (completedCount || 0) >= 5 ? 'text-indigo-600' : 'text-slate-400'
+                    }`} />
+                    <div>
+                      <p className={`font-medium text-sm lg:text-base ${
+                        (completedCount || 0) >= 5 ? 'text-indigo-800' : 'text-slate-600'
+                      }`}>Progress Maker</p>
+                      <p className={`text-xs lg:text-sm ${
+                        (completedCount || 0) >= 5 ? 'text-indigo-600' : 'text-slate-500'
+                      }`}>Complete 5 sessions</p>
+                    </div>
+                  </div>
+
+                  {/* Wellness Warrior Achievement */}
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${
+                    moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'bg-pink-50 border border-pink-200' : 'bg-slate-50 border border-slate-200'
+                  }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
+                      moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'text-pink-600' : 'text-slate-400'
+                    }`} />
+                    <div>
+                      <p className={`font-medium text-sm lg:text-base ${
+                        moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'text-pink-800' : 'text-slate-600'
+                      }`}>Wellness Warrior</p>
+                      <p className={`text-xs lg:text-sm ${
+                        moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'text-pink-600' : 'text-slate-500'
+                      }`}>Track mood & attend sessions</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Insights & Recommendations */}
+            <Card className="border-indigo-100 bg-white/80 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
+                  <TrendingUp className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                  Personalized Insights
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 lg:gap-6 md:grid-cols-2">
+                  <div className="space-y-3 lg:space-y-4">
+                    <h4 className="font-semibold text-indigo-800 text-sm lg:text-base">Your Progress</h4>
+                    <ul className="text-xs lg:text-sm text-slate-600 space-y-2">
+                      {averageMood !== null && averageMood >= 4 && (
+                        <li className="flex items-center space-x-2">
+                          <CheckCircle className="w-3 h-3 text-green-500" />
+                          <span>Great mood stability this week!</span>
+                        </li>
+                      )}
+                      {moodData.filter(d => typeof d.mood === 'number').length >= 5 && (
+                        <li className="flex items-center space-x-2">
+                          <CheckCircle className="w-3 h-3 text-green-500" />
+                          <span>Consistent mood tracking habit</span>
+                        </li>
+                      )}
+                      {(completedCount || 0) >= 1 && (
+                        <li className="flex items-center space-x-2">
+                          <CheckCircle className="w-3 h-3 text-green-500" />
+                          <span>Active therapy engagement</span>
+                        </li>
+                      )}
+                      {averageMood !== null && averageMood < 3 && (
+                        <li className="flex items-center space-x-2">
+                          <AlertCircle className="w-3 h-3 text-orange-500" />
+                          <span>Consider scheduling a session</span>
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                  
+                  <div className="space-y-3 lg:space-y-4">
+                    <h4 className="font-semibold text-indigo-800 text-sm lg:text-base">Recommendations</h4>
+                    <ul className="text-xs lg:text-sm text-slate-600 space-y-2">
+                      {moodData.filter(d => typeof d.mood === 'number').length < 7 && (
+                        <li className="flex items-center space-x-2">
+                          <Plus className="w-3 h-3 text-blue-500" />
+                          <span>Log your mood daily for better insights</span>
+                        </li>
+                      )}
+                      {(completedCount || 0) === 0 && (
+                        <li className="flex items-center space-x-2">
+                          <Plus className="w-3 h-3 text-blue-500" />
+                          <span>Book your first therapy session</span>
+                        </li>
+                      )}
+                      {averageMood !== null && averageMood < 3 && (
+                        <li className="flex items-center space-x-2">
+                          <Plus className="w-3 h-3 text-blue-500" />
+                          <span>Try meditation or deep breathing exercises</span>
+                        </li>
+                      )}
+                      <li className="flex items-center space-x-2">
+                        <Plus className="w-3 h-3 text-blue-500" />
+                        <span>Practice gratitude journaling</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
+
       </main>
     </div>
   );

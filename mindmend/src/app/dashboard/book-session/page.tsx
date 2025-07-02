@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
 import {
   Card, CardHeader, CardTitle, CardContent,
 } from '@/components/ui/card';
@@ -19,7 +20,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
 import { getFreeSlotsFixed as getFreeSlots } from '@/lib/freeSlotsFixed';
 import { debugTimeConversion } from '@/lib/timeTest';
-import { useAuth } from '@/components/auth/AuthProvider';
 import { Calendar, Clock, User, MessageSquare } from 'lucide-react';
 
 interface Therapist {
@@ -36,7 +36,9 @@ interface TimeSlot {
 }
 
 export default function BookSessionPage() {
-  const { user } = useAuth();
+  const user = useUser();
+  const session = useSession();
+  const supabase = useSupabaseClient();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 

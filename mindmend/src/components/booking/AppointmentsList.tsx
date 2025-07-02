@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Calendar, Clock, User, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import AppointmentActions from './AppointmentActions';
 
 interface Appointment {
   id: string;
@@ -47,7 +48,8 @@ export default function AppointmentsList({
   className = "",
   onViewAll
 }: AppointmentsListProps) {
-  const { user } = useAuth();
+      const user = useUser();
+  const supabase = useSupabaseClient();
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -427,9 +429,25 @@ export default function AppointmentsList({
                   </div>
                   {getStatusBadge(appointment.status || 'upcoming')}
                   {isUpcoming && (appointment.status || 'upcoming') === 'upcoming' && (
-                    <Button size="sm" variant="outline" className="text-xs h-6 px-1.5">
-                      Reschedule
-                    </Button>
+                    <AppointmentActions 
+                      appointment={{
+                        id: appointment.id,
+                        scheduled_at: appointment.scheduled_at,
+                        status: appointment.status || 'upcoming',
+                        type: appointment.type,
+                        duration: appointment.duration || 30,
+                        therapist: {
+                          profiles: {
+                            first_name: appointment.therapist?.first_name || 'Unknown',
+                            last_name: appointment.therapist?.last_name || 'Therapist'
+                          }
+                        }
+                      }}
+                      onActionComplete={() => {
+                        // Refresh appointments after action
+                        window.location.reload();
+                      }}
+                    />
                   )}
                 </div>
               </div>

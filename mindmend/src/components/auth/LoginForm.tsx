@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
-import { useAuth } from './AuthProvider';
+import { useUser, useSupabaseClient, useSession } from '@supabase/auth-helpers-react';
 
 import {
   Card,
@@ -28,8 +27,20 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
-  const { signIn, signInWithGoogle } = useAuth();
+  const supabase = useSupabaseClient();
+  const user = useUser();
+  const session = useSession();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    // Prevent hydration mismatch by not rendering until after mount
+    return null;
+  }
 
   const redirectBasedOnProfile = async (userId: string, userEmail: string) => {
     const { data: profile, error: profileErr } = await supabase
@@ -65,11 +76,12 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      await signIn(email, password);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
       await new Promise((res) => setTimeout(res, 300));
-      const { data: userRes, error: userErr } = await supabase.auth.getUser();
-      if (userErr || !userRes.user) throw new Error('Login failed');
-      await redirectBasedOnProfile(userRes.user.id, userRes.user.email!);
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !user) throw new Error('Login failed');
+      await redirectBasedOnProfile(user.id, user.email!);
     } catch (err: any) {
       setError(err.message ?? 'An error occurred during sign-in');
     } finally {
@@ -81,11 +93,26 @@ export default function LoginForm() {
     setError('');
     setLoading(true);
     try {
-      await signInWithGoogle();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+      await new Promise((res) => setTimeout(res, 300));
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !user) throw new Error(userErr?.message || 'Google login failed');
+      await redirectBasedOnProfile(user.id, user.email!);
     } catch (err: any) {
       setError(err.message ?? 'An error occurred during Google sign-in');
+    } finally {
       setLoading(false);
     }
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
   };
 
   return (

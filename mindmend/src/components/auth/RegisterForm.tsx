@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from './AuthProvider';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useRouter } from 'next/navigation';
 
 export default function RegisterForm() {
@@ -13,7 +13,7 @@ export default function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { signUp } = useAuth();
+  const supabase = useSupabaseClient();
   const router = useRouter();
 
 
@@ -36,13 +36,21 @@ export default function RegisterForm() {
     }
 
     try {
-      await signUp(email, password, role);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { role },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
       setSuccess('Registration successful! Please check your email to verify your account.');
       setTimeout(() => {
         router.push("/setup-profile");
       }, 1500); // short delay to show success message
     
-    } catch (error) {
+    } catch (error: any) {
       setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);

@@ -1,19 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// TODO: Replace <your-project-ref> with your actual Supabase project ref (found in your Supabase dashboard URL)
-const SUPABASE_PROJECT_REF = '<your-project-ref>';
-const EDGE_FUNCTION_URL = `https://${SUPABASE_PROJECT_REF}.functions.supabase.co/mood-insights`;
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { supabase } from '@/lib/supabaseClient';
+export async function GET() {
+  return NextResponse.json({ message: "Mood API is working ✅" });
+}
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const res = await fetch(EDGE_FUNCTION_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json();
-  return NextResponse.json(data);
-} 
+  
+  try {
+    const supabase = createRouteHandlerClient({ cookies });
+
+    // ✅ Get user from cookie-based session
+    let {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    // Optional: fallback to Bearer token if cookie session is missing
+    if (!user) {
+      const bearer = req.headers.get('authorization')?.replace('Bearer ', '');
+      if (bearer) {
+        ({ data: { user }, error: authError } = await supabase.auth.getUser(bearer));
+      }
+    }
+
+    if (authError || !user) {
+      // More helpful error for missing session
+      return NextResponse.json({ error: 'Unauthorized: No Supabase session found. Please log in.' }, { status: 401 });
+    }
+
+    const { mood_score, notes } = await req.json();
+    if (typeof mood_score !== 'number' || mood_score < 1 || mood_score > 5) {
+      return NextResponse.json({ error: 'Invalid mood_score (1-5)' }, { status: 400 });
+    }
+
+    const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    console.log('Request started');
+    console.log('user:', user);
+    console.log('mood_score:', mood_score);
+    console.log('notes:', notes);
+    
+    // ✅ Insert mood with user_id manually (RLS requires session)
+    const { data, error } = await supabase
+    .from("mood_logs")
+    .upsert(
+      [{
+        user_id: user.id,  // ✅ insert directly
+        mood_score,
+        logged_at: today,
+        notes
+      }],
+      { onConflict: 'user_id,logged_at' }
+    );
+  
+
+    if (error) {
+      // Clarify RLS/session error for the user
+      if (error.message && error.message.includes('auth.uid() is null')) {
+        return NextResponse.json({ error: 'No Supabase session found (auth.uid() is null). Please ensure you are logged in and your session is valid.' }, { status: 401 });
+      }
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      message: 'Mood logged successfully!',
+      mood: data,
+    });
+  } catch (err) {
+    console.error('API error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

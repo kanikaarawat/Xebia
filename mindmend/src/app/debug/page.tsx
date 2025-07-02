@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs';
+import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,8 +12,12 @@ import UnavailabilityTable from '@/components/debug/UnavailabilityTable';
 import FreeSlotsTester from '@/components/debug/FreeSlotsTester';
 import { TimeConversionTester } from '@/components/debug/TimeConversionTester';
 
+const supabase = createPagesBrowserClient();
+
 export default function DebugPage() {
-  const { user } = useAuth();
+  const user = useUser();
+  const session = useSession();
+  const supabase = useSupabaseClient();
   const [debugInfo, setDebugInfo] = useState<any>({});
   const [loading, setLoading] = useState(true);
 

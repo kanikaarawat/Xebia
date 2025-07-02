@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,9 @@ import Link from 'next/link';
 
 export default function SetupProfile() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const user = useUser();
+  const session = useSession();
+  const supabase = useSupabaseClient();
 
   const [profile, setProfile] = useState<any>(null);
   const [firstName, setFirstName] = useState('');
@@ -35,8 +36,8 @@ export default function SetupProfile() {
 
   // Debug logging
   console.log('🔍 SetupProfile render state:', {
-    user: user ? { id: user.id, email: user.email } : null,
-    authLoading,
+    user: user ? { id: user.id, email: user.user_metadata.email } : null,
+    session,
     profile,
     profileLoading
   });
@@ -103,7 +104,7 @@ export default function SetupProfile() {
                 .from('profiles')
                 .insert({
                   id: user.id,
-                  email: user.email,
+                  email: user.user_metadata.email,
                   role: 'user'
                 })
                 .select()
@@ -154,7 +155,7 @@ export default function SetupProfile() {
     };
 
     fetchProfile();
-  }, [user]);
+  }, [user, supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -265,7 +266,7 @@ export default function SetupProfile() {
     );
   }
 
-  if (authLoading || profileLoading) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 p-6">
         <div className="w-full max-w-xl">
@@ -281,7 +282,7 @@ export default function SetupProfile() {
             <CardContent className="p-8 text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
               <p className="text-slate-600">
-                {authLoading ? 'Checking authentication...' : 'Loading your profile...'}
+                Loading your profile...
               </p>
             </CardContent>
           </Card>

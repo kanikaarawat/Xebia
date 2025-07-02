@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useSupabaseClient, useUser, useSession } from '@supabase/auth-helpers-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -80,6 +80,9 @@ export default function TherapistDashboard() {
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   const [savingAvailability, setSavingAvailability] = useState(false);
   const [now, setNow] = useState<number | null>(null);
+  const supabase = useSupabaseClient();
+  const user = useUser();
+  const session = useSession();
 
   /* ── demo recent-patient list ──  */
   const recentPatients = [
@@ -159,23 +162,19 @@ export default function TherapistDashboard() {
   useEffect(() => {
     const fetchTherapistData = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        
-        if (!session?.user?.id) {
+        if (!user?.id) {
           console.log('❌ No authenticated user found');
           setLoading(false);
           return;
         }
 
-        console.log('🔍 Fetching therapist data for user:', session.user.id);
+        console.log('🔍 Fetching therapist data for user:', user.id);
 
         // First, fetch the basic profile
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select('*')
-          .eq("id", session.user.id)
+          .eq("id", user.id)
           .single();
 
         console.log('🔍 Basic profile result:', { profile, profileError });
@@ -203,7 +202,7 @@ export default function TherapistDashboard() {
         const { data: therapistData, error: therapistError } = await supabase
           .from("therapists")
           .select('*')
-          .eq("id", session.user.id)
+          .eq("id", user.id)
           .single();
 
         console.log('🔍 Therapist data result:', { therapistData, therapistError });
@@ -216,7 +215,7 @@ export default function TherapistDashboard() {
             const { data: newTherapistData, error: createError } = await supabase
               .from("therapists")
               .insert({
-                id: session.user.id,
+                id: user.id,
                 specialization: 'General Therapy',
                 license_number: 'Pending'
               })
@@ -265,7 +264,7 @@ export default function TherapistDashboard() {
         const { data: appointmentsData } = await supabase
           .from("appointments")
           .select("*")
-          .eq("therapist_id", session.user.id)
+          .eq("therapist_id", user.id)
           .order("scheduled_at", { ascending: true });
 
         if (appointmentsData) {
