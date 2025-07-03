@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSupabaseClient, useUser, useSession } from '@supabase/auth-helpers-react';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -39,6 +40,7 @@ import {
   Plus,
   Trash2,
   Save,
+  LogOut,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -102,6 +104,7 @@ export default function TherapistDashboard() {
   const supabase = useSupabaseClient();
   const user = useUser();
   const session = useSession();
+  const router = useRouter();
 
   /* ── demo recent-patient list ──  */
   const recentPatients = [
@@ -348,6 +351,15 @@ export default function TherapistDashboard() {
     setUnreadCount((prev) => Math.max(0, prev - 1));
   };
 
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      router.push('/login');
+    } catch (err: any) {
+      console.error('Error signing out:', err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -571,8 +583,21 @@ export default function TherapistDashboard() {
             <Button variant="ghost" size="sm" className="text-indigo-600 p-2">
               <Bell className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-indigo-600 p-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-indigo-600 p-2"
+              onClick={() => router.push('/dashboard/settings')}
+            >
               <Settings className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600 border-red-200 hover:bg-red-50"
+              onClick={handleSignOut}
+            >
+              Sign Out
             </Button>
             <Avatar className="h-10 w-10">
               <AvatarImage src={therapistProfile.avatar_url} />
@@ -644,7 +669,7 @@ export default function TherapistDashboard() {
           onValueChange={setActiveTab}
           className="w-full max-w-7xl mx-auto pt-4 lg:pt-8"
         >
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 rounded-xl bg-white/70 backdrop-blur p-1 h-12 lg:h-14">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 rounded-xl bg-white/70 backdrop-blur p-1 h-12 lg:h-14">
             <TabsTrigger value="overview" className="rounded-lg text-sm lg:text-base font-medium">Overview</TabsTrigger>
             <TabsTrigger value="appointments" className="rounded-lg text-sm lg:text-base font-medium">Appointments</TabsTrigger>
             <TabsTrigger value="patients" className="rounded-lg text-sm lg:text-base font-medium">Patients</TabsTrigger>
@@ -657,7 +682,7 @@ export default function TherapistDashboard() {
                 <span className="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{unreadCount}</span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-lg text-sm lg:text-base font-medium">Settings</TabsTrigger>
+            {/* <TabsTrigger value="settings" className="rounded-lg text-sm lg:text-base font-medium">Settings</TabsTrigger> */}
           </TabsList>
 
           {/* ── Overview tab ── */}
@@ -1107,13 +1132,7 @@ export default function TherapistDashboard() {
               text="Insights into your practice outcomes."
             />
           </TabsContent>
-          <TabsContent value="settings">
-            <PlaceholderCard
-              icon={Settings}
-              title="Settings"
-              text="Manage your account settings."
-            />
-          </TabsContent>
+
         </Tabs>
       </main>
 

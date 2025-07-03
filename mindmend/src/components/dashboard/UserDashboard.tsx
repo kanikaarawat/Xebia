@@ -608,7 +608,7 @@ export default function UserDashboard() {
           onValueChange={setActiveTab}
           className="w-full max-w-7xl mx-auto pt-4 lg:pt-8"
         >
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 rounded-xl bg-white/70 backdrop-blur p-1 h-12 lg:h-14">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 rounded-xl bg-white/70 backdrop-blur p-1 h-12 lg:h-14">
             <TabsTrigger value="overview" className="rounded-lg text-sm lg:text-base font-medium">Overview</TabsTrigger>
             <TabsTrigger value="appointments" className="rounded-lg text-sm lg:text-base font-medium">Appointments</TabsTrigger>
             <TabsTrigger value="therapists" className="rounded-lg text-sm lg:text-base font-medium">Find Therapists</TabsTrigger>
@@ -621,7 +621,7 @@ export default function UserDashboard() {
                 <span className="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{unreadCount}</span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-lg text-sm lg:text-base font-medium">Settings</TabsTrigger>
+            {/* <TabsTrigger value="settings" className="rounded-lg text-sm lg:text-base font-medium">Settings</TabsTrigger> */}
           </TabsList>
 
           {/* ── Overview tab ── */}

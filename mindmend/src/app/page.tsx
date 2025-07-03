@@ -1,6 +1,7 @@
 'use client';
 
 import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Heart, Users, Clock, BookOpen, Shield, ArrowRight, Star, CheckCircle } from 'lucide-react';
 
@@ -8,6 +9,7 @@ export default function Home() {
   const user = useUser();
   const session = useSession();
   const supabase = useSupabaseClient();
+  const router = useRouter();
 
   if (session === undefined) {
     return (
@@ -18,7 +20,13 @@ export default function Home() {
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+      // Navigate to login page after sign out
+      router.push('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
@@ -230,7 +238,7 @@ export default function Home() {
             Join thousands of users who have transformed their mental health with MindMend
           </p>
           <Link
-            href="/register"
+            href="/signup"
             className="inline-flex items-center px-8 py-4 border-2 border-white text-lg font-medium rounded-xl text-white bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             Get Started Today

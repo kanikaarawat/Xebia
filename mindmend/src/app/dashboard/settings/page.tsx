@@ -92,6 +92,9 @@ export default function SettingsPage() {
     timezone: 'UTC',
   });
   
+  // Track if form has been modified
+  const [isFormModified, setIsFormModified] = useState(false);
+  
   // Notification settings
   const [notifications, setNotifications] = useState({
     email_notifications: true,
@@ -157,33 +160,66 @@ export default function SettingsPage() {
   }, [user, supabase, router]);
 
   const handleProfileUpdate = async () => {
-    if (!user) return;
+    if (!user) {
+      setError('User not authenticated');
+      return;
+    }
+    
+    // Validate required fields
+    if (!formData.first_name.trim() || !formData.last_name.trim()) {
+      setError('First name and last name are required');
+      return;
+    }
     
     try {
       setSaving(true);
       setError(null);
+      setSuccess(null);
       
-      const { error: updateError } = await supabase
+      const updateData: any = {
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        bio: formData.bio.trim(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Only include phone and timezone if they exist in the database
+      if (formData.phone.trim()) {
+        updateData.phone = formData.phone.trim();
+      }
+      if (formData.timezone) {
+        updateData.timezone = formData.timezone;
+      }
+
+      const { data, error: updateError } = await supabase
         .from('profiles')
-        .update({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          bio: formData.bio,
-          phone: formData.phone,
-          timezone: formData.timezone,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+        .update(updateData)
+        .eq('id', user.id)
+        .select()
+        .single();
 
       if (updateError) {
+        console.error('Supabase update error:', updateError);
         throw updateError;
       }
 
-      setSuccess('Profile updated successfully!');
-      setTimeout(() => setSuccess(null), 3000);
+      if (data) {
+        // Update local state with the new data
+        setUserProfile(data);
+        setSuccess('Profile updated successfully!');
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        throw new Error('No data returned from update');
+      }
     } catch (err: any) {
       console.error('Error updating profile:', err);
-      setError('Failed to update profile');
+      if (err.code === 'PGRST116') {
+        setError('Profile not found. Please refresh the page and try again.');
+      } else if (err.message?.includes('RLS')) {
+        setError('Permission denied. Please check your account status.');
+      } else {
+        setError(`Failed to update profile: ${err.message || 'Unknown error'}`);
+      }
     } finally {
       setSaving(false);
     }
@@ -274,6 +310,28 @@ export default function SettingsPage() {
   const getInitials = () => {
     if (!userProfile) return 'U';
     return `${userProfile.first_name?.[0] || ''}${userProfile.last_name?.[0] || ''}`.toUpperCase();
+  };
+
+  // Debug function to check profile data
+  const debugProfile = async () => {
+    if (!user) return;
+    
+    try {
+      console.log('Current user:', user);
+      console.log('Current form data:', formData);
+      console.log('Current user profile:', userProfile);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      console.log('Database profile:', data);
+      console.log('Database error:', error);
+    } catch (err) {
+      console.error('Debug error:', err);
+    }
   };
 
   if (loading) {
@@ -381,7 +439,10 @@ export default function SettingsPage() {
                     <Input
                       id="first_name"
                       value={formData.first_name}
-                      onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, first_name: e.target.value });
+                        setIsFormModified(true);
+                      }}
                       placeholder="Enter your first name"
                     />
                   </div>
@@ -391,7 +452,10 @@ export default function SettingsPage() {
                     <Input
                       id="last_name"
                       value={formData.last_name}
-                      onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, last_name: e.target.value });
+                        setIsFormModified(true);
+                      }}
                       placeholder="Enter your last name"
                     />
                   </div>
@@ -401,7 +465,10 @@ export default function SettingsPage() {
                     <Input
                       id="phone"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, phone: e.target.value });
+                        setIsFormModified(true);
+                      }}
                       placeholder="Enter your phone number"
                     />
                   </div>
@@ -410,7 +477,10 @@ export default function SettingsPage() {
                     <Label htmlFor="timezone">Timezone</Label>
                     <Select
                       value={formData.timezone}
-                      onValueChange={(value) => setFormData({ ...formData, timezone: value })}
+                      onValueChange={(value) => {
+                        setFormData({ ...formData, timezone: value });
+                        setIsFormModified(true);
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select timezone" />
@@ -434,16 +504,26 @@ export default function SettingsPage() {
                   <Textarea
                     id="bio"
                     value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, bio: e.target.value });
+                      setIsFormModified(true);
+                    }}
                     placeholder="Tell us about yourself..."
                     rows={4}
                   />
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-between items-center">
+                  <Button
+                    variant="outline"
+                    onClick={debugProfile}
+                    className="text-slate-600 border-slate-200"
+                  >
+                    Debug Profile
+                  </Button>
                   <Button
                     onClick={handleProfileUpdate}
-                    disabled={saving}
+                    disabled={saving || !formData.first_name.trim() || !formData.last_name.trim()}
                     className="bg-indigo-600 hover:bg-indigo-700"
                   >
                     <Save className="w-4 h-4 mr-2" />
