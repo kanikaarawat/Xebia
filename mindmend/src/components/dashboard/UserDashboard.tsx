@@ -702,33 +702,33 @@ export default function UserDashboard() {
                       <div className="text-center text-red-600">{moodError}</div>
                     ) : (
                       <>
-                        <div className="flex items-end justify-between h-32 lg:h-40 space-x-2">
+                    <div className="flex items-end justify-between h-32 lg:h-40 space-x-2">
                           {moodData.map((data, index) => {
                             const maxHeight = 120; // 120px max height
                             const height = typeof data.mood === 'number' ? (data.mood / 5) * maxHeight : 20;
                             const minHeight = typeof data.mood === 'number' ? Math.max(height, 20) : 20;
                             console.log(`Bar ${index} (${data.day}): mood=${data.mood}, height=${height}px, minHeight=${minHeight}px`);
                             return (
-                              <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
-                                <div
+                        <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
+                          <div
                                   className={`w-full rounded-t-lg transition-all duration-300 border-2 border-purple-500 ${typeof data.mood === 'number' ? 'bg-gradient-to-t from-indigo-400 to-pink-400' : 'bg-slate-200'}`}
                                   style={{ 
                                     height: `${minHeight}px`,
                                     backgroundColor: typeof data.mood === 'number' ? '#8b5cf6' : '#e2e8f0'
                                   }}
-                                />
-                                <span className="text-xs lg:text-sm text-slate-600 font-medium">{data.day}</span>
-                              </div>
+                          />
+                          <span className="text-xs lg:text-sm text-slate-600 font-medium">{data.day}</span>
+                        </div>
                             );
                           })}
-                        </div>
+                    </div>
                     
-                        <div className="mt-4 lg:mt-6 flex items-center justify-between text-xs lg:text-sm text-slate-600">
+                    <div className="mt-4 lg:mt-6 flex items-center justify-between text-xs lg:text-sm text-slate-600">
                           <span className="font-medium">
                             Average: {averageMood !== null ? averageMood.toFixed(2) : '--'}/5
                           </span>
                           {/* Placeholder for trend badge */}
-                        </div>
+                    </div>
                       </>
                     )}
                   </CardContent>
@@ -742,7 +742,7 @@ export default function UserDashboard() {
                   <CardHeader className="pb-4 lg:pb-6">
                     <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
                       <div className="p-2 bg-indigo-100 rounded-lg">
-                        <Calendar className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                      <Calendar className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
                       </div>
                       Upcoming Sessions
                     </CardTitle>
@@ -941,23 +941,23 @@ export default function UserDashboard() {
                     ) : moodError ? (
                       <div className="text-center text-red-600">{moodError}</div>
                     ) : (
-                      <div className="flex items-end justify-between h-32 lg:h-48 space-x-2">
+                    <div className="flex items-end justify-between h-32 lg:h-48 space-x-2">
                         {moodData.map((data, index) => {
                           const maxHeight = 120; // 120px max height
                           const height = typeof data.mood === 'number' ? (data.mood / 5) * maxHeight : 20;
                           const minHeight = typeof data.mood === 'number' ? Math.max(height, 20) : 20;
                           console.log(`Bar ${index} (${data.day}): mood=${data.mood}, height=${height}px, minHeight=${minHeight}px`);
                           return (
-                            <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
-                              <div
+                        <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
+                          <div
                                 className={`w-full rounded-t-lg transition-all duration-300 ${typeof data.mood === 'number' ? 'bg-gradient-to-t from-indigo-400 to-pink-400' : 'bg-slate-200'}`}
                                 style={{ height: `${minHeight}px` }}
-                              />
-                              <span className="text-xs lg:text-sm text-slate-600 font-medium">{data.day}</span>
-                            </div>
+                          />
+                          <span className="text-xs lg:text-sm text-slate-600 font-medium">{data.day}</span>
+                        </div>
                           );
                         })}
-                      </div>
+                    </div>
                     )}
                   </div>
 
@@ -1103,14 +1103,14 @@ export default function UserDashboard() {
             </div>
 
             {/* Achievements Section */}
-            <Card className="border-indigo-100 bg-white/80 shadow-md">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
-                  <Star className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
+              <Card className="border-indigo-100 bg-white/80 shadow-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
+                    <Star className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
                   Achievements & Milestones
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                 <div className="grid gap-4 lg:gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {/* First Session Achievement */}
                   <div className={`flex items-center space-x-3 p-3 rounded-lg ${
@@ -1119,16 +1119,16 @@ export default function UserDashboard() {
                     <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
                       (completedCount || 0) >= 1 ? 'text-green-600' : 'text-slate-400'
                     }`} />
-                    <div>
+                      <div>
                       <p className={`font-medium text-sm lg:text-base ${
                         (completedCount || 0) >= 1 ? 'text-green-800' : 'text-slate-600'
                       }`}>First Session</p>
                       <p className={`text-xs lg:text-sm ${
                         (completedCount || 0) >= 1 ? 'text-green-600' : 'text-slate-500'
                       }`}>Complete your first therapy session</p>
+                      </div>
                     </div>
-                  </div>
-                  
+                    
                   {/* Mood Tracker Achievement */}
                   <div className={`flex items-center space-x-3 p-3 rounded-lg ${
                     moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50 border border-slate-200'
@@ -1136,16 +1136,16 @@ export default function UserDashboard() {
                     <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
                       moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'text-blue-600' : 'text-slate-400'
                     }`} />
-                    <div>
+                      <div>
                       <p className={`font-medium text-sm lg:text-base ${
                         moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'text-blue-800' : 'text-slate-600'
                       }`}>Mood Tracker</p>
                       <p className={`text-xs lg:text-sm ${
                         moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'text-blue-600' : 'text-slate-500'
                       }`}>Log mood for 7 consecutive days</p>
+                      </div>
                     </div>
-                  </div>
-                  
+                    
                   {/* Consistent Achievement */}
                   <div className={`flex items-center space-x-3 p-3 rounded-lg ${
                     (completedCount || 0) >= 3 ? 'bg-purple-50 border border-purple-200' : 'bg-slate-50 border border-slate-200'
@@ -1153,7 +1153,7 @@ export default function UserDashboard() {
                     <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
                       (completedCount || 0) >= 3 ? 'text-purple-600' : 'text-slate-400'
                     }`} />
-                    <div>
+                      <div>
                       <p className={`font-medium text-sm lg:text-base ${
                         (completedCount || 0) >= 3 ? 'text-purple-800' : 'text-slate-600'
                       }`}>Consistent</p>
@@ -1211,11 +1211,11 @@ export default function UserDashboard() {
                       <p className={`text-xs lg:text-sm ${
                         moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'text-pink-600' : 'text-slate-500'
                       }`}>Track mood & attend sessions</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
             {/* Insights & Recommendations */}
             <Card className="border-indigo-100 bg-white/80 shadow-md">
@@ -1255,7 +1255,7 @@ export default function UserDashboard() {
                         </li>
                       )}
                     </ul>
-                  </div>
+            </div>
                   
                   <div className="space-y-3 lg:space-y-4">
                     <h4 className="font-semibold text-indigo-800 text-sm lg:text-base">Recommendations</h4>

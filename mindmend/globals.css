@@ -1,3 +1,43 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Webkit */
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 2.5s linear infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-float {
+  animation: floatBadge 2.2s ease-in-out infinite alternate;
+}
+@keyframes floatBadge {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-6px) scale(1.08); }
+}
+@keyframes borderGlow {
+  0% { box-shadow: 0 0 0 0 #c7d2fe; }
+  50% { box-shadow: 0 0 16px 4px #fbcfe8, 0 0 32px 8px #a5b4fc; }
+  100% { box-shadow: 0 0 0 0 #c7d2fe; }
+}
+.animate-borderGlow {
+  animation: borderGlow 2.5s ease-in-out infinite;
+}
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-bounce-slow {
+  animation: bounce-slow 2.2s infinite;
+}
