@@ -47,6 +47,7 @@ import UserSessionStats from "@/components/booking/UserSessionStats";
 import { useSessionCounts } from "@/lib/hooks/useSessionCounts";
 import { Textarea } from "@/components/ui/textarea";
 import { format, subDays } from 'date-fns';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 
 interface UserProfile {
   id: string;
@@ -144,6 +145,10 @@ export default function UserDashboard() {
   const [moodLoading, setMoodLoading] = useState(false);
   const [moodError, setMoodError] = useState<string | null>(null);
   const [averageMood, setAverageMood] = useState<number | null>(null);
+
+  // Notification state
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Fetch mood logs for the last 7 days
   useEffect(() => {
@@ -376,6 +381,41 @@ export default function UserDashboard() {
     return therapist?.specialization || 'General Therapy';
   };
 
+  // Fetch notifications
+  useEffect(() => {
+    if (!user) return;
+    const fetchNotifications = async () => {
+      const res = await fetch(`/api/notifications?user_id=${user.id}`);
+      if (res.ok) {
+        const { notifications } = await res.json();
+        setNotifications(notifications);
+        setUnreadCount(notifications.filter((n: any) => !n.read).length);
+      }
+    };
+    fetchNotifications();
+  }, [user]);
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+    await fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: user.id, mark_all: true })
+    });
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
+  };
+
+  const markOneAsRead = async (id: string) => {
+    await fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notification_id: id })
+    });
+    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+  };
+
   if (profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -511,21 +551,22 @@ export default function UserDashboard() {
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="space-y-6 lg:space-y-8"
+          className="w-full max-w-7xl mx-auto pt-4 lg:pt-8"
         >
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 rounded-xl bg-white/70 backdrop-blur p-1 h-12 lg:h-14">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 rounded-xl bg-white/70 backdrop-blur p-1 h-12 lg:h-14">
             <TabsTrigger value="overview" className="rounded-lg text-sm lg:text-base font-medium">Overview</TabsTrigger>
             <TabsTrigger value="appointments" className="rounded-lg text-sm lg:text-base font-medium">Appointments</TabsTrigger>
             <TabsTrigger value="therapists" className="rounded-lg text-sm lg:text-base font-medium">Find Therapists</TabsTrigger>
             <TabsTrigger value="mood" className="rounded-lg text-sm lg:text-base font-medium">Mood Tracking</TabsTrigger>
             <TabsTrigger value="progress" className="rounded-lg text-sm lg:text-base font-medium">Progress</TabsTrigger>
-            <TabsTrigger 
-              value="settings" 
-              className="rounded-lg text-sm lg:text-base font-medium"
-              onClick={() => router.push('/dashboard/settings')}
-            >
-              Settings
+            <TabsTrigger value="notifications" className="rounded-lg text-sm lg:text-base font-medium flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              Notifications
+              {unreadCount > 0 && (
+                <span className="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{unreadCount}</span>
+              )}
             </TabsTrigger>
+            <TabsTrigger value="settings" className="rounded-lg text-sm lg:text-base font-medium">Settings</TabsTrigger>
           </TabsList>
 
           {/* ── Overview tab ── */}
@@ -1288,8 +1329,36 @@ export default function UserDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
-        </Tabs>
 
+          {/* ── Notifications tab ── */}
+          <TabsContent value="notifications" className="space-y-6 lg:space-y-8">
+            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-indigo-800 flex items-center gap-2">
+                  <Bell className="h-5 w-5" /> Notifications
+                </h2>
+                {unreadCount > 0 && (
+                  <button onClick={markAllAsRead} className="text-xs text-indigo-600 hover:underline">Mark all as read</button>
+                )}
+              </div>
+              <div className="divide-y">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-slate-500 text-center">No notifications</div>
+                ) : notifications.map((n) => (
+                  <div
+                    key={n.id}
+                    className={`py-4 px-2 cursor-pointer ${n.read ? 'bg-white' : 'bg-indigo-50'} hover:bg-indigo-100 rounded`}
+                    onClick={() => markOneAsRead(n.id)}
+                  >
+                    <div className="font-medium text-slate-800 text-sm">{n.title}</div>
+                    <div className="text-slate-600 text-xs mt-1">{n.message}</div>
+                    <div className="text-slate-400 text-xs mt-1">{new Date(n.created_at).toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

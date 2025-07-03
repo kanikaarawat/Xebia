@@ -109,6 +109,48 @@ export async function POST(req: NextRequest) {
       // Don't fail the cancellation if unavailability removal fails
     }
 
+    // --- Notification Logic ---
+    // Fetch patient and therapist profiles
+    const { data: patientProfile } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name')
+      .eq('id', currentAppointment.patient_id)
+      .single();
+    const { data: therapistProfile } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name')
+      .eq('id', currentAppointment.therapist_id)
+      .single();
+
+    // Prepare notification payloads
+    const appointmentTime = new Date(currentAppointment.scheduled_at).toLocaleString();
+    const meta = { appointment_id, scheduled_at: currentAppointment.scheduled_at };
+
+    // Notify patient
+    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: currentAppointment.patient_id,
+        type: 'appointment_cancelled',
+        title: 'Appointment Cancelled',
+        message: `Your appointment scheduled for ${appointmentTime} was cancelled. ${reason ? 'Reason: ' + reason : ''}`,
+        meta
+      })
+    });
+    // Notify therapist
+    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: currentAppointment.therapist_id,
+        type: 'appointment_cancelled',
+        title: 'Appointment Cancelled',
+        message: `An appointment with patient ${patientProfile?.first_name || ''} ${patientProfile?.last_name || ''} scheduled for ${appointmentTime} was cancelled. ${reason ? 'Reason: ' + reason : ''}`,
+        meta
+      })
+    });
+
     return NextResponse.json({ 
       appointment: cancelledAppointment,
       message: "Appointment cancelled successfully",
