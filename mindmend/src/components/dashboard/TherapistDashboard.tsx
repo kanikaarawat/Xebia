@@ -50,6 +50,16 @@ interface Appointment {
   scheduled_at: string;
   notes: string;
   status: string;
+  patient?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    avatar_url?: string;
+  };
+  type: string;
+  duration: number;
+  created_at: string;
 }
 
 interface TherapistProfile {
@@ -269,16 +279,20 @@ export default function TherapistDashboard() {
           setTherapistProfile(combinedData);
         }
 
-        // Fetch appointments
-        const { data: appointmentsData } = await supabase
-          .from("appointments")
-          .select("*")
-          .eq("therapist_id", user.id)
-          .order("scheduled_at", { ascending: true });
-
-        if (appointmentsData) {
-          console.log('✅ Appointments loaded:', appointmentsData.length);
-          setAppointments(appointmentsData);
+        // Fetch appointments ONLY from the therapist appointments API (absolute URL for clarity)
+        try {
+          const res = await fetch(`/api/therapists/appointments?therapist_id=${user.id}`);
+          if (res.ok) {
+            const { appointments: appointmentsData } = await res.json();
+            if (appointmentsData) {
+              console.log('✅ Appointments loaded:', appointmentsData.length);
+              setAppointments(appointmentsData);
+            }
+          } else {
+            console.error('❌ Failed to fetch appointments from therapist appointments API');
+          }
+        } catch (err) {
+          console.error('❌ Error fetching appointments:', err);
         }
       } catch (error) {
         console.error('❌ Unexpected error in fetchTherapistData:', error);
@@ -303,9 +317,9 @@ export default function TherapistDashboard() {
   useEffect(() => {
     if (!user) return;
     const fetchNotifications = async () => {
-      const res = await fetch(`/api/notifications?user_id=${user.id}`);
-      if (res.ok) {
-        const { notifications } = await res.json();
+      const notifRes = await fetch(`/api/notifications?user_id=${user.id}`);
+      if (notifRes.ok) {
+        const { notifications } = await notifRes.json();
         setNotifications(notifications);
         setUnreadCount(notifications.filter((n: any) => !n.read).length);
       }
@@ -480,7 +494,26 @@ export default function TherapistDashboard() {
     }
   };
 
-  /* ---------- UI ---------- */
+  // Helper to format date/time
+  const formatDateTime = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  };
+
+  // Status badge color
+  const statusBadge = (status: string) => {
+    switch (status) {
+      case 'upcoming': return <Badge className="bg-blue-100 text-blue-700">Upcoming</Badge>;
+      case 'completed': return <Badge className="bg-green-100 text-green-700">Completed</Badge>;
+      case 'cancelled': return <Badge className="bg-red-100 text-red-700">Cancelled</Badge>;
+      default: return <Badge className="bg-slate-100 text-slate-600">{status}</Badge>;
+    }
+  };
+
+  // Debug: log appointments state
+  console.log('Appointments in state:', appointments);
+
+  // Appointments list UI
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Notification Bell */}
@@ -670,7 +703,7 @@ export default function TherapistDashboard() {
                   ))}
                 </div>
 
-                {/* Schedule */}
+                {/* Schedule - only show today's appointments */}
                 <Card className="border-indigo-100 bg-white/80 shadow-md">
                   <CardHeader className="pb-6">
                     <CardTitle className="flex items-center gap-3 text-indigo-800 text-xl">
@@ -679,53 +712,73 @@ export default function TherapistDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {appointments.length > 0 ? (
-                      appointments.map((a) => (
-                        <div
-                          key={a.id}
-                          className="flex items-center justify-between rounded-xl bg-slate-50 p-6 hover:bg-slate-100 transition-colors"
-                        >
-                          <div className="space-y-2">
-                            <p className="font-semibold text-indigo-900 text-lg">
-                              {new Date(a.scheduled_at).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </p>
-                            <p className="text-slate-600 whitespace-pre-line">{a.notes}</p>
-                            {/* Show rejection reason if present in notes */}
-                            {a.status === 'rejected' && a.notes && a.notes.includes('Rejection reason:') && (
-                              <p className="text-red-600 text-sm font-semibold">
-                                {a.notes.split('Rejection reason:')[1].trim()}
+                    {(() => {
+                      const today = new Date();
+                      const todaysAppointments = appointments.filter(a => {
+                        const apptDate = new Date(a.scheduled_at);
+                        return apptDate.getFullYear() === today.getFullYear() &&
+                          apptDate.getMonth() === today.getMonth() &&
+                          apptDate.getDate() === today.getDate();
+                      });
+                      return todaysAppointments.length > 0 ? (
+                        todaysAppointments.map((a) => (
+                          <div
+                            key={a.id}
+                            className="flex items-center justify-between rounded-xl bg-slate-50 p-6 hover:bg-slate-100 transition-colors"
+                          >
+                            <div className="space-y-2">
+                              <p className="font-semibold text-indigo-900 text-lg">
+                                {new Date(a.scheduled_at).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
                               </p>
-                            )}
-                            <p className="text-sm text-slate-500">
-                              Patient #{a.patient_id.slice(0, 6)}
-                            </p>
+                              <p className="text-slate-800 font-medium">
+                                {a.patient?.first_name} {a.patient?.last_name}
+                              </p>
+                              <p className="text-slate-500 text-xs">{a.patient?.email}</p>
+                              <p className="text-slate-600 whitespace-pre-line">{a.notes}</p>
+                              {/* Show rejection reason if present in notes */}
+                              {a.status === 'rejected' && a.notes && a.notes.includes('Rejection reason:') && (
+                                <p className="text-red-600 text-sm font-semibold">
+                                  {a.notes.split('Rejection reason:')[1].trim()}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-3">
+                              <Badge className={`px-3 py-1 ${a.status === 'completed' ? 'bg-green-100 text-green-700' : a.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                                {a.status === 'completed' ? 'Completed' : a.status === 'rejected' ? 'Rejected' : 'Upcoming'}
+                              </Badge>
+                              {/* VC Button for upcoming video calls */}
+                              {a.status === 'upcoming' && a.type?.toLowerCase() === 'video call' && (
+                                <Button
+                                  className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-4 py-2 rounded-lg font-semibold shadow hover:from-indigo-600 hover:to-pink-600 transition-all"
+                                  onClick={() => alert('Joining video call for appointment ' + a.id)}
+                                >
+                                  <Video className="w-4 h-4 mr-2" />
+                                  Join Video Call
+                                </Button>
+                              )}
+                              {/* Show Reject button for upcoming appointments only */}
+                              {a.status === 'upcoming' && (
+                                <Button
+                                  variant="destructive"
+                                  onClick={() => handleOpenRejectDialog(a.id)}
+                                >
+                                  Reject
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <Badge className={`px-3 py-1 ${a.status === 'completed' ? 'bg-green-100 text-green-700' : a.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                              {a.status === 'completed' ? 'Completed' : a.status === 'rejected' ? 'Rejected' : 'Upcoming'}
-                            </Badge>
-                            {/* Show Reject button for upcoming appointments only */}
-                            {a.status === 'upcoming' && (
-                              <Button
-                                variant="destructive"
-                                onClick={() => handleOpenRejectDialog(a.id)}
-                              >
-                                Reject
-                              </Button>
-                            )}
-                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-12">
+                          <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                          <p className="text-slate-600 text-lg">No appointments scheduled for today</p>
+                          <p className="text-slate-500 text-sm mt-2">You're all caught up!</p>
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-12">
-                        <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                        <p className="text-slate-600 text-lg">No appointments scheduled for today</p>
-                        <p className="text-slate-500 text-sm mt-2">You're all caught up!</p>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </div>
@@ -804,11 +857,44 @@ export default function TherapistDashboard() {
 
           {/* Additional tabs (place-holders) */}
           <TabsContent value="appointments">
-            <PlaceholderCard
-              icon={Calendar}
-              title="Appointment Management"
-              text="Manage upcoming and past sessions."
-            />
+            <section className="mt-4">
+              <h2 className="text-xl font-bold mb-4 text-indigo-700">All Appointments</h2>
+              {appointments.length === 0 ? (
+                <div className="p-8 text-center text-slate-500 bg-white/60 rounded-xl shadow">No appointments found.</div>
+              ) : (
+                <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                  {appointments.map((appt) => {
+                    const dateObj = new Date(appt.scheduled_at);
+                    const date = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const time = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                    const isUpcoming = new Date(appt.scheduled_at) > new Date();
+                    return (
+                      <Card key={appt.id} className={`flex items-center gap-4 p-4 ${isUpcoming ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200' : 'bg-gradient-to-r from-slate-50 to-gray-50 border-slate-200'} border shadow`}>
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage src={appt.patient?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-indigo-200 text-indigo-800 font-bold">
+                            {appt.patient?.first_name?.[0] || ''}{appt.patient?.last_name?.[0] || ''}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-base text-indigo-900 truncate">{appt.patient?.first_name} {appt.patient?.last_name}</div>
+                          <div className="text-slate-500 text-xs truncate">{appt.patient?.email}</div>
+                          <div className="flex flex-wrap gap-2 mt-1 items-center text-xs">
+                            <span className="text-slate-500">{date} {time}</span>
+                            <Badge className="bg-pink-100 text-pink-700">{appt.type}</Badge>
+                            <Badge className="bg-blue-50 text-blue-600">{appt.duration} min</Badge>
+                            {statusBadge(appt.status)}
+                          </div>
+                          {appt.status === 'cancelled' && appt.notes && (
+                            <div className="text-red-500 text-xs mt-1">{appt.notes}</div>
+                          )}
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
           </TabsContent>
           <TabsContent value="patients">
             <PlaceholderCard
