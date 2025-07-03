@@ -475,6 +475,12 @@ export default function AppointmentsList({
                           <p className="text-xs text-slate-600 italic max-w-full truncate">
                             "{appointment.notes}"
                           </p>
+                          {/* Show rejection reason if present in notes */}
+                          {appointment.status === 'rejected' && appointment.notes && appointment.notes.includes('Rejection reason:') && (
+                            <p className="text-red-600 text-sm font-semibold">
+                              {appointment.notes.split('Rejection reason:')[1].trim()}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>

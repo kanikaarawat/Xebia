@@ -40,6 +40,8 @@ import {
   Trash2,
   Save,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 
 /* ---------- Types ---------- */
 interface Appointment {
@@ -80,6 +82,13 @@ export default function TherapistDashboard() {
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   const [savingAvailability, setSavingAvailability] = useState(false);
   const [now, setNow] = useState<number | null>(null);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectingAppointmentId, setRejectingAppointmentId] = useState<string | null>(null);
+  const [rejectError, setRejectError] = useState<string | null>(null);
+  const [rejectLoading, setRejectLoading] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const supabase = useSupabaseClient();
   const user = useUser();
   const session = useSession();
@@ -291,6 +300,40 @@ export default function TherapistDashboard() {
     setNow(Date.now());
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    const fetchNotifications = async () => {
+      const res = await fetch(`/api/notifications?user_id=${user.id}`);
+      if (res.ok) {
+        const { notifications } = await res.json();
+        setNotifications(notifications);
+        setUnreadCount(notifications.filter((n: any) => !n.read).length);
+      }
+    };
+    fetchNotifications();
+  }, [user]);
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+    await fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: user.id, mark_all: true })
+    });
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
+  };
+
+  const markOneAsRead = async (id: string) => {
+    await fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notification_id: id })
+    });
+    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -389,9 +432,94 @@ export default function TherapistDashboard() {
     );
   };
 
+  // Handler to open dialog
+  const handleOpenRejectDialog = (appointmentId: string) => {
+    setRejectingAppointmentId(appointmentId);
+    setRejectReason('');
+    setRejectError(null);
+    setShowRejectDialog(true);
+  };
+
+  // Handler to submit rejection
+  const handleRejectAppointment = async () => {
+    if (!rejectReason.trim()) {
+      setRejectError('Reason is required.');
+      return;
+    }
+    setRejectLoading(true);
+    setRejectError(null);
+    try {
+      const res = await fetch('/api/appointments/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appointment_id: rejectingAppointmentId,
+          reason: rejectReason,
+          therapist_id: therapistProfile?.id,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setRejectError(data.error || 'Failed to reject appointment.');
+        setRejectLoading(false);
+        return;
+      }
+      // Refresh appointments
+      setAppointments((prev) =>
+        prev.map((a) =>
+          a.id === rejectingAppointmentId
+            ? { ...a, status: 'rejected', notes: a.notes ? `${a.notes}\n\nRejection reason: ${rejectReason}` : `Rejection reason: ${rejectReason}` }
+            : a
+        )
+      );
+      setShowRejectDialog(false);
+    } catch (err: any) {
+      setRejectError(err.message || 'Failed to reject appointment.');
+    } finally {
+      setRejectLoading(false);
+    }
+  };
+
   /* ---------- UI ---------- */
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      {/* Notification Bell */}
+      <div className="fixed top-6 right-8 z-50">
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="relative p-2 rounded-full bg-white shadow hover:bg-slate-100">
+              <Bell className="h-6 w-6 text-indigo-600" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{unreadCount}</span>
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0">
+            <div className="flex items-center justify-between px-4 py-2 border-b">
+              <span className="font-semibold text-indigo-800">Notifications</span>
+              {unreadCount > 0 && (
+                <button onClick={markAllAsRead} className="text-xs text-indigo-600 hover:underline">Mark all as read</button>
+              )}
+            </div>
+            <div className="max-h-80 overflow-y-auto divide-y">
+              {notifications.length === 0 ? (
+                <div className="p-4 text-slate-500 text-center">No notifications</div>
+              ) : notifications.map((n) => (
+                <div
+                  key={n.id}
+                  className={`px-4 py-3 cursor-pointer ${n.read ? 'bg-white' : 'bg-indigo-50'} hover:bg-indigo-100`}
+                  onClick={() => markOneAsRead(n.id)}
+                >
+                  <div className="font-medium text-slate-800 text-sm">{n.title}</div>
+                  <div className="text-slate-600 text-xs mt-1">{n.message}</div>
+                  <div className="text-slate-400 text-xs mt-1">{new Date(n.created_at).toLocaleString()}</div>
+                </div>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-indigo-100">
         <div className="container mx-auto flex items-center justify-between px-8 py-5">
@@ -481,14 +609,22 @@ export default function TherapistDashboard() {
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="space-y-8"
+          className="w-full max-w-7xl mx-auto pt-4 lg:pt-8"
         >
-          <TabsList className="grid w-full grid-cols-5 rounded-xl bg-white/70 backdrop-blur p-1 h-14">
-            <TabsTrigger value="overview" className="rounded-lg text-base font-medium">Overview</TabsTrigger>
-            <TabsTrigger value="appointments" className="rounded-lg text-base font-medium">Appointments</TabsTrigger>
-            <TabsTrigger value="patients" className="rounded-lg text-base font-medium">Patients</TabsTrigger>
-            <TabsTrigger value="availability" className="rounded-lg text-base font-medium">Availability</TabsTrigger>
-            <TabsTrigger value="analytics" className="rounded-lg text-base font-medium">Analytics</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 rounded-xl bg-white/70 backdrop-blur p-1 h-12 lg:h-14">
+            <TabsTrigger value="overview" className="rounded-lg text-sm lg:text-base font-medium">Overview</TabsTrigger>
+            <TabsTrigger value="appointments" className="rounded-lg text-sm lg:text-base font-medium">Appointments</TabsTrigger>
+            <TabsTrigger value="patients" className="rounded-lg text-sm lg:text-base font-medium">Patients</TabsTrigger>
+            <TabsTrigger value="availability" className="rounded-lg text-sm lg:text-base font-medium">Availability</TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-lg text-sm lg:text-base font-medium">Analytics</TabsTrigger>
+            <TabsTrigger value="notifications" className="rounded-lg text-sm lg:text-base font-medium flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              Notifications
+              {unreadCount > 0 && (
+                <span className="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{unreadCount}</span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="rounded-lg text-sm lg:text-base font-medium">Settings</TabsTrigger>
           </TabsList>
 
           {/* ── Overview tab ── */}
@@ -556,17 +692,30 @@ export default function TherapistDashboard() {
                                 minute: "2-digit",
                               })}
                             </p>
-                            <p className="text-slate-600">{a.notes}</p>
+                            <p className="text-slate-600 whitespace-pre-line">{a.notes}</p>
+                            {/* Show rejection reason if present in notes */}
+                            {a.status === 'rejected' && a.notes && a.notes.includes('Rejection reason:') && (
+                              <p className="text-red-600 text-sm font-semibold">
+                                {a.notes.split('Rejection reason:')[1].trim()}
+                              </p>
+                            )}
                             <p className="text-sm text-slate-500">
                               Patient #{a.patient_id.slice(0, 6)}
                             </p>
                           </div>
                           <div className="flex items-center gap-3">
-                            <Badge className="bg-indigo-100 text-indigo-700 px-3 py-1">
-                              {a.status === "completed"
-                                ? "Completed"
-                                : "Upcoming"}
+                            <Badge className={`px-3 py-1 ${a.status === 'completed' ? 'bg-green-100 text-green-700' : a.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                              {a.status === 'completed' ? 'Completed' : a.status === 'rejected' ? 'Rejected' : 'Upcoming'}
                             </Badge>
+                            {/* Show Reject button for upcoming appointments only */}
+                            {a.status === 'upcoming' && (
+                              <Button
+                                variant="destructive"
+                                onClick={() => handleOpenRejectDialog(a.id)}
+                              >
+                                Reject
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))
@@ -838,6 +987,33 @@ export default function TherapistDashboard() {
               </div>
             </div>
           </TabsContent>
+          <TabsContent value="notifications" className="space-y-6 lg:space-y-8">
+            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-indigo-800 flex items-center gap-2">
+                  <Bell className="h-5 w-5" /> Notifications
+                </h2>
+                {unreadCount > 0 && (
+                  <button onClick={markAllAsRead} className="text-xs text-indigo-600 hover:underline">Mark all as read</button>
+                )}
+              </div>
+              <div className="divide-y">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-slate-500 text-center">No notifications</div>
+                ) : notifications.map((n) => (
+                  <div
+                    key={n.id}
+                    className={`py-4 px-2 cursor-pointer ${n.read ? 'bg-white' : 'bg-indigo-50'} hover:bg-indigo-100 rounded`}
+                    onClick={() => markOneAsRead(n.id)}
+                  >
+                    <div className="font-medium text-slate-800 text-sm">{n.title}</div>
+                    <div className="text-slate-600 text-xs mt-1">{n.message}</div>
+                    <div className="text-slate-400 text-xs mt-1">{new Date(n.created_at).toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
           <TabsContent value="analytics">
             <PlaceholderCard
               icon={TrendingUp}
@@ -845,8 +1021,51 @@ export default function TherapistDashboard() {
               text="Insights into your practice outcomes."
             />
           </TabsContent>
+          <TabsContent value="settings">
+            <PlaceholderCard
+              icon={Settings}
+              title="Settings"
+              text="Manage your account settings."
+            />
+          </TabsContent>
         </Tabs>
       </main>
+
+      {/* Reject Reason Dialog */}
+      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Appointment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <label htmlFor="reject-reason" className="block text-sm font-medium text-slate-700">
+              Reason for rejection <span className="text-red-500">*</span>
+            </label>
+            <Input
+              id="reject-reason"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Enter reason..."
+              autoFocus
+            />
+            {rejectError && <p className="text-red-600 text-sm">{rejectError}</p>}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="destructive"
+              onClick={handleRejectAppointment}
+              disabled={rejectLoading}
+            >
+              {rejectLoading ? 'Rejecting...' : 'Reject Appointment'}
+            </Button>
+            <DialogClose asChild>
+              <Button variant="outline" type="button">
+                Cancel
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
