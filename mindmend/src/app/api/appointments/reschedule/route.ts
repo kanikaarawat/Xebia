@@ -12,6 +12,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { appointment_id, new_scheduled_at, new_duration, new_type, notes } = body;
 
+    // Debug log: received payload
+    console.log('Reschedule API received:', {
+      appointment_id,
+      new_scheduled_at,
+      new_duration,
+      new_type,
+      notes,
+    });
+
     // Validation
     if (!appointment_id || !new_scheduled_at) {
       return NextResponse.json(
@@ -56,28 +65,44 @@ export async function POST(req: NextRequest) {
     const newAppointmentDate = new Date(new_scheduled_at);
     const newEndTime = new Date(newAppointmentDate.getTime() + (new_duration || currentAppointment.duration) * 60000);
 
-    // Check for conflicts with other appointments
-    const { data: conflictingAppointments, error: conflictError } = await supabase
+    // Debug log: computed times
+    console.log('Reschedule API computed:', {
+      newAppointmentDate: newAppointmentDate.toISOString(),
+      newEndTime: newEndTime.toISOString(),
+    });
+
+    // Fetch all upcoming appointments for the therapist (excluding the current one)
+    const { data: allAppointments, error: conflictError } = await supabase
       .from("appointments")
       .select("id, scheduled_at, duration")
       .eq("therapist_id", currentAppointment.therapist_id)
       .eq("status", "upcoming")
-      .neq("id", appointment_id)
-      .or(`scheduled_at.lt.${newEndTime.toISOString()},scheduled_at.gte.${newAppointmentDate.toISOString()}`);
+      .neq("id", appointment_id);
 
-    if (conflictError) {
-      console.error('Error checking conflicts:', conflictError);
-      return NextResponse.json(
-        { error: "Failed to check appointment availability" },
-        { status: 500 }
-      );
-    }
+    // Debug log: all upcoming appointments
+    console.log('Reschedule API all upcoming appointments:', {
+      allAppointments,
+      conflictError,
+    });
 
-    if (conflictingAppointments && conflictingAppointments.length > 0) {
+    // Filter for true time overlaps
+    const conflicts = (allAppointments || []).filter(appt => {
+      const apptStart = new Date(appt.scheduled_at);
+      const apptEnd = new Date(apptStart.getTime() + (appt.duration || 30) * 60000);
+      // Overlap logic: startA < endB && endA > startB
+      return apptStart < newEndTime && apptEnd > newAppointmentDate;
+    });
+
+    // Debug log: filtered conflicts
+    console.log('Reschedule API filtered conflicts:', {
+      conflicts,
+    });
+
+    if (conflicts && conflicts.length > 0) {
       return NextResponse.json(
         { 
           error: "This time slot is not available. Please select a different time.",
-          conflicts: conflictingAppointments 
+          conflicts
         },
         { status: 409 }
       );

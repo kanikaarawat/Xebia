@@ -7,13 +7,21 @@ export function generateTimeSlots(start: string = "09:00", end: string = "17:00"
   
     while (hour < endHour || (hour === endHour && minute < endMinute)) {
       const startTime = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+      // Calculate end time
+      let endHourCalc = hour;
+      let endMinuteCalc = minute + interval;
+      while (endMinuteCalc >= 60) {
+        endHourCalc += 1;
+        endMinuteCalc -= 60;
+      }
+      const endTime = `${String(endHourCalc).padStart(2, "0")}:${String(endMinuteCalc).padStart(2, "0")}`;
+      slots.push({ start_time: startTime, end_time: endTime });
+      // Increment start time
       minute += interval;
-      if (minute >= 60) {
+      while (minute >= 60) {
         hour += 1;
         minute -= 60;
       }
-      const endTime = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-      slots.push({ start_time: startTime, end_time: endTime });
     }
   
     return slots;

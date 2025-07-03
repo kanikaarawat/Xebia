@@ -502,6 +502,7 @@ export default function AppointmentsList({
                           status: appointment.status || 'upcoming',
                           type: appointment.type,
                           duration: appointment.duration || 30,
+                          therapist_id: appointment.therapist_id,
                           therapist: {
                             profiles: {
                               first_name: appointment.therapist?.first_name || 'Unknown',

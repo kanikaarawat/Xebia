@@ -32,7 +32,7 @@ export async function getFreeSlotsFixed(therapist_id: string, date: string, inte
   console.log('✅ Found availability:', availability);
 
   // 2. Generate full slots
-  const possibleSlots = generateTimeSlots(availability.start_time, availability.end_time, interval);
+  const possibleSlots = generateTimeSlots(availability.start_time, availability.end_time, sessionDuration);
   console.log('⏰ Generated slots:', possibleSlots);
 
   // 3. Fetch unavailability for that date from therapist_unavailability table
