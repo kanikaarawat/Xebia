@@ -734,9 +734,9 @@ export default function TherapistDashboard() {
                                 })}
                               </p>
                               <p className="text-slate-800 font-medium">
-                                {a.patient?.first_name} {a.patient?.last_name}
+                                {a.patient ? `${a.patient.first_name} ${a.patient.last_name}` : 'Unknown Patient'}
                               </p>
-                              <p className="text-slate-500 text-xs">{a.patient?.email}</p>
+                              <p className="text-slate-500 text-xs">{a.patient?.email || 'No email available'}</p>
                               <p className="text-slate-600 whitespace-pre-line">{a.notes}</p>
                               {/* Show rejection reason if present in notes */}
                               {a.status === 'rejected' && a.notes && a.notes.includes('Rejection reason:') && (

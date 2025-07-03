@@ -146,6 +146,12 @@ export default function UserDashboard() {
   const [moodError, setMoodError] = useState<string | null>(null);
   const [averageMood, setAverageMood] = useState<number | null>(null);
 
+  // Weekly mood analysis state
+  const [weeklyAnalysis, setWeeklyAnalysis] = useState<string | null>(null);
+  const [weeklyStats, setWeeklyStats] = useState<any>(null);
+  const [weeklyLoading, setWeeklyLoading] = useState(false);
+  const [weeklyError, setWeeklyError] = useState<string | null>(null);
+
   // Notification state
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -182,6 +188,36 @@ export default function UserDashboard() {
       }
     };
     fetchMoodLogs();
+  }, [user]);
+
+  // Fetch weekly mood analysis
+  const fetchWeeklyAnalysis = async () => {
+    if (!user) return;
+    setWeeklyLoading(true);
+    setWeeklyError(null);
+    try {
+      const res = await fetch(`/api/mood-analysis/weekly?userId=${user.id}`);
+      if (!res.ok) {
+        const errorData = await res.json();
+        if (res.status === 404) {
+          setWeeklyError(errorData.suggestion || 'No weekly data available');
+        } else {
+          throw new Error(errorData.error || 'Failed to fetch weekly analysis');
+        }
+        return;
+      }
+      const data = await res.json();
+      setWeeklyAnalysis(data.analysis);
+      setWeeklyStats(data.statistics);
+    } catch (err: any) {
+      setWeeklyError(err.message || 'Could not load weekly analysis');
+    } finally {
+      setWeeklyLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWeeklyAnalysis();
   }, [user]);
 
   // Map mood to score
@@ -301,8 +337,8 @@ export default function UserDashboard() {
         }),
       };
 
-      // 3. Make the request
-      const res = await fetch('/api/mood-insights', {
+      // 3. First, log the mood to the database
+      const moodRes = await fetch('/api/mood-insights', {
         method: 'POST',
         headers,
         credentials: 'include',
@@ -312,18 +348,37 @@ export default function UserDashboard() {
         }),
       });
 
-      // 4. Handle response
-      if (!res.ok) {
-        const errorData = await res.json();
-        console.error('API error:', errorData);
+      // 4. Handle mood logging response
+      if (!moodRes.ok) {
+        const errorData = await moodRes.json();
+        console.error('Mood API error:', errorData);
         setError(errorData.error || 'Failed to log mood');
-      } else {
-        const data = await res.json();
-        setMoodLogSuccess('Mood logged successfully!');
-        setInsight(data.message || null);
-        setSelectedMoodScore(null);
-        setMoodNotes("");
+        return;
       }
+
+      // 5. Get Gemini suggestions
+      const geminiRes = await fetch('/api/mood-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mood_score: selectedMoodScore,
+          notes: moodNotes,
+        }),
+      });
+
+      // 6. Handle Gemini response
+      if (geminiRes.ok) {
+        const geminiData = await geminiRes.json();
+        setMoodLogSuccess('Mood logged successfully!');
+        setInsight(geminiData.reflection || 'No suggestions available');
+      } else {
+        // If Gemini fails, still show success for mood logging but with a fallback message
+        setMoodLogSuccess('Mood logged!');
+        setInsight('Mood logged successfully. Check back later for personalized insights.');
+      }
+
+      setSelectedMoodScore(null);
+      setMoodNotes("");
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
@@ -1001,6 +1056,135 @@ export default function UserDashboard() {
                     </div>
                     )}
                   </div>
+
+                  {/* Weekly Mood Analysis */}
+                  <Card className="border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50">
+                    <CardHeader>
+                                          <CardTitle className="flex items-center justify-between text-indigo-800 text-lg lg:text-xl">
+                      <div className="flex items-center gap-3">
+                        <TrendingUp className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                        AI Weekly Analysis
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={fetchWeeklyAnalysis}
+                        disabled={weeklyLoading}
+                        className="text-indigo-600 hover:bg-indigo-100"
+                      >
+                        {weeklyLoading ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                        ) : (
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        )}
+                      </Button>
+                    </CardTitle>
+                      <CardDescription>Personalized insights and recommendations based on your mood patterns</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {weeklyLoading ? (
+                        <div className="flex items-center justify-center h-32">
+                          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+                        </div>
+                      ) : weeklyError ? (
+                        <div className="text-center p-6">
+                          <div className="text-slate-500 mb-2">{weeklyError}</div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => window.location.reload()}
+                            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                          >
+                            Try Again
+                          </Button>
+                        </div>
+                      ) : weeklyAnalysis ? (
+                        <div className="space-y-4">
+                          {/* Weekly Statistics */}
+                          {weeklyStats && (
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 bg-white/60 rounded-lg border border-indigo-100">
+                              <div className="text-center">
+                                <div className="text-lg font-semibold text-blue-700">{weeklyStats.averageMood}/5</div>
+                                <div className="text-xs text-slate-600">Avg Mood</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-lg font-semibold text-purple-700">{weeklyStats.daysTracked}/7</div>
+                                <div className="text-xs text-slate-600">Days Tracked</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-lg font-semibold text-pink-700">{weeklyStats.consistency}%</div>
+                                <div className="text-xs text-slate-600">Consistency</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-lg font-semibold text-indigo-700">{weeklyStats.moodVariance}</div>
+                                <div className="text-xs text-slate-600">Variance</div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* AI Analysis */}
+                          <div className="bg-white/80 rounded-xl p-6 border border-indigo-100 shadow-sm">
+                            <div className="space-y-6">
+                              {weeklyAnalysis.split('\n\n').map((section, index) => {
+                                const lines = section.split('\n');
+                                const title = lines[0];
+                                const content = lines.slice(1).join('\n');
+                                
+                                // Minimal theme colors: pink, purple, blue
+                                const sectionStyles = {
+                                  'Mood Summary': {
+                                    text: 'text-blue-800'
+                                  },
+                                  'Key Insights': {
+                                    text: 'text-purple-800'
+                                  },
+                                  'Recommendations': {
+                                    text: 'text-pink-800'
+                                  },
+                                  'Encouragement': {
+                                    text: 'text-indigo-800'
+                                  }
+                                };
+                                
+                                const styles = sectionStyles[title as keyof typeof sectionStyles] || {
+                                  text: 'text-slate-800'
+                                };
+                                
+                                return (
+                                  <div key={index}>
+                                    <h4 className={`font-semibold text-lg mb-3 ${styles.text}`}>
+                                      {title}
+                                    </h4>
+                                    <div className="space-y-2 text-sm text-slate-700 leading-relaxed">
+                                      {content.split('\n').map((line, lineIndex) => {
+                                        if (line.trim().startsWith('•')) {
+                                          return (
+                                            <div key={lineIndex} className="flex items-start gap-3">
+                                              <div className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2 flex-shrink-0"></div>
+                                              <span>{line.replace('•', '').trim()}</span>
+                                            </div>
+                                          );
+                                        }
+                                        return (
+                                          <p key={lineIndex}>{line}</p>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center p-6 text-slate-500">
+                          No weekly analysis available
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
 
                   {/* Mood Insights */}
                   <div className="grid gap-4 lg:gap-6 md:grid-cols-2">

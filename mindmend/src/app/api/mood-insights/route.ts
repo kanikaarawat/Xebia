@@ -35,7 +35,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid mood_score (1-5)' }, { status: 400 });
     }
 
-    const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    // Get Indian Standard Time (IST) date
+    const today = new Date().toLocaleDateString('en-CA', { 
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }); // Returns 'YYYY-MM-DD' in IST
     console.log('Request started');
     console.log('user:', user);
     console.log('mood_score:', mood_score);
