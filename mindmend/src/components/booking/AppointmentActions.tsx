@@ -166,6 +166,12 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
   const isUpcoming = appointment.status === 'upcoming';
   const canCancel = cancellationInfo?.can_cancel ?? true;
 
+  // Calculate if appointment is within 24 hours
+  const now = new Date();
+  const scheduledDate = new Date(appointment.scheduled_at);
+  const hoursUntilAppointment = (scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+  const isWithin24Hours = hoursUntilAppointment <= 24 && hoursUntilAppointment > 0;
+
   return (
     <>
       {/* Success Message */}
@@ -189,208 +195,216 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-2">
+      <div className="flex flex-row flex-wrap gap-2 mt-2 w-full">
         {isUpcoming && (
           <>
-            <Dialog open={showRescheduleDialog} onOpenChange={setShowRescheduleDialog}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  disabled={loading}
-                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                >
-                  <Clock className="w-4 h-4 mr-1" />
-                  Reschedule
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-white">
-                <DialogHeader>
-                  <DialogTitle>Reschedule Appointment</DialogTitle>
-                  <DialogDescription>
-                    Reschedule your session with Dr. {appointment.therapist?.profiles.first_name} {appointment.therapist?.profiles.last_name}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="p-4 bg-slate-50 rounded-lg">
-                    <p className="text-sm font-medium text-slate-700">Current Appointment</p>
-                    <p className="text-sm text-slate-600">{date} at {time}</p>
-                    <p className="text-sm text-slate-600">{appointment.type} • {getDurationText(appointment.duration)}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="reschedule-date">New Date</Label>
-                    <input
-                      id="reschedule-date"
-                      type="date"
-                      className="border rounded px-2 py-1 w-full"
-                      value={rescheduleDate}
-                      onChange={e => setRescheduleDate(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="session-duration">Session Duration</Label>
-                    <Select value={String(newDuration)} onValueChange={val => setNewDuration(Number(val))}>
-                      <SelectTrigger id="session-duration" className="w-full bg-white">
-                        <SelectValue placeholder="Select duration" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white">
-                        <SelectItem value="30">30 min</SelectItem>
-                        <SelectItem value="60">1 hour</SelectItem>
-                        <SelectItem value="90">1.5 hours</SelectItem>
-                        <SelectItem value="120">2 hours</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {(rescheduleDate && newDuration) && (
-                    <div className="space-y-2">
-                      {fetchingSlots && <div className="text-sm text-blue-600">Loading available slots...</div>}
-                      {rescheduleDate && !fetchingSlots && availableSlots.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {availableSlots.map(slot => (
-                            <Button
-                              key={slot.start_time}
-                              variant={selectedSlot === slot.start_time ? "default" : "outline"}
-                              onClick={() => setSelectedSlot(slot.start_time)}
-                              className={selectedSlot === slot.start_time ? "bg-blue-600 text-white" : ""}
-                            >
-                              {slot.start_time} - {slot.end_time}
-                            </Button>
-                          ))}
+            {isWithin24Hours ? (
+              <div className="w-full p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm text-center">
+                You can't cancel or reschedule an appointment within 24 hours of its scheduled time as per our policy.
+              </div>
+            ) : (
+              <>
+                <Dialog open={showRescheduleDialog} onOpenChange={setShowRescheduleDialog}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      disabled={loading}
+                      className="flex-1 min-w-[100px] max-w-[120px] whitespace-nowrap text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Clock className="w-4 h-4 mr-1" />
+                      Reschedule
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-white">
+                    <DialogHeader>
+                      <DialogTitle>Reschedule Appointment</DialogTitle>
+                      <DialogDescription>
+                        Reschedule your session with Dr. {appointment.therapist?.profiles.first_name} {appointment.therapist?.profiles.last_name}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-slate-50 rounded-lg">
+                        <p className="text-sm font-medium text-slate-700">Current Appointment</p>
+                        <p className="text-sm text-slate-600">{date} at {time}</p>
+                        <p className="text-sm text-slate-600">{appointment.type} • {getDurationText(appointment.duration)}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="reschedule-date">New Date</Label>
+                        <input
+                          id="reschedule-date"
+                          type="date"
+                          className="border rounded px-2 py-1 w-full"
+                          value={rescheduleDate}
+                          onChange={e => setRescheduleDate(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="session-duration">Session Duration</Label>
+                        <Select value={String(newDuration)} onValueChange={val => setNewDuration(Number(val))}>
+                          <SelectTrigger id="session-duration" className="w-full bg-white">
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white">
+                            <SelectItem value="30">30 min</SelectItem>
+                            <SelectItem value="60">1 hour</SelectItem>
+                            <SelectItem value="90">1.5 hours</SelectItem>
+                            <SelectItem value="120">2 hours</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {(rescheduleDate && newDuration) && (
+                        <div className="space-y-2">
+                          {fetchingSlots && <div className="text-sm text-blue-600">Loading available slots...</div>}
+                          {rescheduleDate && !fetchingSlots && availableSlots.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {availableSlots.map(slot => (
+                                <Button
+                                  key={slot.start_time}
+                                  variant={selectedSlot === slot.start_time ? "default" : "outline"}
+                                  onClick={() => setSelectedSlot(slot.start_time)}
+                                  className={selectedSlot === slot.start_time ? "bg-blue-600 text-white" : ""}
+                                >
+                                  {slot.start_time} - {slot.end_time}
+                                </Button>
+                              ))}
+                            </div>
+                          )}
+                          {rescheduleDate && !fetchingSlots && availableSlots.length === 0 && (
+                            <div className="text-sm text-red-600">No available slots for this date and duration.</div>
+                          )}
                         </div>
                       )}
-                      {rescheduleDate && !fetchingSlots && availableSlots.length === 0 && (
-                        <div className="text-sm text-red-600">No available slots for this date and duration.</div>
+                      <div className="space-y-1">
+                        <Label htmlFor="session-type">Session Type</Label>
+                        <Select value={newType} onValueChange={setNewType}>
+                          <SelectTrigger id="session-type" className="w-full">
+                            <SelectValue placeholder="Select session type" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white">
+                            <SelectItem value="In-Person">In-Person</SelectItem>
+                            <SelectItem value="Video Call">Video Call</SelectItem>
+                            <SelectItem value="Phone Call">Phone Call</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="session-notes">Additional Notes</Label>
+                        <Textarea
+                          id="session-notes"
+                          className="w-full border rounded px-2 py-1"
+                          rows={3}
+                          value={newNotes}
+                          onChange={e => setNewNotes(e.target.value)}
+                          placeholder="Add any notes for your therapist..."
+                        />
+                      </div>
+                      {rescheduleError && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center">
+                          {/* Black semi-opaque overlay */}
+                          <div className="fixed inset-0 bg-black" style={{ opacity: 0.5 }}></div>
+                          {/* White error popup card - solid white, no transparency */}
+                          <div className="relative z-10" style={{ background: '#fff', borderRadius: '0.75rem', boxShadow: '0 10px 40px rgba(0,0,0,0.2)', padding: '2rem', maxWidth: '24rem', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px solid #e5e7eb' }}>
+                            <AlertTriangle className="h-8 w-8 text-red-600 mb-2" />
+                            <div className="text-lg font-semibold text-red-800 mb-2">Reschedule Error</div>
+                            <AlertDescription className="text-red-700 text-center mb-4">
+                              {rescheduleError}
+                            </AlertDescription>
+                            <Button variant="outline" onClick={() => setRescheduleError(null)}>
+                              Close
+                            </Button>
+                          </div>
+                        </div>
                       )}
                     </div>
-                  )}
-                  <div className="space-y-1">
-                    <Label htmlFor="session-type">Session Type</Label>
-                    <Select value={newType} onValueChange={setNewType}>
-                      <SelectTrigger id="session-type" className="w-full">
-                        <SelectValue placeholder="Select session type" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white">
-                        <SelectItem value="In-Person">In-Person</SelectItem>
-                        <SelectItem value="Video Call">Video Call</SelectItem>
-                        <SelectItem value="Phone Call">Phone Call</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="session-notes">Additional Notes</Label>
-                    <Textarea
-                      id="session-notes"
-                      className="w-full border rounded px-2 py-1"
-                      rows={3}
-                      value={newNotes}
-                      onChange={e => setNewNotes(e.target.value)}
-                      placeholder="Add any notes for your therapist..."
-                    />
-                  </div>
-                  {rescheduleError && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center">
-                      {/* Black semi-opaque overlay */}
-                      <div className="fixed inset-0 bg-black" style={{ opacity: 0.5 }}></div>
-                      {/* White error popup card - solid white, no transparency */}
-                      <div className="relative z-10" style={{ background: '#fff', borderRadius: '0.75rem', boxShadow: '0 10px 40px rgba(0,0,0,0.2)', padding: '2rem', maxWidth: '24rem', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px solid #e5e7eb' }}>
-                        <AlertTriangle className="h-8 w-8 text-red-600 mb-2" />
-                        <div className="text-lg font-semibold text-red-800 mb-2">Reschedule Error</div>
-                        <AlertDescription className="text-red-700 text-center mb-4">
-                          {rescheduleError}
-                        </AlertDescription>
-                        <Button variant="outline" onClick={() => setRescheduleError(null)}>
-                          Close
-                        </Button>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowRescheduleDialog(false)} disabled={rescheduleLoading}>
+                        Close
+                      </Button>
+                      <Button 
+                        variant="default" 
+                        onClick={handleRescheduleAppointment}
+                        disabled={rescheduleLoading || !selectedSlot}
+                      >
+                        {rescheduleLoading ? 'Rescheduling...' : 'Reschedule'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      disabled={loading || !canCancel}
+                      onClick={handleCancelClick}
+                      className="flex-1 min-w-[80px] max-w-[100px] whitespace-nowrap text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Cancel
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Cancel Appointment</DialogTitle>
+                      <DialogDescription>
+                        Are you sure you want to cancel your session with Dr. {appointment.therapist?.profiles.first_name} {appointment.therapist?.profiles.last_name}?
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-slate-50 rounded-lg">
+                        <p className="text-sm font-medium text-slate-700">Appointment Details</p>
+                        <p className="text-sm text-slate-600">{date} at {time}</p>
+                        <p className="text-sm text-slate-600">{appointment.type} • {getDurationText(appointment.duration)}</p>
                       </div>
+
+                      {cancellationInfo && (
+                        <div className="p-4 bg-blue-50 rounded-lg">
+                          <p className="text-sm font-medium text-blue-700">Cancellation Policy</p>
+                          <p className="text-sm text-blue-600">{cancellationInfo.cancellation_policy.message}</p>
+                          <p className="text-sm text-blue-600 mt-1">
+                            {cancellationInfo.hours_until_appointment} hours until appointment
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <Label htmlFor="cancel-reason">Reason for cancellation (optional)</Label>
+                        <Textarea
+                          id="cancel-reason"
+                          placeholder="Please let us know why you're cancelling..."
+                          value={cancelReason}
+                          onChange={(e) => setCancelReason(e.target.value)}
+                          rows={3}
+                        />
+                      </div>
+
+                      {!canCancel && cancellationInfo && (
+                        <Alert className="border-orange-200 bg-orange-50">
+                          <AlertTriangle className="h-4 w-4 text-orange-600" />
+                          <AlertDescription className="text-orange-800">
+                            {cancellationInfo.cancellation_policy.message}
+                          </AlertDescription>
+                        </Alert>
+                      )}
                     </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowRescheduleDialog(false)} disabled={rescheduleLoading}>
-                    Close
-                  </Button>
-                  <Button 
-                    variant="default" 
-                    onClick={handleRescheduleAppointment}
-                    disabled={rescheduleLoading || !selectedSlot}
-                  >
-                    {rescheduleLoading ? 'Rescheduling...' : 'Reschedule'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  disabled={loading || !canCancel}
-                  onClick={handleCancelClick}
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                >
-                  <X className="w-4 h-4 mr-1" />
-                  Cancel
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Cancel Appointment</DialogTitle>
-                  <DialogDescription>
-                    Are you sure you want to cancel your session with Dr. {appointment.therapist?.profiles.first_name} {appointment.therapist?.profiles.last_name}?
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="p-4 bg-slate-50 rounded-lg">
-                    <p className="text-sm font-medium text-slate-700">Appointment Details</p>
-                    <p className="text-sm text-slate-600">{date} at {time}</p>
-                    <p className="text-sm text-slate-600">{appointment.type} • {getDurationText(appointment.duration)}</p>
-                  </div>
-
-                  {cancellationInfo && (
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <p className="text-sm font-medium text-blue-700">Cancellation Policy</p>
-                      <p className="text-sm text-blue-600">{cancellationInfo.cancellation_policy.message}</p>
-                      <p className="text-sm text-blue-600 mt-1">
-                        {cancellationInfo.hours_until_appointment} hours until appointment
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="cancel-reason">Reason for cancellation (optional)</Label>
-                    <Textarea
-                      id="cancel-reason"
-                      placeholder="Please let us know why you're cancelling..."
-                      value={cancelReason}
-                      onChange={(e) => setCancelReason(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-
-                  {!canCancel && cancellationInfo && (
-                    <Alert className="border-orange-200 bg-orange-50">
-                      <AlertTriangle className="h-4 w-4 text-orange-600" />
-                      <AlertDescription className="text-orange-800">
-                        {cancellationInfo.cancellation_policy.message}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
-                    Keep Appointment
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    onClick={handleCancelAppointment}
-                    disabled={loading || !canCancel}
-                  >
-                    {loading ? 'Cancelling...' : 'Cancel Appointment'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
+                        Keep Appointment
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        onClick={handleCancelAppointment}
+                        disabled={loading || !canCancel}
+                      >
+                        {loading ? 'Cancelling...' : 'Cancel Appointment'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
+            )}
           </>
         )}
       </div>

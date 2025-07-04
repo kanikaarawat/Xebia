@@ -125,6 +125,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // If the appointment is a video call, create a Daily room
+    if (type && type.toLowerCase() === 'video call') {
+      try {
+        console.log('DAILY_API_KEY:', process.env.DAILY_API_KEY);
+        console.log('Creating Daily room for appointment:', appointment.id);
+        const dailyRes = await fetch('https://api.daily.co/v1/rooms', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.DAILY_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: appointment.id,
+            properties: { enable_prejoin_ui: true }
+          }),
+        });
+        const dailyData = await dailyRes.json();
+        console.log('Daily API response:', dailyRes.status, dailyData);
+        if (!dailyRes.ok) {
+          console.error('Error creating Daily room:', dailyData);
+          // Optionally, you can delete the appointment if room creation fails
+          // await supabase.from('appointments').delete().eq('id', appointment.id);
+          return NextResponse.json(
+            { error: 'Failed to create video call room', details: dailyData },
+            { status: 500 }
+          );
+        }
+      } catch (err) {
+        console.error('Unexpected error creating Daily room:', err);
+        // Optionally, you can delete the appointment if room creation fails
+        // await supabase.from('appointments').delete().eq('id', appointment.id);
+        return NextResponse.json(
+          { error: 'Failed to create video call room', details: err },
+          { status: 500 }
+        );
+      }
+    }
+
     return NextResponse.json({ 
       appointment,
       message: "Appointment created successfully" 
