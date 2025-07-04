@@ -450,21 +450,23 @@ export default function AppointmentsList({
     <>
       {showCard && (
         <div className="p-6 border-b border-slate-200 flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-3 text-indigo-800 text-xl">
-              <Calendar className="h-6 w-6 text-indigo-600" />
-              {title}
-            </h3>
+          <div className="flex items-center justify-between gap-3 sm:gap-4">
+            <div className="flex-1 min-w-0">
+              <h3 className="flex items-center gap-3 text-indigo-800 text-lg sm:text-xl">
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 flex-shrink-0" />
+                <span className="truncate">{title}</span>
+              </h3>
+              {description && <p className="text-slate-600 mt-1 text-sm sm:text-base truncate">{description}</p>}
+            </div>
             {bookButton && (
               <Button
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg shadow"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 sm:px-6 py-2 rounded-lg shadow text-xs sm:text-base whitespace-nowrap flex-shrink-0"
                 onClick={() => router.push('/dashboard/book-session')}
               >
                 Book a Session
               </Button>
             )}
           </div>
-          {description && <p className="text-slate-600 mt-1">{description}</p>}
         </div>
       )}
       <div className={`${showCard ? 'p-6' : ''} w-full overflow-hidden max-w-full`}>

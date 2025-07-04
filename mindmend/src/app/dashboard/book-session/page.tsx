@@ -299,10 +299,10 @@ export default function BookSessionPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 p-4 sm:p-6 relative">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 p-2 sm:p-3 lg:p-4 xl:p-6 relative">
       <div className="max-w-4xl mx-auto relative z-10">
-        <header className="w-full text-center mt-8 mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-indigo-500 via-pink-500 to-blue-500 bg-clip-text text-transparent tracking-tight" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>
+        <header className="w-full text-center mt-2 sm:mt-4 lg:mt-6 xl:mt-8 mb-3 sm:mb-4 lg:mb-6 xl:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-extrabold bg-gradient-to-r from-indigo-500 via-pink-500 to-blue-500 bg-clip-text text-transparent tracking-tight" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>
             Book a Session
           </h1>
         </header>
@@ -312,62 +312,62 @@ export default function BookSessionPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card className="bg-white/70 backdrop-blur-xl shadow-2xl border-2 border-transparent bg-clip-padding relative z-20 rounded-3xl p-1"
+          <Card className="bg-white/70 backdrop-blur-xl shadow-2xl border-2 border-transparent bg-clip-padding relative z-20 rounded-xl sm:rounded-2xl xl:rounded-3xl p-1"
             style={{ borderImage: 'linear-gradient(90deg, #fbc2eb 0%, #a6c1ee 100%) 1' }}
           >
 
-            <CardContent className="p-6 sm:p-8">
+            <CardContent className="p-3 sm:p-4 lg:p-6 xl:p-8">
               {success ? (
-                <div className="py-12 text-center">
-                  <div className="mb-4 text-6xl">🎉</div>
-                  <h3 className="text-2xl font-bold text-green-700 mb-2">
+                <div className="py-8 sm:py-12 text-center">
+                  <div className="mb-3 sm:mb-4 text-4xl sm:text-6xl">🎉</div>
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-green-700 mb-2">
                     Session Booked Successfully!
                   </h3>
-                  <p className="text-slate-600 mb-6">
+                  <p className="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6">
                     Your appointment has been scheduled. You'll receive a confirmation email shortly.
                   </p>
                   <Button 
-                    className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-8 py-3"
+                    className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base"
                     onClick={() => router.push('/dashboard')}
                   >
                     Go to Dashboard
                   </Button>
                 </div>
               ) : (
-                <form className="space-y-6 sm:space-y-8" onSubmit={handleSubmit}>
+                <form className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8" onSubmit={handleSubmit}>
                   {error && (
                     <Alert className="border-red-200 bg-red-50">
-                      <AlertDescription className="text-red-700">
+                      <AlertDescription className="text-red-700 text-sm sm:text-base">
                         {error}
                       </AlertDescription>
                     </Alert>
                   )}
 
                   {/* Therapist Selection */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-                      <Label className="text-base sm:text-lg font-semibold text-slate-700 flex items-center gap-2 mt-2 sm:mt-4">
+                  <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 lg:gap-6">
+                      <Label className="text-sm sm:text-base lg:text-lg font-semibold text-slate-700 flex items-center gap-2 mt-1 sm:mt-2 lg:mt-4">
                         <User className="w-4 h-4 sm:w-5 sm:h-5" />
                         Select Your Therapist
                       </Label>
                       {/* Therapist Search Bar - enhanced UI */}
                       <div className="relative w-full sm:w-80">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                          <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </span>
                         <Input
                           type="text"
                           placeholder="Search by name or specialization..."
                           value={therapistSearch}
                           onChange={e => setTherapistSearch(e.target.value)}
-                          className="pl-12 pr-4 py-3 rounded-2xl border border-slate-200 shadow focus:ring-2 focus:ring-pink-200 focus:border-pink-300 bg-white/70 backdrop-blur placeholder:text-slate-400 text-base transition-all"
+                          className="pl-10 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 rounded-lg sm:rounded-xl xl:rounded-2xl border border-slate-200 shadow focus:ring-2 focus:ring-pink-200 focus:border-pink-300 bg-white/70 backdrop-blur placeholder:text-slate-400 text-sm sm:text-base transition-all"
                           autoComplete="off"
                         />
                       </div>
                     </div>
-                    <div className="flex gap-6 px-2 overflow-x-auto scrollbar-hide pb-2 -mx-2 p-8">
+                    <div className="flex gap-3 sm:gap-4 lg:gap-6 px-2 overflow-x-auto scrollbar-hide pb-2 -mx-2 p-3 sm:p-4 lg:p-6 xl:p-8">
                       {filteredTherapists.length === 0 && !loadingTherapists && (
-                        <div className="px-3 py-4 text-center text-slate-500">No therapists found</div>
+                        <div className="px-3 py-4 text-center text-slate-500 text-sm sm:text-base">No therapists found</div>
                       )}
                       {filteredTherapists.map((therapist, idx) => {
                         const isSelected = therapistId === therapist.id;
@@ -379,11 +379,11 @@ export default function BookSessionPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.07, type: 'spring', stiffness: 80 }}
                             onClick={() => setTherapistId(therapist.id)}
-                            className={`relative min-w-[182px] max-w-sm flex-shrink-0 rounded-3xl p-5 flex flex-col items-center gap-3 cursor-pointer group
+                            className={`relative min-w-[140px] sm:min-w-[160px] lg:min-w-[182px] max-w-sm flex-shrink-0 rounded-xl sm:rounded-2xl xl:rounded-3xl p-3 sm:p-4 lg:p-5 flex flex-col items-center gap-2 sm:gap-3 cursor-pointer group
                               bg-white/60 backdrop-blur-xl border transition-all duration-200
                               shadow-xl hover:shadow-2xl hover:-translate-y-1
                               ${isSelected ? 'border-2 border-gradient-to-r from-indigo-400 via-pink-300 to-blue-300 ring-2 ring-indigo-200 scale-105' : 'border-slate-200'}
-                              before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-br before:from-indigo-100/40 before:to-pink-100/30 before:opacity-0 before:group-hover:opacity-100 before:transition-opacity before:duration-300
+                              before:absolute before:inset-0 before:rounded-xl sm:before:rounded-2xl xl:before:rounded-3xl before:bg-gradient-to-br before:from-indigo-100/40 before:to-pink-100/30 before:opacity-0 before:group-hover:opacity-100 before:transition-opacity before:duration-300
                               overflow-hidden
                               focus:outline-none focus:ring-2 focus:ring-indigo-300
                             `}
@@ -391,29 +391,29 @@ export default function BookSessionPage() {
                           >
                             {/* Animated border for selected */}
                             {isSelected && (
-                              <span className="absolute inset-0 rounded-3xl pointer-events-none border-2 border-transparent bg-gradient-to-r from-indigo-300 via-pink-200 to-blue-200 animate-borderGlow" />
+                              <span className="absolute inset-0 rounded-xl sm:rounded-2xl xl:rounded-3xl pointer-events-none border-2 border-transparent bg-gradient-to-r from-indigo-300 via-pink-200 to-blue-200 animate-borderGlow" />
                             )}
                             {/* Floating Available badge */}
-                            <Badge variant="secondary" className="absolute top-2 right-2 text-xs px-2 py-1 shadow-lg bg-green-100 text-green-700 border-green-200 z-10 animate-bounce-slow">
+                            <Badge variant="secondary" className="absolute top-1 sm:top-2 right-1 sm:right-2 text-xs px-1 sm:px-2 py-0.5 sm:py-1 shadow-lg bg-green-100 text-green-700 border-green-200 z-10 animate-bounce-slow">
                               Available
                             </Badge>
-                            <div className={`relative mb-2 z-10 ${isSelected ? 'drop-shadow-xl' : ''}`}>
+                            <div className={`relative mb-1 sm:mb-2 z-10 ${isSelected ? 'drop-shadow-xl' : ''}`}>
                               {therapist.avatar_url ? (
-                                <Avatar className={`w-16 h-16 shadow-lg ${isSelected ? 'ring-4 ring-indigo-200/80' : 'ring-2 ring-indigo-100/60'} transition-all duration-200`}>
+                                <Avatar className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 shadow-lg ${isSelected ? 'ring-4 ring-indigo-200/80' : 'ring-2 ring-indigo-100/60'} transition-all duration-200`}>
                                   <AvatarImage src={therapist.avatar_url} />
-                                  <AvatarFallback className="bg-gradient-to-br from-pink-400 to-indigo-400 text-white text-xl">
+                                  <AvatarFallback className="bg-gradient-to-br from-pink-400 to-indigo-400 text-white text-sm sm:text-lg lg:text-xl">
                                     {therapist.name.split(' ').map(n => n[0]).join('')}
                                   </AvatarFallback>
                                 </Avatar>
                               ) : (
-                                <div className={`w-16 h-16 rounded-full flex items-center justify-center bg-indigo-200 text-indigo-800 text-2xl font-bold shadow-lg ${isSelected ? 'ring-4 ring-indigo-200/80' : 'ring-2 ring-indigo-100/60'} transition-all duration-200`}>
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-full flex items-center justify-center bg-indigo-200 text-indigo-800 text-base sm:text-lg lg:text-2xl font-bold shadow-lg ${isSelected ? 'ring-4 ring-indigo-200/80' : 'ring-2 ring-indigo-100/60'} transition-all duration-200`}>
                                   {therapist.name.split(' ').map(n => n[0]).join('')}
                                 </div>
                               )}
                             </div>
-                            <div className="font-semibold text-indigo-900 text-lg truncate w-full text-center drop-shadow-sm z-10" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>{therapist.name}</div>
-                            <div className="flex flex-wrap gap-2 justify-center mb-1 z-10">
-                              <Badge className="bg-gradient-to-r from-blue-100 via-pink-100 to-indigo-100 text-blue-700 text-xs px-3 py-1 rounded-full shadow-sm border-0">
+                            <div className="font-semibold text-indigo-900 text-xs sm:text-sm lg:text-lg truncate w-full text-center drop-shadow-sm z-10" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>{therapist.name}</div>
+                            <div className="flex flex-wrap gap-1 sm:gap-2 justify-center mb-1 z-10">
+                              <Badge className="bg-gradient-to-r from-blue-100 via-pink-100 to-indigo-100 text-blue-700 text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-sm border-0">
                                 {therapist.specialization}
                               </Badge>
                             </div>
@@ -424,15 +424,15 @@ export default function BookSessionPage() {
                   </div>
 
                   {/* Date Selection */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <Label className="text-base sm:text-lg font-semibold text-slate-700 flex items-center gap-2 mt-6 sm:mt-8">
+                  <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+                    <Label className="text-sm sm:text-base lg:text-lg font-semibold text-slate-700 flex items-center gap-2 mt-4 sm:mt-6 lg:mt-8">
                       <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
                       Select Date
                     </Label>
                     
                     <div className="relative w-full max-w-[182px]">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                        <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M8 2v2m8-2v2m-9 4h10M5 10h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z"/></svg>
+                      <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M8 2v2m8-2v2m-9 4h10M5 10h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z"/></svg>
                       </span>
                       <Input
                         type="date"
@@ -440,7 +440,7 @@ export default function BookSessionPage() {
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
                         required
-                        className="pl-12 h-12 text-base sm:text-lg bg-white/70 border border-slate-200 rounded-2xl shadow focus:border-pink-300 focus:ring-2 focus:ring-pink-200 backdrop-blur placeholder:text-slate-400 transition-all"
+                        className="pl-10 sm:pl-12 h-10 sm:h-12 text-sm sm:text-base lg:text-lg bg-white/70 border border-slate-200 rounded-lg sm:rounded-xl xl:rounded-2xl shadow focus:border-pink-300 focus:ring-2 focus:ring-pink-200 backdrop-blur placeholder:text-slate-400 transition-all"
                       />
                     </div>
                     {date && (
@@ -448,31 +448,31 @@ export default function BookSessionPage() {
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4 }}
-                        className="mt-4 p-5 rounded-2xl bg-gradient-to-br from-indigo-50 via-pink-50 to-blue-50 border border-pink-100 shadow flex items-center justify-between"
+                        className="mt-3 sm:mt-4 p-4 sm:p-5 rounded-lg sm:rounded-xl xl:rounded-2xl bg-gradient-to-br from-indigo-50 via-pink-50 to-blue-50 border border-pink-100 shadow flex items-center justify-between"
                       >
                         <div>
-                          <div className="text-lg sm:text-xl font-bold text-indigo-700" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>
+                          <div className="text-base sm:text-lg lg:text-xl font-bold text-indigo-700" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>
                             {new Date(date).toLocaleDateString('en-US', { weekday: 'long' })}
                           </div>
-                          <div className="text-sm sm:text-base text-indigo-500">
+                          <div className="text-xs sm:text-sm lg:text-base text-indigo-500">
                             {new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                           </div>
                         </div>
-                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-pink-200 to-indigo-200">
-                          <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><path stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M8 2v2m8-2v2m-9 4h10M5 10h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z"/></svg>
+                        <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-pink-200 to-indigo-200">
+                          <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M8 2v2m8-2v2m-9 4h10M5 10h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z"/></svg>
                         </div>
                       </motion.div>
                     )}
                   </div>
 
                   {/* Session Duration */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <Label className="text-base sm:text-lg font-semibold text-slate-700 flex items-center gap-2 mt-6 sm:mt-8">
+                  <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+                    <Label className="text-sm sm:text-base lg:text-lg font-semibold text-slate-700 flex items-center gap-2 mt-4 sm:mt-6 lg:mt-8">
                       <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                       Session Duration
                     </Label>
                     
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mt-2 mb-4 text-sm sm:text-base">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mt-2 mb-4 text-sm sm:text-base">
                       {[
                         { value: 30, label: '30 min', description: 'Quick session' },
                         { value: 60, label: '1 hour', description: 'Standard session' },
@@ -637,9 +637,12 @@ export default function BookSessionPage() {
 
                   {/* Session Type */}
                   <div className="space-y-4">
-                    <Label className="text-lg font-semibold text-slate-700">Session Type</Label>
+                    <Label className="text-sm sm:text-base lg:text-lg font-semibold text-slate-700 flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                      Session Type
+                    </Label>
                     <Select value={type} onValueChange={setType} required>
-                      <SelectTrigger className="h-12 text-lg bg-white border-slate-200 hover:bg-slate-50">
+                      <SelectTrigger className="h-10 sm:h-12 text-sm sm:text-base lg:text-lg bg-white border-slate-200 hover:bg-slate-50">
                         <SelectValue placeholder="Select session type" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-slate-200 shadow-lg z-50">
@@ -652,19 +655,17 @@ export default function BookSessionPage() {
 
                   {/* Notes */}
                   <div className="space-y-4">
-                    <Label className="text-lg font-semibold text-slate-700 flex items-center gap-2">
-                      <MessageSquare className="w-5 h-5" />
+                    <Label className="text-sm sm:text-base lg:text-lg font-semibold text-slate-700 flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
                       Additional Notes (Optional)
                     </Label>
                     <Textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Anything you'd like your therapist to know before the session?"
-                      className="min-h-[100px] text-lg"
+                      className="min-h-[100px] text-sm sm:text-base lg:text-lg"
                     />
                   </div>
-
-
 
                   {/* Submit Button */}
                   <Button 
