@@ -10,6 +10,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -75,50 +82,60 @@ interface Therapist {
 // SVG face icons for moods 1-5
 const MoodFaces = [
   // 1: Very Sad
-  () => { return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="10" fill="#fecaca" />
-      <circle cx="9" cy="11" r="1" fill="#991b1b" />
-      <circle cx="15" cy="11" r="1" fill="#991b1b" />
-      <path d="M9 17c1-1 3-1 6 0" stroke="#991b1b" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  ); },
+  () => {
+    return (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="#fecaca" />
+        <circle cx="9" cy="11" r="1" fill="#991b1b" />
+        <circle cx="15" cy="11" r="1" fill="#991b1b" />
+        <path d="M9 17c1-1 3-1 6 0" stroke="#991b1b" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    );
+  },
   // 2: Sad
-  () => { return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="10" fill="#fca5a5" />
-      <circle cx="9" cy="11" r="1" fill="#b91c1c" />
-      <circle cx="15" cy="11" r="1" fill="#b91c1c" />
-      <path d="M9 16c1-0.5 3-0.5 6 0" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  ); },
+  () => {
+    return (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="#fca5a5" />
+        <circle cx="9" cy="11" r="1" fill="#b91c1c" />
+        <circle cx="15" cy="11" r="1" fill="#b91c1c" />
+        <path d="M9 16c1-0.5 3-0.5 6 0" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    );
+  },
   // 3: Neutral
-  () => { return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="10" fill="#fef08a" />
-      <circle cx="9" cy="11" r="1" fill="#b45309" />
-      <circle cx="15" cy="11" r="1" fill="#b45309" />
-      <path d="M9 16h6" stroke="#b45309" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  ); },
+  () => {
+    return (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="#fef08a" />
+        <circle cx="9" cy="11" r="1" fill="#b45309" />
+        <circle cx="15" cy="11" r="1" fill="#b45309" />
+        <path d="M9 16h6" stroke="#b45309" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    );
+  },
   // 4: Happy
-  () => { return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="10" fill="#bbf7d0" />
-      <circle cx="9" cy="11" r="1" fill="#166534" />
-      <circle cx="15" cy="11" r="1" fill="#166534" />
-      <path d="M9 15c1 1 3 1 6 0" stroke="#166534" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  ); },
+  () => {
+    return (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="#bbf7d0" />
+        <circle cx="9" cy="11" r="1" fill="#166534" />
+        <circle cx="15" cy="11" r="1" fill="#166534" />
+        <path d="M9 15c1 1 3 1 6 0" stroke="#166534" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    );
+  },
   // 5: Very Happy
-  () => { return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="10" fill="#a7f3d0" />
-      <circle cx="9" cy="11" r="1" fill="#065f46" />
-      <circle cx="15" cy="11" r="1" fill="#065f46" />
-      <path d="M9 14c1.5 2 4.5 2 6 0" stroke="#065f46" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  ); },
+  () => {
+    return (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="#a7f3d0" />
+        <circle cx="9" cy="11" r="1" fill="#065f46" />
+        <circle cx="15" cy="11" r="1" fill="#065f46" />
+        <path d="M9 14c1.5 2 4.5 2 6 0" stroke="#065f46" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    );
+  },
 ];
 
 export default function UserDashboard() {
@@ -138,6 +155,10 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [moodNotes, setMoodNotes] = useState("");
   
+  // Filter states for appointments
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<string>("all");
+
   // Use the custom hook for session counts
   const { upcomingCount, completedCount, todayCount, loading: sessionCountsLoading, error: sessionCountsError } = useSessionCounts(userProfile?.id);
 
@@ -518,7 +539,7 @@ export default function UserDashboard() {
                 <li>• There's a database connection issue</li>
                 <li>• You need to complete your registration</li>
               </ul>
-              <Button 
+              <Button
                 onClick={() => router.push('/setup-profile')}
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
@@ -574,7 +595,7 @@ export default function UserDashboard() {
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-indigo-800">Notifications</h3>
                     {unreadCount > 0 && (
-                      <button 
+                      <button
                         onClick={markAllAsRead}
                         className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
                       >
@@ -594,15 +615,13 @@ export default function UserDashboard() {
                       {notifications.slice(0, 5).map((notification) => (
                         <div
                           key={notification.id}
-                          className={`p-4 cursor-pointer hover:bg-indigo-50/50 transition-colors ${
-                            !notification.read ? 'bg-gradient-to-r from-indigo-50 to-pink-50' : ''
-                          }`}
+                          className={`p-4 cursor-pointer hover:bg-indigo-50/50 transition-colors ${!notification.read ? 'bg-gradient-to-r from-indigo-50 to-pink-50' : ''
+                            }`}
                           onClick={() => markOneAsRead(notification.id)}
                         >
                           <div className="flex items-start gap-3">
-                            <div className={`w-2 h-2 rounded-full mt-2 ${
-                              !notification.read ? 'bg-indigo-500' : 'bg-indigo-300'
-                            }`} />
+                            <div className={`w-2 h-2 rounded-full mt-2 ${!notification.read ? 'bg-indigo-500' : 'bg-indigo-300'
+                              }`} />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-indigo-900 truncate">
                                 {notification.title}
@@ -622,7 +641,7 @@ export default function UserDashboard() {
                 </div>
                 {notifications.length > 5 && (
                   <div className="p-3 border-t border-indigo-200 bg-gradient-to-r from-indigo-50 to-pink-50">
-                    <button 
+                    <button
                       onClick={() => setActiveTab('notifications')}
                       className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                     >
@@ -634,9 +653,9 @@ export default function UserDashboard() {
             </Popover>
 
             {/* Settings Button */}
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="text-indigo-600 p-2"
               onClick={() => router.push('/dashboard/settings')}
             >
@@ -789,13 +808,12 @@ export default function UserDashboard() {
                           <Icon className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
                         </span>
                         <div>
-                          <p className={`text-xl lg:text-2xl font-bold mb-1 ${
-                            label === "Mood Score" && averageMood !== null
+                          <p className={`text-xl lg:text-2xl font-bold mb-1 ${label === "Mood Score" && averageMood !== null
                               ? averageMood >= 4 ? 'text-green-600'
-                              : averageMood >= 3 ? 'text-yellow-600'
-                              : 'text-red-600'
+                                : averageMood >= 3 ? 'text-yellow-600'
+                                  : 'text-red-600'
                               : 'text-indigo-800'
-                          }`}>
+                            }`}>
                             {value}
                           </p>
                           <p className="text-xs lg:text-sm text-slate-600 font-medium">{label}</p>
@@ -804,11 +822,10 @@ export default function UserDashboard() {
                               <div className="flex items-center gap-1">
                                 <p className="text-xs text-slate-500">out of 5</p>
                                 {averageMood !== null && (
-                                  <span className={`text-xs px-1 py-0.5 rounded ${
-                                    averageMood >= 4 ? 'bg-green-100 text-green-700'
-                                    : averageMood >= 3 ? 'bg-yellow-100 text-yellow-700'
-                                    : 'bg-red-100 text-red-700'
-                                  }`}>
+                                  <span className={`text-xs px-1 py-0.5 rounded ${averageMood >= 4 ? 'bg-green-100 text-green-700'
+                                      : averageMood >= 3 ? 'bg-yellow-100 text-yellow-700'
+                                        : 'bg-red-100 text-red-700'
+                                    }`}>
                                     {averageMood >= 4 ? 'Great' : averageMood >= 3 ? 'Good' : 'Needs attention'}
                                   </span>
                                 )}
@@ -844,12 +861,12 @@ export default function UserDashboard() {
                           score === 1
                             ? "border-red-300"
                             : score === 2
-                            ? "border-orange-300"
-                            : score === 3
-                            ? "border-yellow-300"
-                            : score === 4
-                            ? "border-green-300"
-                            : "border-emerald-300";
+                              ? "border-orange-300"
+                              : score === 3
+                                ? "border-yellow-300"
+                                : score === 4
+                                  ? "border-green-300"
+                                  : "border-emerald-300";
                         const ringColor = isSelected ? "ring-4 ring-indigo-400 scale-110" : "";
                         return (
                           <button
@@ -931,7 +948,7 @@ export default function UserDashboard() {
                               <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
                                 <div
                                   className={`w-full rounded-t-lg transition-all duration-300 border-2 border-purple-500 ${typeof data.mood === 'number' ? 'bg-gradient-to-t from-indigo-400 to-pink-400' : 'bg-slate-200'}`}
-                                  style={{ 
+                                  style={{
                                     height: `${minHeight}px`,
                                     backgroundColor: typeof data.mood === 'number' ? '#8b5cf6' : '#e2e8f0'
                                   }}
@@ -959,7 +976,7 @@ export default function UserDashboard() {
                   <CardHeader className="pb-4 lg:pb-6">
                     <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
                       <div className="p-2 bg-indigo-100 rounded-lg">
-                      <Calendar className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                        <Calendar className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
                       </div>
                       Upcoming Sessions
                     </CardTitle>
@@ -968,7 +985,7 @@ export default function UserDashboard() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <AppointmentsList 
+                    <AppointmentsList
                       showUpcoming={true}
                       showPast={false}
                       limit={5}
@@ -978,10 +995,10 @@ export default function UserDashboard() {
                       onViewAll={() => setActiveTab('appointments')}
                       statusFilter={["upcoming", "scheduled", "completed"]}
                     />
-                    
+
                     {/* Quick action button */}
                     <div className="pt-2 border-t border-slate-200 space-y-2">
-                      <Button 
+                      <Button
                         variant="outline"
                         className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
                         onClick={() => setActiveTab('appointments')}
@@ -989,7 +1006,7 @@ export default function UserDashboard() {
                         <BookOpen className="w-4 h-4 mr-2" />
                         View All Appointments
                       </Button>
-                      <Button 
+                      <Button
                         variant="outline"
                         className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
                         onClick={() => router.push('/dashboard/book-session')}
@@ -1049,7 +1066,7 @@ export default function UserDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3 lg:space-y-4">
-                    <Button 
+                    <Button
                       variant="outline"
                       className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 text-sm lg:text-base"
                       onClick={() => setActiveTab('therapists')}
@@ -1057,7 +1074,7 @@ export default function UserDashboard() {
                       <Search className="w-4 h-4 mr-2" />
                       Find Therapists
                     </Button>
-                    <Button 
+                    <Button
                       variant="outline"
                       className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 text-sm lg:text-base"
                     >
@@ -1072,13 +1089,76 @@ export default function UserDashboard() {
 
           {/* ── Appointments tab ── */}
           <TabsContent value="appointments" className="space-y-6 lg:space-y-8">
-            <AppointmentsList 
-              showUpcoming={true}
-              showPast={true}
-              title="All Appointments"
-              description="View and manage your therapy sessions"
-              showCard={true}
-            />
+            <Card className="border-indigo-100 bg-white/80 shadow-md">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
+                      <Calendar className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                      All Appointments
+                    </CardTitle>
+                    <CardDescription>View and manage your therapy sessions</CardDescription>
+                  </div>
+                  <Button 
+                    onClick={() => router.push('/dashboard/book-session')}
+                    className="bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white"
+                  >
+                    Book a Session
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Filters */}
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="status-filter" className="text-sm font-medium text-slate-700">Status:</Label>
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                          <SelectTrigger id="status-filter" className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white">
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="upcoming">Upcoming</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                            <SelectItem value="rejected">Rejected</SelectItem>
+                            <SelectItem value="expired">Expired</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="date-filter" className="text-sm font-medium text-slate-700">Date:</Label>
+                        <Select value={dateFilter} onValueChange={setDateFilter}>
+                          <SelectTrigger id="date-filter" className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white">
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="today">Today</SelectItem>
+                            <SelectItem value="week">This Week</SelectItem>
+                            <SelectItem value="month">This Month</SelectItem>
+                            <SelectItem value="past">Past</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Appointments List */}
+                  <AppointmentsList
+                    showUpcoming={true}
+                    showPast={true}
+                    title=""
+                    description=""
+                    showCard={false}
+                    statusFilter={statusFilter !== "all" ? [statusFilter] : undefined}
+                    dateFilter={dateFilter}
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* ── Find Therapists tab ── */}
@@ -1102,7 +1182,7 @@ export default function UserDashboard() {
                       className="pl-12 h-12 text-base lg:text-lg"
                     />
                   </div>
-                  
+
                   <div className="grid gap-4 lg:gap-6">
                     {filteredTherapists.map((therapist) => (
                       <div key={therapist.id} className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6 p-4 lg:p-6 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
@@ -1128,7 +1208,7 @@ export default function UserDashboard() {
                             <Badge className="bg-green-100 text-green-700 w-fit">Available</Badge>
                           </div>
                         </div>
-                        <Button 
+                        <Button
                           onClick={() => router.push(`/dashboard/book-session?therapist=${therapist.id}`)}
                           className="bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white px-6 py-2 lg:px-8 lg:py-3 text-base lg:text-lg"
                         >
@@ -1137,7 +1217,7 @@ export default function UserDashboard() {
                       </div>
                     ))}
                   </div>
-                  
+
                   {filteredTherapists.length === 0 && searchQuery && (
                     <div className="text-center py-8 lg:py-12">
                       <Search className="h-12 w-12 lg:h-16 lg:w-16 text-slate-400 mx-auto mb-4" />
@@ -1172,50 +1252,50 @@ export default function UserDashboard() {
                     ) : moodError ? (
                       <div className="text-center text-red-600">{moodError}</div>
                     ) : (
-                    <div className="flex items-end justify-between h-32 lg:h-48 space-x-2">
+                      <div className="flex items-end justify-between h-32 lg:h-48 space-x-2">
                         {moodData.map((data, index) => {
                           const maxHeight = 120; // 120px max height
                           const height = typeof data.mood === 'number' ? (data.mood / 5) * maxHeight : 20;
                           const minHeight = typeof data.mood === 'number' ? Math.max(height, 20) : 20;
                           console.log(`Bar ${index} (${data.day}): mood=${data.mood}, height=${height}px, minHeight=${minHeight}px`);
                           return (
-                        <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
-                          <div
+                            <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
+                              <div
                                 className={`w-full rounded-t-lg transition-all duration-300 ${typeof data.mood === 'number' ? 'bg-gradient-to-t from-indigo-400 to-pink-400' : 'bg-slate-200'}`}
                                 style={{ height: `${minHeight}px` }}
-                          />
-                          <span className="text-xs lg:text-sm text-slate-600 font-medium">{data.day}</span>
-                        </div>
+                              />
+                              <span className="text-xs lg:text-sm text-slate-600 font-medium">{data.day}</span>
+                            </div>
                           );
                         })}
-                    </div>
+                      </div>
                     )}
                   </div>
 
                   {/* Weekly Mood Analysis */}
                   <Card className="border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50">
                     <CardHeader>
-                                          <CardTitle className="flex items-center justify-between text-indigo-800 text-lg lg:text-xl">
-                      <div className="flex items-center gap-3">
-                        <TrendingUp className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
-                        AI Weekly Analysis
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={fetchWeeklyAnalysis}
-                        disabled={weeklyLoading}
-                        className="text-indigo-600 hover:bg-indigo-100"
-                      >
-                        {weeklyLoading ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
-                        ) : (
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
-                        )}
-                      </Button>
-                    </CardTitle>
+                      <CardTitle className="flex items-center justify-between text-indigo-800 text-lg lg:text-xl">
+                        <div className="flex items-center gap-3">
+                          <TrendingUp className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                          AI Weekly Analysis
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={fetchWeeklyAnalysis}
+                          disabled={weeklyLoading}
+                          className="text-indigo-600 hover:bg-indigo-100"
+                        >
+                          {weeklyLoading ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                          ) : (
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          )}
+                        </Button>
+                      </CardTitle>
                       <CardDescription>Personalized insights and recommendations based on your mood patterns</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -1226,8 +1306,8 @@ export default function UserDashboard() {
                       ) : weeklyError ? (
                         <div className="text-center p-6">
                           <div className="text-slate-500 mb-2">{weeklyError}</div>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => window.location.reload()}
                             className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
@@ -1258,7 +1338,7 @@ export default function UserDashboard() {
                               </div>
                             </div>
                           )}
-                          
+
                           {/* AI Analysis */}
                           <div className="bg-white/80 rounded-xl p-6 border border-indigo-100 shadow-sm">
                             <div className="space-y-6">
@@ -1266,7 +1346,7 @@ export default function UserDashboard() {
                                 const lines = section.split('\n');
                                 const title = lines[0];
                                 const content = lines.slice(1).join('\n');
-                                
+
                                 // Minimal theme colors: pink, purple, blue
                                 const sectionStyles = {
                                   'Mood Summary': {
@@ -1282,11 +1362,11 @@ export default function UserDashboard() {
                                     text: 'text-indigo-800'
                                   }
                                 };
-                                
+
                                 const styles = sectionStyles[title as keyof typeof sectionStyles] || {
                                   text: 'text-slate-800'
                                 };
-                                
+
                                 return (
                                   <div key={index}>
                                     <h4 className={`font-semibold text-lg mb-3 ${styles.text}`}>
@@ -1371,7 +1451,7 @@ export default function UserDashboard() {
                     </div>
                     <Progress value={averageMood !== null ? (averageMood / 5) * 100 : 0} className="h-2 lg:h-3" />
                   </div>
-                  
+
                   <div className="space-y-3 lg:space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-xs lg:text-sm text-slate-600">Sessions Completed</span>
@@ -1421,8 +1501,8 @@ export default function UserDashboard() {
                     <div className="flex justify-between items-center">
                       <span className="text-xs lg:text-sm text-slate-600">Best Day</span>
                       <span className="text-xs lg:text-sm font-medium">
-                        {moodData.length > 0 ? 
-                          moodData.reduce((max, day) => 
+                        {moodData.length > 0 ?
+                          moodData.reduce((max, day) =>
                             (typeof day.mood === 'number' && day.mood > (typeof max.mood === 'number' ? max.mood : 0)) ? day : max
                           ).day : '--'
                         }
@@ -1435,20 +1515,19 @@ export default function UserDashboard() {
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="pt-3 lg:pt-4 border-t border-slate-200">
                     <h4 className="font-semibold text-indigo-800 mb-2 text-sm lg:text-base">This Week's Pattern</h4>
                     <div className="flex space-x-1">
                       {moodData.map((day, index) => (
                         <div
                           key={index}
-                          className={`flex-1 h-8 rounded ${
-                            typeof day.mood === 'number' 
-                              ? day.mood >= 4 ? 'bg-green-400' 
-                              : day.mood >= 3 ? 'bg-yellow-400' 
-                              : 'bg-red-400'
+                          className={`flex-1 h-8 rounded ${typeof day.mood === 'number'
+                              ? day.mood >= 4 ? 'bg-green-400'
+                                : day.mood >= 3 ? 'bg-yellow-400'
+                                  : 'bg-red-400'
                               : 'bg-slate-200'
-                          }`}
+                            }`}
                           title={`${day.day}: ${day.mood || 'No data'}/5`}
                         />
                       ))}
@@ -1463,119 +1542,95 @@ export default function UserDashboard() {
             </div>
 
             {/* Achievements Section */}
-              <Card className="border-indigo-100 bg-white/80 shadow-md">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
-                    <Star className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
+            <Card className="border-indigo-100 bg-white/80 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
+                  <Star className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
                   Achievements & Milestones
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="grid gap-4 lg:gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {/* First Session Achievement */}
-                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${
-                    (completedCount || 0) >= 1 ? 'bg-green-50 border border-green-200' : 'bg-slate-50 border border-slate-200'
-                  }`}>
-                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
-                      (completedCount || 0) >= 1 ? 'text-green-600' : 'text-slate-400'
-                    }`} />
-                      <div>
-                      <p className={`font-medium text-sm lg:text-base ${
-                        (completedCount || 0) >= 1 ? 'text-green-800' : 'text-slate-600'
-                      }`}>First Session</p>
-                      <p className={`text-xs lg:text-sm ${
-                        (completedCount || 0) >= 1 ? 'text-green-600' : 'text-slate-500'
-                      }`}>Complete your first therapy session</p>
-                      </div>
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${(completedCount || 0) >= 1 ? 'bg-green-50 border border-green-200' : 'bg-slate-50 border border-slate-200'
+                    }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${(completedCount || 0) >= 1 ? 'text-green-600' : 'text-slate-400'
+                      }`} />
+                    <div>
+                      <p className={`font-medium text-sm lg:text-base ${(completedCount || 0) >= 1 ? 'text-green-800' : 'text-slate-600'
+                        }`}>First Session</p>
+                      <p className={`text-xs lg:text-sm ${(completedCount || 0) >= 1 ? 'text-green-600' : 'text-slate-500'
+                        }`}>Complete your first therapy session</p>
                     </div>
-                    
+                  </div>
+
                   {/* Mood Tracker Achievement */}
-                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${
-                    moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50 border border-slate-200'
-                  }`}>
-                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
-                      moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'text-blue-600' : 'text-slate-400'
-                    }`} />
-                      <div>
-                      <p className={`font-medium text-sm lg:text-base ${
-                        moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'text-blue-800' : 'text-slate-600'
-                      }`}>Mood Tracker</p>
-                      <p className={`text-xs lg:text-sm ${
-                        moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'text-blue-600' : 'text-slate-500'
-                      }`}>Log mood for 7 consecutive days</p>
-                      </div>
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50 border border-slate-200'
+                    }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'text-blue-600' : 'text-slate-400'
+                      }`} />
+                    <div>
+                      <p className={`font-medium text-sm lg:text-base ${moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'text-blue-800' : 'text-slate-600'
+                        }`}>Mood Tracker</p>
+                      <p className={`text-xs lg:text-sm ${moodData.filter(d => typeof d.mood === 'number').length >= 7 ? 'text-blue-600' : 'text-slate-500'
+                        }`}>Log mood for 7 consecutive days</p>
                     </div>
-                    
+                  </div>
+
                   {/* Consistent Achievement */}
-                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${
-                    (completedCount || 0) >= 3 ? 'bg-purple-50 border border-purple-200' : 'bg-slate-50 border border-slate-200'
-                  }`}>
-                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
-                      (completedCount || 0) >= 3 ? 'text-purple-600' : 'text-slate-400'
-                    }`} />
-                      <div>
-                      <p className={`font-medium text-sm lg:text-base ${
-                        (completedCount || 0) >= 3 ? 'text-purple-800' : 'text-slate-600'
-                      }`}>Consistent</p>
-                      <p className={`text-xs lg:text-sm ${
-                        (completedCount || 0) >= 3 ? 'text-purple-600' : 'text-slate-500'
-                      }`}>Attend 3 sessions</p>
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${(completedCount || 0) >= 3 ? 'bg-purple-50 border border-purple-200' : 'bg-slate-50 border border-slate-200'
+                    }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${(completedCount || 0) >= 3 ? 'text-purple-600' : 'text-slate-400'
+                      }`} />
+                    <div>
+                      <p className={`font-medium text-sm lg:text-base ${(completedCount || 0) >= 3 ? 'text-purple-800' : 'text-slate-600'
+                        }`}>Consistent</p>
+                      <p className={`text-xs lg:text-sm ${(completedCount || 0) >= 3 ? 'text-purple-600' : 'text-slate-500'
+                        }`}>Attend 3 sessions</p>
                     </div>
                   </div>
 
                   {/* High Mood Achievement */}
-                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${
-                    averageMood !== null && averageMood >= 4 ? 'bg-yellow-50 border border-yellow-200' : 'bg-slate-50 border border-slate-200'
-                  }`}>
-                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
-                      averageMood !== null && averageMood >= 4 ? 'text-yellow-600' : 'text-slate-400'
-                    }`} />
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${averageMood !== null && averageMood >= 4 ? 'bg-yellow-50 border border-yellow-200' : 'bg-slate-50 border border-slate-200'
+                    }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${averageMood !== null && averageMood >= 4 ? 'text-yellow-600' : 'text-slate-400'
+                      }`} />
                     <div>
-                      <p className={`font-medium text-sm lg:text-base ${
-                        averageMood !== null && averageMood >= 4 ? 'text-yellow-800' : 'text-slate-600'
-                      }`}>Positive Vibes</p>
-                      <p className={`text-xs lg:text-sm ${
-                        averageMood !== null && averageMood >= 4 ? 'text-yellow-600' : 'text-slate-500'
-                      }`}>Maintain high mood average</p>
+                      <p className={`font-medium text-sm lg:text-base ${averageMood !== null && averageMood >= 4 ? 'text-yellow-800' : 'text-slate-600'
+                        }`}>Positive Vibes</p>
+                      <p className={`text-xs lg:text-sm ${averageMood !== null && averageMood >= 4 ? 'text-yellow-600' : 'text-slate-500'
+                        }`}>Maintain high mood average</p>
                     </div>
                   </div>
 
                   {/* Progress Maker Achievement */}
-                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${
-                    (completedCount || 0) >= 5 ? 'bg-indigo-50 border border-indigo-200' : 'bg-slate-50 border border-slate-200'
-                  }`}>
-                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
-                      (completedCount || 0) >= 5 ? 'text-indigo-600' : 'text-slate-400'
-                    }`} />
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${(completedCount || 0) >= 5 ? 'bg-indigo-50 border border-indigo-200' : 'bg-slate-50 border border-slate-200'
+                    }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${(completedCount || 0) >= 5 ? 'text-indigo-600' : 'text-slate-400'
+                      }`} />
                     <div>
-                      <p className={`font-medium text-sm lg:text-base ${
-                        (completedCount || 0) >= 5 ? 'text-indigo-800' : 'text-slate-600'
-                      }`}>Progress Maker</p>
-                      <p className={`text-xs lg:text-sm ${
-                        (completedCount || 0) >= 5 ? 'text-indigo-600' : 'text-slate-500'
-                      }`}>Complete 5 sessions</p>
+                      <p className={`font-medium text-sm lg:text-base ${(completedCount || 0) >= 5 ? 'text-indigo-800' : 'text-slate-600'
+                        }`}>Progress Maker</p>
+                      <p className={`text-xs lg:text-sm ${(completedCount || 0) >= 5 ? 'text-indigo-600' : 'text-slate-500'
+                        }`}>Complete 5 sessions</p>
                     </div>
                   </div>
 
                   {/* Wellness Warrior Achievement */}
-                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${
-                    moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'bg-pink-50 border border-pink-200' : 'bg-slate-50 border border-slate-200'
-                  }`}>
-                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
-                      moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'text-pink-600' : 'text-slate-400'
-                    }`} />
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg ${moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'bg-pink-50 border border-pink-200' : 'bg-slate-50 border border-slate-200'
+                    }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'text-pink-600' : 'text-slate-400'
+                      }`} />
                     <div>
-                      <p className={`font-medium text-sm lg:text-base ${
-                        moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'text-pink-800' : 'text-slate-600'
-                      }`}>Wellness Warrior</p>
-                      <p className={`text-xs lg:text-sm ${
-                        moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'text-pink-600' : 'text-slate-500'
-                      }`}>Track mood & attend sessions</p>
-                      </div>
+                      <p className={`font-medium text-sm lg:text-base ${moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'text-pink-800' : 'text-slate-600'
+                        }`}>Wellness Warrior</p>
+                      <p className={`text-xs lg:text-sm ${moodData.filter(d => typeof d.mood === 'number').length >= 7 && (completedCount || 0) >= 3 ? 'text-pink-600' : 'text-slate-500'
+                        }`}>Track mood & attend sessions</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Insights & Recommendations */}
             <Card className="border-indigo-100 bg-white/80 shadow-md">
@@ -1615,8 +1670,8 @@ export default function UserDashboard() {
                         </li>
                       )}
                     </ul>
-            </div>
-                  
+                  </div>
+
                   <div className="space-y-3 lg:space-y-4">
                     <h4 className="font-semibold text-indigo-800 text-sm lg:text-base">Recommendations</h4>
                     <ul className="text-xs lg:text-sm text-slate-600 space-y-2">

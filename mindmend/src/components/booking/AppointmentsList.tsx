@@ -10,6 +10,7 @@ import { Calendar, Clock, User, AlertCircle, CheckCircle, XCircle, Video, Phone 
 import { useRouter } from 'next/navigation';
 import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
 import AppointmentActions from './AppointmentActions';
+import { isToday, isThisWeek, isThisMonth, addDays } from 'date-fns';
 
 interface Appointment {
   id: string;
@@ -37,6 +38,8 @@ interface AppointmentsListProps {
   className?: string;
   onViewAll?: () => void;
   statusFilter?: string[];
+  dateFilter?: string;
+  bookButton?: boolean;
 }
 
 export default function AppointmentsList({ 
@@ -48,7 +51,9 @@ export default function AppointmentsList({
   showCard = true,
   className = "",
   onViewAll,
-  statusFilter
+  statusFilter,
+  dateFilter = 'all',
+  bookButton = false,
 }: AppointmentsListProps) {
       const user = useUser();
   const supabase = useSupabaseClient();
@@ -75,8 +80,34 @@ export default function AppointmentsList({
           .select('*')
           .eq("patient_id", user.id)
           .order("scheduled_at", { ascending: true });
+        
+        // Apply status filter
         if (Array.isArray(statusFilter) && statusFilter.length > 0) {
           query = query.in("status", statusFilter);
+        }
+        
+        // Apply date filter at database level for better performance
+        if (dateFilter === 'today') {
+          const today = new Date();
+          const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+          const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+          query = query.gte('scheduled_at', startOfDay.toISOString())
+                      .lt('scheduled_at', endOfDay.toISOString());
+        } else if (dateFilter === 'week') {
+          const now = new Date();
+          const weekFromNow = new Date();
+          weekFromNow.setDate(now.getDate() + 7);
+          query = query.gte('scheduled_at', now.toISOString())
+                      .lte('scheduled_at', weekFromNow.toISOString());
+        } else if (dateFilter === 'month') {
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+          query = query.gte('scheduled_at', startOfMonth.toISOString())
+                      .lte('scheduled_at', endOfMonth.toISOString());
+        } else if (dateFilter === 'past') {
+          const now = new Date();
+          query = query.lt('scheduled_at', now.toISOString());
         }
         const { data: appointmentsData, error: appointmentsError } = await query;
 
@@ -161,7 +192,7 @@ export default function AppointmentsList({
     };
 
     fetchAppointments();
-  }, [user]);
+  }, [user, statusFilter, dateFilter]);
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
@@ -237,17 +268,13 @@ export default function AppointmentsList({
     }
   };
 
-  // Filter appointments based on props
+  // Filter appointments based on showUpcoming/showPast props
   const filteredAppointments = appointments.filter(apt => {
     const appointmentDate = new Date(apt.scheduled_at);
     const now = new Date();
-    const status = apt.status?.toLowerCase() || 'upcoming';
-    // Only filter out cancelled/rejected if statusFilter is set (overview/upcoming cards)
-    if (Array.isArray(statusFilter) && statusFilter.length > 0) {
-      if (status === 'cancelled' || status === 'rejected') {
-        return false;
-      }
-    }
+    
+    // Status and date filtering is already handled in the database query
+    // Only apply showUpcoming/showPast filtering here
     if (showUpcoming && showPast) return true;
     if (showUpcoming) return appointmentDate > now;
     if (showPast) return appointmentDate < now;
@@ -422,11 +449,21 @@ export default function AppointmentsList({
   const content = (
     <>
       {showCard && (
-        <div className="p-6 border-b border-slate-200">
-          <h3 className="flex items-center gap-3 text-indigo-800 text-xl">
-            <Calendar className="h-6 w-6 text-indigo-600" />
-            {title}
-          </h3>
+        <div className="p-6 border-b border-slate-200 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h3 className="flex items-center gap-3 text-indigo-800 text-xl">
+              <Calendar className="h-6 w-6 text-indigo-600" />
+              {title}
+            </h3>
+            {bookButton && (
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg shadow"
+                onClick={() => router.push('/dashboard/book-session')}
+              >
+                Book a Session
+              </Button>
+            )}
+          </div>
           {description && <p className="text-slate-600 mt-1">{description}</p>}
         </div>
       )}

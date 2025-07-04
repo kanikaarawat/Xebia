@@ -19,7 +19,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
 import { getFreeSlotsFixed as getFreeSlots } from '@/lib/freeSlotsFixed';
-import { debugTimeConversion } from '@/lib/timeTest';
 import { Calendar, Clock, User, MessageSquare, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -82,8 +81,6 @@ export default function BookSessionPage() {
     if (!mounted) return;
     
     const fetchTherapists = async () => {
-      console.log('🔍 Starting to fetch therapists...');
-      
       const { data, error } = await supabase
   .from('therapists')
   .select(`
@@ -97,18 +94,10 @@ export default function BookSessionPage() {
     )
   `);
 
-      
-
-      console.log('🔍 Raw therapist data:', data);
-
-      console.log('📊 Supabase response:', { data, error });
-
       if (error) {
         console.error('Error fetching therapists:', error);
         setError('Failed to load therapists');
       } else {
-        console.log("Fetched therapists:", data);  // 🔍 See what Supabase returned
-    
         const therapistsWithAvatars = data?.map(t => {
           const profile = Array.isArray(t.profile) ? t.profile[0] : t.profile;
           return {
@@ -120,9 +109,6 @@ export default function BookSessionPage() {
           };
         }) || [];
           
-        console.log('🎯 Processed therapists:', therapistsWithAvatars);
-        console.log('Therapists:', therapistsWithAvatars);
-
         setTherapists(therapistsWithAvatars);
       }
       setLoadingTherapists(false);
@@ -142,36 +128,18 @@ export default function BookSessionPage() {
     setLoadingSlots(true);
     const fetchSlots = async () => {
       try {
-        console.log('🕐 Fetching slots for therapist:', therapistId, 'date:', date, 'duration:', duration);
         const { available, unavailable } = await getFreeSlots(therapistId, date, 30, duration);
-        console.log("✅ Available slots for", date, "with", duration, "min duration:", available);
-        console.log("❌ Unavailable slots:", unavailable);
-        
-        // Debug: Check for any overlap between available and unavailable slots
-        const availableTimes = available.map(slot => slot.start_time);
-        const unavailableTimes = unavailable.map(slot => slot.start_time);
-        const overlap = availableTimes.filter(time => unavailableTimes.includes(time));
-        
-        console.log("🔍 Debug - Slot overlap check:", {
-          availableTimes,
-          unavailableTimes,
-          overlap,
-          hasOverlap: overlap.length > 0
-        });
         
         // Filter out any slots that appear in both arrays (this shouldn't happen but just in case)
+        const availableTimes = available.map(slot => slot.start_time);
+        const unavailableTimes = unavailable.map(slot => slot.start_time);
         const filteredAvailable = available.filter(slot => !unavailableTimes.includes(slot.start_time));
         const filteredUnavailable = unavailable.filter(slot => !availableTimes.includes(slot.start_time));
-        
-        console.log("🔧 After filtering:", {
-          filteredAvailable: filteredAvailable.map(s => s.start_time),
-          filteredUnavailable: filteredUnavailable.map(s => s.start_time)
-        });
         
         setSlots(filteredAvailable);
         setUnavailableSlots(filteredUnavailable);
       } catch (err) {
-        console.error('❌ Error fetching slots:', err);
+        console.error('Error fetching slots:', err);
         setError('Failed to load available slots');
       } finally {
         setLoadingSlots(false);
@@ -203,7 +171,6 @@ export default function BookSessionPage() {
       }
 
       // Additional validation: Check if the slot is still available
-      console.log('🔍 Double-checking slot availability before booking...');
       const { available: currentSlots } = await getFreeSlots(therapistId, date, 30, duration);
       const isSlotStillAvailable = currentSlots.some((slot: TimeSlot) => slot.start_time === selectedSlot);
       
@@ -221,9 +188,6 @@ export default function BookSessionPage() {
         status: 'upcoming',
       };
 
-      console.log('📅 Booking appointment:', appointmentData);
-      console.log('⏰ This will block therapist time from', selectedSlot, 'to', getSessionEndTime(selectedSlot, duration));
-
       // Insert appointment
       const { data: appointment, error: apptErr } = await supabase
         .from('appointments')
@@ -231,20 +195,12 @@ export default function BookSessionPage() {
         .select()
         .single();
       
-      console.log('📊 Appointment creation result:', { appointment, error: apptErr });
-      
       if (apptErr) {
-        console.error('❌ Appointment creation error:', apptErr);
+        console.error('Appointment creation error:', apptErr);
         throw new Error(`Appointment creation failed: ${apptErr.message || 'Unknown error'}`);
       }
 
-      console.log('✅ Appointment created successfully:', appointment);
-      console.log('🚫 Therapist is now blocked from', selectedSlot, 'to', getSessionEndTime(selectedSlot, duration));
-
       // Manual fallback: Create unavailability record if trigger didn't work
-      console.log('🔧 Creating unavailability record manually...');
-      
-      // Try to create unavailability record with detailed error logging
       const unavailabilityData = {
         therapist_id: therapistId,
         appointment_id: appointment.id,
@@ -253,24 +209,13 @@ export default function BookSessionPage() {
         reason: `Booked session - ${type}`
       };
       
-      console.log('📝 Attempting to insert unavailability data:', unavailabilityData);
-      
-      const { data: unavailData, error: unavailErr } = await supabase
+      const { error: unavailErr } = await supabase
         .from('therapist_unavailability')
         .insert(unavailabilityData)
         .select();
 
       if (unavailErr) {
-        console.error('⚠️ Manual unavailability creation failed:', {
-          message: unavailErr.message,
-          details: unavailErr.details,
-          hint: unavailErr.hint,
-          code: unavailErr.code,
-          error: unavailErr
-        });
-        
         // Try alternative schema if the first one fails
-        console.log('🔄 Trying alternative schema...');
         const alternativeData = {
           therapist_id: therapistId,
           appointment_id: appointment.id,
@@ -280,23 +225,12 @@ export default function BookSessionPage() {
           reason: `Booked session - ${type}`
         };
         
-        console.log('📝 Attempting alternative unavailability data:', alternativeData);
-        
         const { error: altUnavailErr } = await supabase
           .from('therapist_unavailability')
           .insert(alternativeData);
           
         if (altUnavailErr) {
-          console.error('⚠️ Alternative unavailability creation also failed:', {
-            message: altUnavailErr.message,
-            details: altUnavailErr.details,
-            hint: altUnavailErr.hint,
-            code: altUnavailErr.code,
-            error: altUnavailErr
-          });
-          
           // Try without appointment_id as it might not exist in the table
-          console.log('🔄 Trying without appointment_id...');
           const simpleData = {
             therapist_id: therapistId,
             start_time: `${date}T${selectedSlot}:00`,
@@ -304,31 +238,15 @@ export default function BookSessionPage() {
             reason: `Booked session - ${type}`
           };
           
-          const { error: simpleUnavailErr } = await supabase
+          await supabase
             .from('therapist_unavailability')
             .insert(simpleData);
-            
-          if (simpleUnavailErr) {
-            console.error('⚠️ Simple unavailability creation also failed:', {
-              message: simpleUnavailErr.message,
-              details: simpleUnavailErr.details,
-              hint: simpleUnavailErr.hint,
-              code: simpleUnavailErr.code,
-              error: simpleUnavailErr
-            });
-          } else {
-            console.log('✅ Unavailability record created with simple schema');
-          }
-        } else {
-          console.log('✅ Unavailability record created with alternative schema');
         }
-      } else {
-        console.log('✅ Unavailability record created manually:', unavailData);
       }
 
       setSuccess(true);
     } catch (err: any) {
-      console.error('❌ Booking error:', err);
+      console.error('Booking error:', err);
       setError(err.message ?? 'Booking failed');
     } finally {
       setBooking(false);
@@ -388,27 +306,7 @@ export default function BookSessionPage() {
             Book a Session
           </h1>
         </header>
-        {/* Show selected therapist only once, as a card below the header */}
-        {selectedTherapist && (
-          <div className="mx-auto mb-8 max-w-lg p-4 sm:p-6 bg-gradient-to-r from-indigo-50 to-pink-50 rounded-xl border border-indigo-200 shadow-lg">
-            <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4">
-              <Avatar className="w-12 h-12 sm:w-16 sm:h-16">
-                <AvatarImage src={selectedTherapist.avatar_url} />
-                <AvatarFallback className="bg-gradient-to-br from-pink-400 to-indigo-400 text-white text-lg sm:text-xl">
-                  {selectedTherapist.name.split(' ').map(n => n[0]).join('')}
-                </AvatarFallback>
-              </Avatar>
-              <div className="text-center sm:text-left">
-                <h2 className="text-xl sm:text-2xl font-bold text-indigo-700">{selectedTherapist.name}</h2>
-                <p className="text-base sm:text-lg text-indigo-600 font-medium">{selectedTherapist.specialization}</p>
-                <p className="text-xs sm:text-sm text-slate-500">Licensed Professional</p>
-              </div>
-              <Badge variant="secondary" className="text-xs sm:text-sm px-2 sm:px-3 py-1">
-                Available
-              </Badge>
-            </div>
-          </div>
-        )}
+
         <motion.div
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
@@ -417,12 +315,7 @@ export default function BookSessionPage() {
           <Card className="bg-white/70 backdrop-blur-xl shadow-2xl border-2 border-transparent bg-clip-padding relative z-20 rounded-3xl p-1"
             style={{ borderImage: 'linear-gradient(90deg, #fbc2eb 0%, #a6c1ee 100%) 1' }}
           >
-            <CardHeader className="pb-4 sm:pb-6 mt-4 sm:mt-6">
-              <CardTitle className="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-indigo-500 via-pink-500 to-blue-500 bg-clip-text text-transparent flex items-center gap-3">
-                <Calendar className="w-7 h-7 sm:w-8 sm:h-8 text-pink-400 drop-shadow" />
-                Schedule Your Session
-              </CardTitle>
-            </CardHeader>
+
             <CardContent className="p-6 sm:p-8">
               {success ? (
                 <div className="py-12 text-center">
@@ -452,13 +345,13 @@ export default function BookSessionPage() {
 
                   {/* Therapist Selection */}
                   <div className="space-y-3 sm:space-y-4">
-                    <Label className="text-base sm:text-lg font-semibold text-slate-700 flex items-center gap-2 mt-2 sm:mt-4">
-                      <User className="w-4 h-4 sm:w-5 sm:h-5" />
-                      Select Your Therapist
-                    </Label>
-                    {/* Therapist Search Bar - enhanced UI */}
-                    <div className="w-full flex justify-center mb-4">
-                      <div className="relative w-full max-w-md">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+                      <Label className="text-base sm:text-lg font-semibold text-slate-700 flex items-center gap-2 mt-2 sm:mt-4">
+                        <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                        Select Your Therapist
+                      </Label>
+                      {/* Therapist Search Bar - enhanced UI */}
+                      <div className="relative w-full sm:w-80">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                           <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </span>
@@ -486,7 +379,7 @@ export default function BookSessionPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.07, type: 'spring', stiffness: 80 }}
                             onClick={() => setTherapistId(therapist.id)}
-                            className={`relative min-w-[260px] max-w-sm flex-shrink-0 rounded-3xl p-7 flex flex-col items-center gap-4 cursor-pointer group
+                            className={`relative min-w-[182px] max-w-sm flex-shrink-0 rounded-3xl p-5 flex flex-col items-center gap-3 cursor-pointer group
                               bg-white/60 backdrop-blur-xl border transition-all duration-200
                               shadow-xl hover:shadow-2xl hover:-translate-y-1
                               ${isSelected ? 'border-2 border-gradient-to-r from-indigo-400 via-pink-300 to-blue-300 ring-2 ring-indigo-200 scale-105' : 'border-slate-200'}
@@ -501,24 +394,24 @@ export default function BookSessionPage() {
                               <span className="absolute inset-0 rounded-3xl pointer-events-none border-2 border-transparent bg-gradient-to-r from-indigo-300 via-pink-200 to-blue-200 animate-borderGlow" />
                             )}
                             {/* Floating Available badge */}
-                            <Badge variant="secondary" className="absolute top-4 right-4 text-xs px-2 py-1 shadow-lg bg-green-100 text-green-700 border-green-200 z-10 animate-bounce-slow">
+                            <Badge variant="secondary" className="absolute top-2 right-2 text-xs px-2 py-1 shadow-lg bg-green-100 text-green-700 border-green-200 z-10 animate-bounce-slow">
                               Available
                             </Badge>
                             <div className={`relative mb-2 z-10 ${isSelected ? 'drop-shadow-xl' : ''}`}>
                               {therapist.avatar_url ? (
-                                <Avatar className={`w-24 h-24 shadow-lg ${isSelected ? 'ring-4 ring-indigo-200/80' : 'ring-2 ring-indigo-100/60'} transition-all duration-200`}>
+                                <Avatar className={`w-16 h-16 shadow-lg ${isSelected ? 'ring-4 ring-indigo-200/80' : 'ring-2 ring-indigo-100/60'} transition-all duration-200`}>
                                   <AvatarImage src={therapist.avatar_url} />
-                                  <AvatarFallback className="bg-gradient-to-br from-pink-400 to-indigo-400 text-white text-3xl">
+                                  <AvatarFallback className="bg-gradient-to-br from-pink-400 to-indigo-400 text-white text-xl">
                                     {therapist.name.split(' ').map(n => n[0]).join('')}
                                   </AvatarFallback>
                                 </Avatar>
                               ) : (
-                                <div className={`w-24 h-24 rounded-full flex items-center justify-center bg-indigo-200 text-indigo-800 text-4xl font-bold shadow-lg ${isSelected ? 'ring-4 ring-indigo-200/80' : 'ring-2 ring-indigo-100/60'} transition-all duration-200`}>
+                                <div className={`w-16 h-16 rounded-full flex items-center justify-center bg-indigo-200 text-indigo-800 text-2xl font-bold shadow-lg ${isSelected ? 'ring-4 ring-indigo-200/80' : 'ring-2 ring-indigo-100/60'} transition-all duration-200`}>
                                   {therapist.name.split(' ').map(n => n[0]).join('')}
                                 </div>
                               )}
                             </div>
-                            <div className="font-semibold text-indigo-900 text-xl truncate w-full text-center drop-shadow-sm z-10" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>{therapist.name}</div>
+                            <div className="font-semibold text-indigo-900 text-lg truncate w-full text-center drop-shadow-sm z-10" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>{therapist.name}</div>
                             <div className="flex flex-wrap gap-2 justify-center mb-1 z-10">
                               <Badge className="bg-gradient-to-r from-blue-100 via-pink-100 to-indigo-100 text-blue-700 text-xs px-3 py-1 rounded-full shadow-sm border-0">
                                 {therapist.specialization}
@@ -537,7 +430,7 @@ export default function BookSessionPage() {
                       Select Date
                     </Label>
                     
-                    <div className="relative w-full max-w-xs">
+                    <div className="relative w-full max-w-[182px]">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                         <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M8 2v2m8-2v2m-9 4h10M5 10h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z"/></svg>
                       </span>
@@ -771,35 +664,7 @@ export default function BookSessionPage() {
                     />
                   </div>
 
-                  {/* Debug Info */}
-                  {process.env.NODE_ENV === 'development' && (
-                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <h4 className="font-semibold text-yellow-700 mb-2">Debug Info</h4>
-                      <div className="text-xs text-yellow-600 space-y-1">
-                        <p>Loading therapists: {loadingTherapists ? 'Yes' : 'No'}</p>
-                        <p>Therapists count: {therapists.length}</p>
-                        <p>Selected therapist ID: {therapistId || 'None'}</p>
-                        <p>Selected therapist: {selectedTherapist ? JSON.stringify(selectedTherapist) : 'None'}</p>
-                        {therapists.length > 0 && (
-                          <div>
-                            <p>Available therapists:</p>
-                            <ul className="ml-4">
-                              {therapists.map((t, i) => (
-                                <li key={i}>- {t.name} ({t.specialization}) - ID: {t.id}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                      <Button 
-                        onClick={() => debugTimeConversion()}
-                        className="mt-2 text-xs"
-                        variant="outline"
-                      >
-                        Test Time Conversion
-                      </Button>
-                    </div>
-                  )}
+
 
                   {/* Submit Button */}
                   <Button 
