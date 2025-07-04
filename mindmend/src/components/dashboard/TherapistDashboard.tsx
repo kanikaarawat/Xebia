@@ -722,53 +722,73 @@ export default function TherapistDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {appointments.length > 0 ? (
-                      appointments.map((a) => (
-                        <div
-                          key={a.id}
-                          className="flex items-center justify-between rounded-xl bg-slate-50 p-6 hover:bg-slate-100 transition-colors"
-                        >
-                          <div className="space-y-2">
-                            <p className="font-semibold text-indigo-900 text-lg">
-                              {new Date(a.scheduled_at).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </p>
-                            <p className="text-slate-600 whitespace-pre-line">{a.notes}</p>
-                            {/* Show rejection reason if present in notes */}
-                            {a.status === 'rejected' && a.notes && a.notes.includes('Rejection reason:') && (
-                              <p className="text-red-600 text-sm font-semibold">
-                                {a.notes.split('Rejection reason:')[1].trim()}
+                    {(() => {
+                      const today = new Date();
+                      const todaysAppointments = appointments.filter(a => {
+                        const apptDate = new Date(a.scheduled_at);
+                        return apptDate.getFullYear() === today.getFullYear() &&
+                          apptDate.getMonth() === today.getMonth() &&
+                          apptDate.getDate() === today.getDate();
+                      });
+                      return todaysAppointments.length > 0 ? (
+                        todaysAppointments.map((a) => (
+                          <div
+                            key={a.id}
+                            className="flex items-center justify-between rounded-xl bg-slate-50 p-6 hover:bg-slate-100 transition-colors"
+                          >
+                            <div className="space-y-2">
+                              <p className="font-semibold text-indigo-900 text-lg">
+                                {new Date(a.scheduled_at).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
                               </p>
-                            )}
-                            <p className="text-sm text-slate-500">
-                              Patient #{a.patient_id.slice(0, 6)}
-                            </p>
+                              <p className="text-slate-800 font-medium">
+                                {a.patient?.first_name} {a.patient?.last_name}
+                              </p>
+                              <p className="text-slate-500 text-xs">{a.patient?.email}</p>
+                              <p className="text-slate-600 whitespace-pre-line">{a.notes}</p>
+                              {/* Show rejection reason if present in notes */}
+                              {a.status === 'rejected' && a.notes && a.notes.includes('Rejection reason:') && (
+                                <p className="text-red-600 text-sm font-semibold">
+                                  {a.notes.split('Rejection reason:')[1].trim()}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-3">
+                              <Badge className={`px-3 py-1 ${a.status === 'completed' ? 'bg-green-100 text-green-700' : a.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                                {a.status === 'completed' ? 'Completed' : a.status === 'rejected' ? 'Rejected' : 'Upcoming'}
+                              </Badge>
+                              {/* VC Button for upcoming video calls */}
+                              {a.status === 'upcoming' && a.type?.toLowerCase() === 'video call' && (
+                                <Button
+                                  className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-4 py-2 rounded-lg font-semibold shadow hover:from-indigo-600 hover:to-pink-600 transition-all"
+                                  onClick={() => window.location.href = `/video/${a.id}`}
+                                >
+                                  <Video className="w-4 h-4 mr-2" />
+                                  Join Video Call
+                                </Button>
+                              )}
+                              {/* Show Reject button for upcoming appointments only */}
+                              {a.status === 'upcoming' && (
+                                <Button
+                                  variant="destructive"
+                                  onClick={() => handleOpenRejectDialog(a.id)}
+                                >
+                                  Reject
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <Badge className={`px-3 py-1 ${a.status === 'completed' ? 'bg-green-100 text-green-700' : a.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                              {a.status === 'completed' ? 'Completed' : a.status === 'rejected' ? 'Rejected' : 'Upcoming'}
-                            </Badge>
-                            {/* Show Reject button for upcoming appointments only */}
-                            {a.status === 'upcoming' && (
-                              <Button
-                                variant="destructive"
-                                onClick={() => handleOpenRejectDialog(a.id)}
-                              >
-                                Reject
-                              </Button>
-                            )}
-                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-12">
+                          <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                          <p className="text-slate-600 text-lg">No appointments scheduled for today</p>
+                          <p className="text-slate-500 text-sm mt-2">You're all caught up!</p>
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-12">
-                        <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                        <p className="text-slate-600 text-lg">No appointments scheduled for today</p>
-                        <p className="text-slate-500 text-sm mt-2">You're all caught up!</p>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </div>

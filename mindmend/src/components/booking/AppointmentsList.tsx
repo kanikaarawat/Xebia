@@ -179,17 +179,19 @@ export default function AppointmentsList({
 
   const getStatusBadge = (status: string) => {
     if (!status) return <Badge className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5">Unknown</Badge>;
-    
     const statusLower = status.toLowerCase();
     if (statusLower === 'completed') {
       return <Badge className="bg-green-100 text-green-700 text-xs px-2 py-0.5">Completed</Badge>;
     } else if (statusLower === 'cancelled') {
       return <Badge className="bg-red-100 text-red-700 text-xs px-2 py-0.5">Cancelled</Badge>;
-    } else if (statusLower === 'upcoming' || statusLower === 'scheduled') {
-      return <Badge className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5">Upcoming</Badge>;
-    } else {
-      return <Badge className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5">{status}</Badge>;
+    } else if (statusLower === 'rejected') {
+      return <Badge className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5">Rejected</Badge>;
+    } else if (statusLower === 'expired') {
+      return <Badge className="bg-slate-300 text-slate-700 text-xs px-2 py-0.5">Expired</Badge>;
+    } else if (statusLower === 'upcoming') {
+      return <Badge className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5">Upcoming</Badge>;
     }
+    return <Badge className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5">{status}</Badge>;
   };
 
   const formatDateTime = (dateString: string) => {

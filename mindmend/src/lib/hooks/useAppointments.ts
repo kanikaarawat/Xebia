@@ -9,7 +9,7 @@ interface Appointment {
   duration: number;
   type: string;
   notes?: string;
-  status: string;
+  status: 'upcoming' | 'completed' | 'cancelled' | 'rejected' | 'expired';
   created_at: string;
   updated_at: string;
   therapist?: {
@@ -28,6 +28,7 @@ interface AppointmentActions {
   cancelAppointment: (appointmentId: string, reason?: string) => Promise<boolean>;
   rescheduleAppointment: (appointmentId: string, newScheduledAt: string, newDuration?: number, newType?: string, notes?: string) => Promise<boolean>;
   getCancellationInfo: (appointmentId: string) => Promise<any>;
+  markAsCompleted: (appointmentId: string) => Promise<boolean>;
 }
 
 export function useAppointments(): {
@@ -209,6 +210,43 @@ export function useAppointments(): {
     }
   }, [user]);
 
+  const markAsCompleted = useCallback(async (appointmentId: string): Promise<boolean> => {
+    if (!user) {
+      setError('User not authenticated');
+      return false;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/appointments/complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ appointment_id: appointmentId }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to mark appointment as completed');
+      }
+      setAppointments(prev =>
+        prev.map(apt =>
+          apt.id === appointmentId
+            ? { ...apt, status: 'completed', updated_at: new Date().toISOString() }
+            : apt
+        )
+      );
+      return true;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to mark appointment as completed';
+      setError(errorMessage);
+      console.error('Error marking appointment as completed:', err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   return {
     appointments,
     loading,
@@ -217,7 +255,8 @@ export function useAppointments(): {
       fetchAppointments,
       cancelAppointment,
       rescheduleAppointment,
-      getCancellationInfo
+      getCancellationInfo,
+      markAsCompleted
     }
   };
 } 
