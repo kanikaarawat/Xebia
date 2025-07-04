@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
 import {
   Card, CardHeader, CardTitle, CardContent,
@@ -41,6 +41,7 @@ export default function BookSessionPage() {
   const session = useSession();
   const supabase = useSupabaseClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
 
   const [therapists, setTherapists] = useState<Therapist[]>([]);
@@ -66,6 +67,15 @@ export default function BookSessionPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Set therapistId from query param on mount
+  useEffect(() => {
+    if (!mounted) return;
+    const therapistParam = searchParams.get('therapist');
+    if (therapistParam) {
+      setTherapistId(therapistParam);
+    }
+  }, [mounted, searchParams]);
 
   // Fetch all therapists with their details
   useEffect(() => {

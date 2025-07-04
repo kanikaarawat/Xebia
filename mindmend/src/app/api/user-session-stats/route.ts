@@ -14,6 +14,11 @@ export async function GET(req: NextRequest) {
 
   try {
     const now = new Date().toISOString();
+    
+    // Calculate today's date range
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
 
     // Upcoming sessions: scheduled_at > now and status = 'upcoming'
     const { count: upcoming, error: upcomingError } = await supabase
@@ -31,6 +36,14 @@ export async function GET(req: NextRequest) {
       .lt("scheduled_at", now)
       .eq("status", "completed");
 
+    // Today's appointments: scheduled_at between start and end of today
+    const { count: todayCount, error: todayError } = await supabase
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("patient_id", userId)
+      .gte("scheduled_at", startOfDay.toISOString())
+      .lt("scheduled_at", endOfDay.toISOString());
+
     const { data: statusList } = await supabase
       .from("appointments")
       .select("status")
@@ -38,9 +51,9 @@ export async function GET(req: NextRequest) {
 
     console.log("Statuses for user:", statusList);
 
-    if (upcomingError || completedError) {
+    if (upcomingError || completedError || todayError) {
       return NextResponse.json(
-        { error: upcomingError?.message || completedError?.message || "Failed to fetch session stats" },
+        { error: upcomingError?.message || completedError?.message || todayError?.message || "Failed to fetch session stats" },
         { status: 500 }
       );
     }
@@ -48,6 +61,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       upcoming: upcoming ?? 0,
       completed: completed ?? 0,
+      today: todayCount ?? 0,
       data: statusList,
       
     });

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, Clock, User, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Clock, User, AlertCircle, CheckCircle, XCircle, Video, Phone } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
 import AppointmentActions from './AppointmentActions';
@@ -36,6 +36,7 @@ interface AppointmentsListProps {
   showCard?: boolean;
   className?: string;
   onViewAll?: () => void;
+  statusFilter?: string[];
 }
 
 export default function AppointmentsList({ 
@@ -46,7 +47,8 @@ export default function AppointmentsList({
   description = "Manage your therapy sessions",
   showCard = true,
   className = "",
-  onViewAll
+  onViewAll,
+  statusFilter
 }: AppointmentsListProps) {
       const user = useUser();
   const supabase = useSupabaseClient();
@@ -68,12 +70,15 @@ export default function AppointmentsList({
       try {
         console.log('🔍 Fetching appointments for user:', user.id);
         
-        // Fetch appointments
-        const { data: appointmentsData, error: appointmentsError } = await supabase
+        let query = supabase
           .from("appointments")
           .select('*')
           .eq("patient_id", user.id)
           .order("scheduled_at", { ascending: true });
+        if (Array.isArray(statusFilter) && statusFilter.length > 0) {
+          query = query.in("status", statusFilter);
+        }
+        const { data: appointmentsData, error: appointmentsError } = await query;
 
         if (appointmentsError) {
           console.error('❌ Error fetching appointments:', appointmentsError);
@@ -174,17 +179,19 @@ export default function AppointmentsList({
 
   const getStatusBadge = (status: string) => {
     if (!status) return <Badge className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5">Unknown</Badge>;
-    
     const statusLower = status.toLowerCase();
     if (statusLower === 'completed') {
       return <Badge className="bg-green-100 text-green-700 text-xs px-2 py-0.5">Completed</Badge>;
     } else if (statusLower === 'cancelled') {
       return <Badge className="bg-red-100 text-red-700 text-xs px-2 py-0.5">Cancelled</Badge>;
-    } else if (statusLower === 'upcoming' || statusLower === 'scheduled') {
-      return <Badge className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5">Upcoming</Badge>;
-    } else {
-      return <Badge className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5">{status}</Badge>;
+    } else if (statusLower === 'rejected') {
+      return <Badge className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5">Rejected</Badge>;
+    } else if (statusLower === 'expired') {
+      return <Badge className="bg-slate-300 text-slate-700 text-xs px-2 py-0.5">Expired</Badge>;
+    } else if (statusLower === 'upcoming') {
+      return <Badge className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5">Upcoming</Badge>;
     }
+    return <Badge className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5">{status}</Badge>;
   };
 
   const formatDateTime = (dateString: string) => {
@@ -220,9 +227,9 @@ export default function AppointmentsList({
     
     switch (type.toLowerCase()) {
       case 'video call':
-        return <Calendar className="w-4 h-4" />;
+        return <Video className="w-4 h-4" />;
       case 'phone call':
-        return <Clock className="w-4 h-4" />;
+        return <Phone className="w-4 h-4" />;
       case 'in-person':
         return <User className="w-4 h-4" />;
       default:
@@ -234,34 +241,58 @@ export default function AppointmentsList({
   const filteredAppointments = appointments.filter(apt => {
     const appointmentDate = new Date(apt.scheduled_at);
     const now = new Date();
-    
-    console.log('🔍 Filtering appointment:', {
-      id: apt.id,
-      scheduled_at: apt.scheduled_at,
-      appointmentDate: appointmentDate.toISOString(),
-      now: now.toISOString(),
-      isUpcoming: appointmentDate > now,
-      isPast: appointmentDate < now,
-      showUpcoming,
-      showPast
-    });
-    
+    const status = apt.status?.toLowerCase() || 'upcoming';
+    // Only filter out cancelled/rejected if statusFilter is set (overview/upcoming cards)
+    if (Array.isArray(statusFilter) && statusFilter.length > 0) {
+      if (status === 'cancelled' || status === 'rejected') {
+        return false;
+      }
+    }
     if (showUpcoming && showPast) return true;
     if (showUpcoming) return appointmentDate > now;
     if (showPast) return appointmentDate < now;
     return false;
   });
 
+  // Sort appointments: for upcoming, show earliest first; for past, show most recent first
+  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
+    const dateA = new Date(a.scheduled_at);
+    const dateB = new Date(b.scheduled_at);
+    
+    if (showUpcoming && !showPast) {
+      // For upcoming appointments, sort by earliest first (ascending)
+      return dateA.getTime() - dateB.getTime();
+    } else if (showPast && !showUpcoming) {
+      // For past appointments, sort by most recent first (descending)
+      return dateB.getTime() - dateA.getTime();
+    } else {
+      // For mixed view, upcoming first, then past (upcoming in ascending, past in descending)
+      const now = new Date();
+      const isAUpcoming = dateA > now;
+      const isBUpcoming = dateB > now;
+      
+      if (isAUpcoming && !isBUpcoming) return -1;
+      if (!isAUpcoming && isBUpcoming) return 1;
+      
+      if (isAUpcoming && isBUpcoming) {
+        return dateA.getTime() - dateB.getTime(); // Both upcoming, earliest first
+      } else {
+        return dateB.getTime() - dateA.getTime(); // Both past, most recent first
+      }
+    }
+  });
+
   console.log('📊 Filtering results:', {
     totalAppointments: appointments.length,
     filteredAppointments: filteredAppointments.length,
+    sortedAppointments: sortedAppointments.length,
     showUpcoming,
     showPast,
     limit
   });
 
   // Apply limit if specified
-  const displayAppointments = limit ? filteredAppointments.slice(0, limit) : filteredAppointments;
+  const displayAppointments = limit ? sortedAppointments.slice(0, limit) : sortedAppointments;
 
   function formatTimeFromUTC(dateString: string) {
     // This will convert the UTC timestamp to the user's local time
@@ -487,40 +518,54 @@ export default function AppointmentsList({
                   </div>
                   
                   {/* Right side actions */}
-                  <div className="flex flex-wrap items-center gap-2 justify-start">
-                    {/* Session type with enhanced badge */}
-                    <div className="flex items-center space-x-1">
-                      {getSessionTypeIcon(appointment.type)}
-                      <span className="text-xs text-slate-600 font-medium">
-                        {appointment.type || 'Session'}
-                      </span>
+                  <div className="flex flex-col gap-2">
+                    {/* First row: session type, status badge, join video call */}
+                    <div className="flex flex-row flex-wrap items-center gap-2">
+                      {/* Session type with enhanced badge */}
+                      <div className="flex items-center space-x-1">
+                        {getSessionTypeIcon(appointment.type)}
+                        <span className="text-xs text-slate-600 font-medium">
+                          {appointment.type || 'Session'}
+                        </span>
+                      </div>
+                      {/* Enhanced status badge */}
+                      {getStatusBadge(appointment.status || 'upcoming')}
+                      {/* Join Video Call button (inline) */}
+                      {isUpcoming && (appointment.status || 'upcoming') === 'upcoming' && appointment.type?.toLowerCase() === 'video call' && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="ml-2 bg-green-600 text-white hover:bg-green-700 px-3 py-1 h-8 text-xs"
+                          onClick={() => window.location.href = `/video/${appointment.id}`}
+                        >
+                          Join Video Call
+                        </Button>
+                      )}
                     </div>
-                    
-                    {/* Enhanced status badge */}
-                    {getStatusBadge(appointment.status || 'upcoming')}
-                    
-                    {/* Appointment actions */}
+                    {/* Second row: reschedule/cancel actions */}
                     {isUpcoming && (appointment.status || 'upcoming') === 'upcoming' && (
-                      <AppointmentActions 
-                        appointment={{
-                          id: appointment.id,
-                          scheduled_at: appointment.scheduled_at,
-                          status: appointment.status || 'upcoming',
-                          type: appointment.type,
-                          duration: appointment.duration || 30,
-                          therapist_id: appointment.therapist_id,
-                          therapist: {
-                            profiles: {
-                              first_name: appointment.therapist?.first_name || 'Unknown',
-                              last_name: appointment.therapist?.last_name || 'Therapist'
+                      <div className="flex flex-row flex-wrap gap-2 mt-1">
+                        <AppointmentActions 
+                          appointment={{
+                            id: appointment.id,
+                            scheduled_at: appointment.scheduled_at,
+                            status: appointment.status || 'upcoming',
+                            type: appointment.type,
+                            duration: appointment.duration || 30,
+                            therapist_id: appointment.therapist_id,
+                            therapist: {
+                              profiles: {
+                                first_name: appointment.therapist?.first_name || 'Unknown',
+                                last_name: appointment.therapist?.last_name || 'Therapist'
+                              }
                             }
-                          }
-                        }}
-                        onActionComplete={() => {
-                          // Refresh appointments after action
-                          window.location.reload();
-                        }}
-                      />
+                          }}
+                          onActionComplete={() => {
+                            // Refresh appointments after action
+                            window.location.reload();
+                          }}
+                        />
+                      </div>
                     )}
                   </div>
                 </div>

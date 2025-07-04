@@ -107,29 +107,39 @@ export default function TherapistDashboard() {
   const router = useRouter();
 
   /* ── demo recent-patient list ──  */
-  const recentPatients = [
-    {
-      id: 1,
-      name: "Jordan M.",
-      lastSession: "2 days ago",
-      progress: "Improving",
-      riskLevel: "low",
-    },
-    {
-      id: 2,
-      name: "Alex K.",
-      lastSession: "1 week ago",
-      progress: "Stable",
-      riskLevel: "medium",
-    },
-    {
-      id: 3,
-      name: "Sam R.",
-      lastSession: "3 days ago",
-      progress: "Excellent",
-      riskLevel: "low",
-    },
-  ];
+  const today = new Date();
+  const todaysAppointments = appointments.filter(a => {
+    const apptDate = new Date(a.scheduled_at);
+    return apptDate.getFullYear() === today.getFullYear() &&
+      apptDate.getMonth() === today.getMonth() &&
+      apptDate.getDate() === today.getDate();
+  });
+
+  // Define what counts as an 'active' patient (e.g., seen in last 30 days)
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const activePatientIds = new Set(
+    appointments
+      .filter(a => new Date(a.scheduled_at) >= new Date(Date.now() - THIRTY_DAYS_MS) && a.patient)
+      .map(a => a.patient!.id)
+  );
+
+  // Compute recent patients (most recent unique patients by appointment date)
+  const recentPatientsMap = new Map();
+  appointments
+    .filter(a => a.patient)
+    .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
+    .forEach(a => {
+      if (!recentPatientsMap.has(a.patient!.id)) {
+        recentPatientsMap.set(a.patient!.id, {
+          id: a.patient!.id,
+          name: `${a.patient!.first_name} ${a.patient!.last_name}`,
+          lastSession: a.scheduled_at,
+          email: a.patient!.email,
+          avatar_url: a.patient!.avatar_url,
+        });
+      }
+    });
+  const recentPatients = Array.from(recentPatientsMap.values()).slice(0, 3);
 
   /* ── risk badge helper ── */
   const riskBadge = (level: string) => {
@@ -695,12 +705,12 @@ export default function TherapistDashboard() {
                   {[
                     {
                       icon: Calendar,
-                      value: 4,
+                      value: todaysAppointments.length,
                       label: "Today's Sessions",
                     },
                     {
                       icon: Users,
-                      value: 23,
+                      value: activePatientIds.size,
                       label: "Active Patients",
                     },
                     {
@@ -778,7 +788,7 @@ export default function TherapistDashboard() {
                               {a.status === 'upcoming' && a.type?.toLowerCase() === 'video call' && (
                                 <Button
                                   className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-4 py-2 rounded-lg font-semibold shadow hover:from-indigo-600 hover:to-pink-600 transition-all"
-                                  onClick={() => alert('Joining video call for appointment ' + a.id)}
+                                  onClick={() => window.location.href = `/video/${a.id}`}
                                 >
                                   <Video className="w-4 h-4 mr-2" />
                                   Join Video Call
@@ -817,34 +827,35 @@ export default function TherapistDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {recentPatients.map((p) => (
-                      <div
-                        key={p.id}
-                        className="flex items-center gap-3 rounded-lg bg-indigo-50 p-3"
-                      >
-                        <Avatar>
-                          <AvatarImage src="/placeholder.svg" />
-                          <AvatarFallback className="bg-indigo-200 text-indigo-700">
-                            {p.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className="font-medium text-indigo-800">{p.name}</p>
-                          <p className="text-sm text-slate-600">
-                            {p.lastSession}
-                          </p>
-                          <div className="mt-1 flex gap-2">
-                            <Badge className="bg-purple-100 text-purple-700 text-xs">
-                              {p.progress}
-                            </Badge>
-                            {riskBadge(p.riskLevel)}
+                    {recentPatients.length === 0 ? (
+                      <div className="text-center py-8 text-slate-500">No recent patients found.</div>
+                    ) : (
+                      recentPatients.map((p) => (
+                        <div
+                          key={p.id}
+                          className="flex items-center gap-3 rounded-lg bg-indigo-50 p-3"
+                        >
+                          <Avatar>
+                            <AvatarImage src={p.avatar_url || "/placeholder.svg"} />
+                            <AvatarFallback className="bg-indigo-200 text-indigo-700">
+                              {p.name
+                                .split(" ")
+                                .map((n: string) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <p className="font-medium text-indigo-800">{p.name}</p>
+                            <p className="text-sm text-slate-600">
+                              {new Date(p.lastSession).toLocaleDateString()} {new Date(p.lastSession).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                            <div className="mt-1 flex gap-2">
+                              {/* Optionally, add more patient info here */}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </CardContent>
                 </Card>
 
@@ -1138,7 +1149,7 @@ export default function TherapistDashboard() {
 
       {/* Reject Reason Dialog */}
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <DialogContent>
+        <DialogContent className="bg-white">
           <DialogHeader>
             <DialogTitle>Reject Appointment</DialogTitle>
           </DialogHeader>
@@ -1157,7 +1168,7 @@ export default function TherapistDashboard() {
           </div>
           <DialogFooter>
             <Button
-              variant="destructive"
+              className="bg-red-600 hover:bg-red-700 text-white"
               onClick={handleRejectAppointment}
               disabled={rejectLoading}
             >
