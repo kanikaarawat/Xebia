@@ -41,6 +41,12 @@ function getYouTubeId(url: string): string | null {
   return match ? match[1] : null
 }
 
+// Helper for truncating description
+function truncate(str: string | null, n: number) {
+  if (!str) return "";
+  return str.length > n ? str.slice(0, n - 1) + "…" : str;
+}
+
 export default function VideoLibraryPage() {
   const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(true)
@@ -275,7 +281,9 @@ export default function VideoLibraryPage() {
                     exit={{ opacity: 0, y: 30 }}
                     transition={{ duration: 0.7, type: "spring" }}
                   >
-                    <Card className="overflow-hidden shadow-lg border-0 bg-white/80 hover:shadow-2xl transition-all duration-300 rounded-xl">
+                    <Card className="overflow-hidden border border-white/30 bg-white/40 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl group relative">
+                      {/* Gradient accent bar */}
+                      <div className="absolute left-0 top-0 h-full w-2 bg-gradient-to-b from-blue-200 via-purple-200 to-pink-200 opacity-60 group-hover:opacity-90 transition-all duration-300" />
                       <CardContent className="p-4 flex flex-col gap-4">
                         {ytId ? (
                           <motion.div
@@ -296,9 +304,9 @@ export default function VideoLibraryPage() {
                             Invalid YouTube URL
                           </div>
                         )}
-                        <div>
-                          <h2 className="text-xl font-semibold text-slate-800 mb-1">{prettifyTitle(video.title)}</h2>
-                          {/* <p className="text-slate-600 mb-2">{video.description}</p> */}
+                        <div className="pl-3">
+                          <h2 className="text-xl font-semibold text-slate-800 mb-1 group-hover:text-indigo-700 transition-colors duration-300">{prettifyTitle(video.title)}</h2>
+                          <p className="text-slate-600 mb-2 line-clamp-2" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis'}}>{truncate(video.description, 120)}</p>
                           {video.category && (
                             <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">
                               {video.category}
