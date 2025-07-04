@@ -7,10 +7,25 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Clock, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import AppointmentsList from '@/components/booking/AppointmentsList';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 
 export default function AppointmentsPage() {
   const [activeTab, setActiveTab] = useState('all');
+  const [status, setStatus] = useState('all');
   const router = useRouter();
+
+  // Map status to filter array for AppointmentsList
+  const statusOptions = [
+    { value: 'all', label: 'All Statuses' },
+    { value: 'upcoming', label: 'Upcoming' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'no-show', label: 'No-show' },
+    { value: 'rescheduled', label: 'Rescheduled' },
+    { value: 'rejected', label: 'Rejected' },
+    { value: 'expired', label: 'Expired' },
+  ];
+  const statusFilter = status === 'all' ? undefined : [status];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -90,11 +105,25 @@ export default function AppointmentsPage() {
           </TabsList>
 
           <TabsContent value="all" className="space-y-8">
+            <div className="flex items-center gap-4 mb-2">
+              <label htmlFor="status-filter" className="text-sm font-medium text-slate-700">Filter by status:</label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger id="status-filter" className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <AppointmentsList 
               showUpcoming={true}
               showPast={true}
               title="All Appointments"
               description="View and manage all your therapy sessions"
+              statusFilter={statusFilter}
             />
           </TabsContent>
 
