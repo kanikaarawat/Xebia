@@ -15,7 +15,7 @@ export default function Component({ onCardClick }: MindMendHubProps = {}) {
   const router = useRouter();
 
   const routeMap = {
-    "video-library": "",
+    "video-library": "/video-library",
     "calm-cat": "/calm-cat",
     "guided-breathing": "/guided-breathing",
     "mindful-sipping": "/mindful-sipping",
