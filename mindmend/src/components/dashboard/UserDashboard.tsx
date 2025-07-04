@@ -40,6 +40,7 @@ import {
   FileText,
   Video as VideoIcon,
   MessageCircle as MessageIcon,
+  LogOut,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AppointmentsList from "@/components/booking/AppointmentsList";
@@ -138,7 +139,7 @@ export default function UserDashboard() {
   const [moodNotes, setMoodNotes] = useState("");
   
   // Use the custom hook for session counts
-  const { upcomingCount, completedCount, loading: sessionCountsLoading, error: sessionCountsError } = useSessionCounts(userProfile?.id);
+  const { upcomingCount, completedCount, todayCount, loading: sessionCountsLoading, error: sessionCountsError } = useSessionCounts(userProfile?.id);
 
   // Mood log state
   const [moodData, setMoodData] = useState<{ day: string; mood: number | null }[]>([]);
@@ -149,6 +150,29 @@ export default function UserDashboard() {
   // Notification state
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Calculate mood improvement percent (last 7 days vs previous 7 days)
+  let moodImprovementPercent = 0;
+  if (moodData.length >= 14) {
+    const prev7 = moodData.slice(0, 7).map(d => d.mood ?? 0);
+    const last7 = moodData.slice(7, 14).map(d => d.mood ?? 0);
+    const prevAvg = prev7.reduce((a, b) => a + b, 0) / 7;
+    const lastAvg = last7.reduce((a, b) => a + b, 0) / 7;
+    if (prevAvg > 0) {
+      moodImprovementPercent = Math.round(((lastAvg - prevAvg) / prevAvg) * 100);
+    } else {
+      moodImprovementPercent = 0;
+    }
+  }
+  // Calculate current streak (consecutive days with mood logged)
+  let currentStreak = 0;
+  for (let i = moodData.length - 1; i >= 0; i--) {
+    if (typeof moodData[i].mood === 'number') {
+      currentStreak++;
+    } else {
+      break;
+    }
+  }
 
   // Fetch mood logs for the last 7 days
   useEffect(() => {
@@ -455,118 +479,213 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-indigo-100">
-        <div className="container mx-auto flex items-center justify-between px-4 lg:px-8 py-4 lg:py-5">
-          <div className="flex items-center gap-2 lg:gap-3">
-            <span className="flex h-8 w-8 lg:h-10 lg:w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-pink-500">
-              <Heart className="h-4 w-4 lg:h-5 lg:w-5 text-white" />
-            </span>
-            <span className="text-lg lg:text-2xl font-semibold text-indigo-700">
-              MindMend
-            </span>
-            <Badge className="ml-2 lg:ml-3 bg-indigo-100 text-indigo-700 px-2 py-1 lg:px-3 lg:py-1 text-xs lg:text-sm">
-              User Portal
-            </Badge>
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-lg border-b border-indigo-200 shadow-sm">
+        <div className="container mx-auto flex items-center justify-between px-4 lg:px-8 py-2 lg:py-3">
+          {/* Left: Logo and Brand */}
+          <div className="flex items-center gap-3 lg:gap-4 ml-2 lg:ml-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 lg:h-12 lg:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 shadow-lg">
+                <Heart className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
+              </span>
+              <span className="text-xl lg:text-2xl font-bold text-indigo-800">
+                MindMend
+              </span>
+            </div>
           </div>
+
+          {/* Center: Page Title */}
+          <div className="absolute left-1/2 transform -translate-x-1/2">
+            <h1 className="text-lg lg:text-xl font-semibold text-indigo-700">
+              User Dashboard
+            </h1>
+          </div>
+
+          {/* Right: Actions */}
           <div className="flex items-center gap-2 lg:gap-4">
-            <Button variant="ghost" size="sm" className="text-indigo-600 p-2">
-              <Bell className="h-4 w-4 lg:h-5 lg:w-5" />
-            </Button>
+            {/* Notifications Dropdown */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-indigo-600 p-2 relative">
+                  <Bell className="h-5 w-5 lg:h-6 lg:w-6" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0 bg-gradient-to-br from-white via-indigo-50/30 to-pink-50/30 backdrop-blur-sm border border-indigo-200 shadow-xl" align="end">
+                <div className="p-4 border-b border-indigo-200 bg-gradient-to-r from-indigo-50 to-pink-50">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-indigo-800">Notifications</h3>
+                    {unreadCount > 0 && (
+                      <button 
+                        onClick={markAllAsRead}
+                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-indigo-600">
+                      <Bell className="h-8 w-8 mx-auto mb-2 text-indigo-400" />
+                      <p>No notifications</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-indigo-100">
+                      {notifications.slice(0, 5).map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-4 cursor-pointer hover:bg-indigo-50/50 transition-colors ${
+                            !notification.read ? 'bg-gradient-to-r from-indigo-50 to-pink-50' : ''
+                          }`}
+                          onClick={() => markOneAsRead(notification.id)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-2 h-2 rounded-full mt-2 ${
+                              !notification.read ? 'bg-indigo-500' : 'bg-indigo-300'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-indigo-900 truncate">
+                                {notification.title}
+                              </p>
+                              <p className="text-xs text-indigo-600 mt-1 line-clamp-2">
+                                {notification.message}
+                              </p>
+                              <p className="text-xs text-indigo-400 mt-2">
+                                {new Date(notification.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {notifications.length > 5 && (
+                  <div className="p-3 border-t border-indigo-200 bg-gradient-to-r from-indigo-50 to-pink-50">
+                    <button 
+                      onClick={() => setActiveTab('notifications')}
+                      className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                    >
+                      View all notifications
+                    </button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+
+            {/* Settings Button */}
             <Button 
               variant="ghost" 
               size="sm" 
               className="text-indigo-600 p-2"
               onClick={() => router.push('/dashboard/settings')}
             >
-              <Settings className="h-4 w-4 lg:h-5 lg:w-5" />
+              <Settings className="h-10 w-10 lg:h-10 lg:w-10" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-red-600 border-red-200 hover:bg-red-50 ml-2"
-              onClick={async () => {
-                await supabase.auth.signOut();
-                router.push('/login');
-              }}
-            >
-              Sign Out
-            </Button>
-            <Avatar className="h-8 w-8 lg:h-10 lg:w-10">
-              <AvatarImage src={userProfile.avatar_url} />
-              <AvatarFallback className="bg-indigo-100 text-indigo-700 text-sm lg:text-base">
-                {getInitials()}
-              </AvatarFallback>
-            </Avatar>
+
+            {/* Profile Dropdown */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="p-1">
+                  <Avatar className="h-8 w-8 lg:h-10 lg:w-10 cursor-pointer">
+                    <AvatarImage src={userProfile.avatar_url} />
+                    <AvatarFallback className="bg-indigo-100 text-indigo-700 text-sm lg:text-base">
+                      {getInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-0 bg-gradient-to-br from-white via-indigo-50/30 to-pink-50/30 backdrop-blur-sm border border-indigo-200 shadow-xl" align="end">
+                <div className="p-4 border-b border-indigo-200 bg-gradient-to-r from-indigo-50 to-pink-50">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={userProfile.avatar_url} />
+                      <AvatarFallback className="bg-indigo-100 text-indigo-700">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium text-indigo-900">{getDisplayName()}</p>
+                      <p className="text-sm text-indigo-600">{userProfile.email}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-1">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-left hover:bg-indigo-50/50"
+                    onClick={() => router.push('/setup-profile')}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Update Profile
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-left text-red-600 hover:text-red-700 hover:bg-red-50/50"
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      router.push('/login');
+                    }}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </header>
 
       {/* Body */}
-      <main className="container mx-auto space-y-8 lg:space-y-12 px-4 lg:px-8 py-8 lg:py-16 max-w-7xl">
-        <section className="space-y-4 lg:space-y-6">
-          <div className="space-y-2 lg:space-y-3">
-            <h1 className="text-2xl lg:text-4xl font-bold text-indigo-800 leading-tight">
-              {getGreeting()}, {getDisplayName()}!
-            </h1>
-            <p className="text-base lg:text-lg text-slate-600">
-              Here's a snapshot of your wellness journey.
-            </p>
-          </div>
-          
-          {/* User Info Card */}
-          <Card className="bg-white/80 backdrop-blur-sm border-indigo-100 shadow-lg">
-            <CardContent className="p-6 lg:p-8">
-              <div className="flex flex-col sm:flex-row items-start gap-4 lg:gap-6">
-                <Avatar className="h-16 w-16 lg:h-20 lg:w-20">
-                  <AvatarImage src={userProfile.avatar_url} />
-                  <AvatarFallback className="bg-indigo-100 text-indigo-700 text-lg lg:text-xl">
-                    {getInitials()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 space-y-3 lg:space-y-4">
-                  <div>
-                    <h3 className="text-xl lg:text-2xl font-semibold text-indigo-800 mb-2">
-                      {getDisplayName()}
-                    </h3>
-                    <p className="text-slate-600 text-base lg:text-lg">{userProfile.email}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 lg:gap-3">
-                    <Badge className="bg-blue-100 text-blue-700 px-3 py-1 lg:px-4 lg:py-2 text-xs lg:text-sm">
-                      Wellness Member
-                    </Badge>
-                    <Badge className="bg-green-100 text-green-700 px-3 py-1 lg:px-4 lg:py-2 text-xs lg:text-sm">
-                      Active Since {new Date(userProfile.created_at).toLocaleDateString()}
-                    </Badge>
-                  </div>
-                  {userProfile.bio && (
-                    <p className="text-slate-600 text-sm lg:text-base leading-relaxed">{userProfile.bio}</p>
-                  )}
-                </div>
+      <main className="container mx-auto px-4 lg:px-8 py-6 lg:py-12 max-w-7xl">
+        {/* Welcome Section */}
+        <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-2xl p-6 lg:p-8 border border-indigo-100 shadow-sm mb-6 lg:mb-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-6">
+            <div className="flex-shrink-0">
+              <Avatar className="h-16 w-16 lg:h-20 lg:w-20 border-4 border-white shadow-lg">
+                <AvatarImage src={userProfile.avatar_url} />
+                <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-pink-500 text-white text-lg lg:text-xl font-bold">
+                  {getInitials()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl lg:text-3xl font-bold text-indigo-800 mb-2">
+                {getGreeting()}, {getDisplayName()}! 👋
+              </h1>
+              <p className="text-base lg:text-lg text-indigo-600 mb-3">
+                Welcome back to your wellness journey. Here's what's happening today.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Badge className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-3 py-1 text-sm font-medium">
+                  Wellness Member
+                </Badge>
+                <Badge className="bg-white/80 text-indigo-700 px-3 py-1 text-sm font-medium border border-indigo-200">
+                  Member since {new Date(userProfile.created_at).toLocaleDateString()}
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
-        </section>
+            </div>
+          </div>
+        </div>
 
         {/* Tabs */}
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="w-full max-w-7xl mx-auto pt-4 lg:pt-8"
+          className="w-full max-w-7xl mx-auto"
         >
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 rounded-xl bg-white/70 backdrop-blur p-1 h-12 lg:h-14">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 rounded-xl bg-white/70 backdrop-blur p-1 h-12 lg:h-14">
             <TabsTrigger value="overview" className="rounded-lg text-sm lg:text-base font-medium">Overview</TabsTrigger>
             <TabsTrigger value="appointments" className="rounded-lg text-sm lg:text-base font-medium">Appointments</TabsTrigger>
             <TabsTrigger value="therapists" className="rounded-lg text-sm lg:text-base font-medium">Find Therapists</TabsTrigger>
             <TabsTrigger value="mood" className="rounded-lg text-sm lg:text-base font-medium">Mood Tracking</TabsTrigger>
             <TabsTrigger value="progress" className="rounded-lg text-sm lg:text-base font-medium">Progress</TabsTrigger>
-            <TabsTrigger value="notifications" className="rounded-lg text-sm lg:text-base font-medium flex items-center gap-2">
-              <Bell className="h-4 w-4" />
-              Notifications
-              {unreadCount > 0 && (
-                <span className="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{unreadCount}</span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-lg text-sm lg:text-base font-medium">Settings</TabsTrigger>
           </TabsList>
 
           {/* ── Overview tab ── */}
@@ -575,14 +694,14 @@ export default function UserDashboard() {
               {/* Left (2 cols on large screens, 1 col on smaller) */}
               <div className="space-y-6 lg:space-y-8 xl:col-span-2">
                 {/* Quick stats */}
-                <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
                   {sessionCountsLoading ? (
-                    <div className="col-span-3 flex justify-center items-center h-24">
-                      <span className="text-slate-600 text-lg">Loading session stats...</span>
+                    <div className="col-span-4 flex justify-center items-center h-20">
+                      <span className="text-slate-600 text-base">Loading session stats...</span>
                     </div>
                   ) : sessionCountsError ? (
-                    <div className="col-span-3 flex justify-center items-center h-24">
-                      <span className="text-red-600 text-lg">{sessionCountsError}</span>
+                    <div className="col-span-4 flex justify-center items-center h-20">
+                      <span className="text-red-600 text-base">{sessionCountsError}</span>
                     </div>
                   ) : ([
                     {
@@ -600,17 +719,22 @@ export default function UserDashboard() {
                       value: moodLoading ? "..." : (averageMood !== null ? averageMood.toFixed(1) : "0"),
                       label: "Mood Score",
                     },
+                    {
+                      icon: Clock,
+                      value: sessionCountsLoading ? "..." : (todayCount === null ? "0" : todayCount),
+                      label: "Today's Appointments",
+                    },
                   ].map(({ icon: Icon, value, label }) => (
                     <Card
                       key={label}
                       className="border-indigo-100 bg-white/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-shadow"
                     >
-                      <CardContent className="flex items-center gap-4 p-6 lg:p-8">
-                        <span className="flex h-12 w-12 lg:h-14 lg:w-14 items-center justify-center rounded-full bg-indigo-100">
-                          <Icon className="h-6 w-6 lg:h-7 lg:w-7 text-indigo-600" />
+                      <CardContent className="flex items-center gap-3 p-4 lg:p-5">
+                        <span className="flex h-10 w-10 lg:h-11 lg:w-11 items-center justify-center rounded-full bg-indigo-100">
+                          <Icon className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-600" />
                         </span>
                         <div>
-                          <p className={`text-2xl lg:text-3xl font-bold mb-1 ${
+                          <p className={`text-xl lg:text-2xl font-bold mb-1 ${
                             label === "Mood Score" && averageMood !== null
                               ? averageMood >= 4 ? 'text-green-600'
                               : averageMood >= 3 ? 'text-yellow-600'
@@ -619,7 +743,7 @@ export default function UserDashboard() {
                           }`}>
                             {value}
                           </p>
-                          <p className="text-sm text-slate-600 font-medium">{label}</p>
+                          <p className="text-xs lg:text-sm text-slate-600 font-medium">{label}</p>
                           {label === "Mood Score" && (
                             <div className="space-y-1 mt-1">
                               <div className="flex items-center gap-1">
@@ -726,7 +850,7 @@ export default function UserDashboard() {
                   </CardContent>
                 </Card>
 
-                {/* Mood Trends (Bar Chart) */}
+                {/* Mood Tracking Card (Mood Trends) */}
                 <Card className="border-indigo-100 bg-white/80 shadow-md">
                   <CardHeader className="pb-4 lg:pb-6">
                     <CardTitle className="flex items-center gap-3 text-indigo-800 text-lg lg:text-xl">
@@ -743,33 +867,30 @@ export default function UserDashboard() {
                       <div className="text-center text-red-600">{moodError}</div>
                     ) : (
                       <>
-                    <div className="flex items-end justify-between h-32 lg:h-40 space-x-2">
+                        <div className="flex items-end justify-between h-32 lg:h-40 space-x-2">
                           {moodData.map((data, index) => {
                             const maxHeight = 120; // 120px max height
                             const height = typeof data.mood === 'number' ? (data.mood / 5) * maxHeight : 20;
                             const minHeight = typeof data.mood === 'number' ? Math.max(height, 20) : 20;
-                            console.log(`Bar ${index} (${data.day}): mood=${data.mood}, height=${height}px, minHeight=${minHeight}px`);
                             return (
-                        <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
-                          <div
+                              <div key={index} className="flex flex-col items-center space-y-2 lg:space-y-3 flex-1">
+                                <div
                                   className={`w-full rounded-t-lg transition-all duration-300 border-2 border-purple-500 ${typeof data.mood === 'number' ? 'bg-gradient-to-t from-indigo-400 to-pink-400' : 'bg-slate-200'}`}
                                   style={{ 
                                     height: `${minHeight}px`,
                                     backgroundColor: typeof data.mood === 'number' ? '#8b5cf6' : '#e2e8f0'
                                   }}
-                          />
-                          <span className="text-xs lg:text-sm text-slate-600 font-medium">{data.day}</span>
-                        </div>
+                                />
+                                <span className="text-xs lg:text-sm text-slate-600 font-medium">{data.day}</span>
+                              </div>
                             );
                           })}
-                    </div>
-                    
-                    <div className="mt-4 lg:mt-6 flex items-center justify-between text-xs lg:text-sm text-slate-600">
+                        </div>
+                        <div className="mt-4 lg:mt-6 flex items-center justify-between text-xs lg:text-sm text-slate-600">
                           <span className="font-medium">
                             Average: {averageMood !== null ? averageMood.toFixed(2) : '--'}/5
                           </span>
-                          {/* Placeholder for trend badge */}
-                    </div>
+                        </div>
                       </>
                     )}
                   </CardContent>
@@ -795,11 +916,12 @@ export default function UserDashboard() {
                     <AppointmentsList 
                       showUpcoming={true}
                       showPast={false}
-                      limit={3}
+                      limit={5}
                       showCard={false}
                       title=""
                       description=""
                       onViewAll={() => setActiveTab('appointments')}
+                      statusFilter={["upcoming", "scheduled", "completed"]}
                     />
                     
                     {/* Quick action button */}
@@ -825,26 +947,31 @@ export default function UserDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 lg:space-y-6">
+                    {/* Mood Improvement */}
                     <div className="space-y-3 lg:space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-xs lg:text-sm text-slate-600">Mood Improvement</span>
-                        <span className="text-xs lg:text-sm font-medium">75%</span>
+                        <span className="text-xs lg:text-sm font-medium">
+                          {averageMood !== null ? Math.round((averageMood / 5) * 100) : 0}%
+                        </span>
                       </div>
-                      <Progress value={75} className="h-2 lg:h-3" />
+                      <Progress value={averageMood !== null ? (averageMood / 5) * 100 : 0} className="h-2 lg:h-3" />
                     </div>
-                    
+                    {/* Sessions Completed */}
                     <div className="space-y-3 lg:space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-xs lg:text-sm text-slate-600">Sessions Completed</span>
-                        <span className="text-xs lg:text-sm font-medium">5</span>
+                        <span className="text-xs lg:text-sm font-medium">{completedCount || 0}</span>
                       </div>
-                      <Progress value={Math.min(5 * 20, 100)} className="h-2 lg:h-3" />
+                      <Progress value={Math.min((completedCount || 0) * 20, 100)} className="h-2 lg:h-3" />
                     </div>
-
+                    {/* Mood Tracking Streak */}
                     <div className="pt-3 lg:pt-4 border-t border-slate-200">
                       <div className="flex items-center justify-between text-xs lg:text-sm">
-                        <span className="text-slate-600">Current Streak</span>
-                        <Badge className="bg-orange-100 text-orange-700">7 days</Badge>
+                        <span className="text-slate-600">Mood Tracking Streak</span>
+                        <Badge className="bg-orange-100 text-orange-700">
+                          {moodData.filter(d => typeof d.mood === 'number').length} days
+                        </Badge>
                       </div>
                     </div>
                   </CardContent>
@@ -1328,35 +1455,6 @@ export default function UserDashboard() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* ── Notifications tab ── */}
-          <TabsContent value="notifications" className="space-y-6 lg:space-y-8">
-            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-indigo-800 flex items-center gap-2">
-                  <Bell className="h-5 w-5" /> Notifications
-                </h2>
-                {unreadCount > 0 && (
-                  <button onClick={markAllAsRead} className="text-xs text-indigo-600 hover:underline">Mark all as read</button>
-                )}
-              </div>
-              <div className="divide-y">
-                {notifications.length === 0 ? (
-                  <div className="p-4 text-slate-500 text-center">No notifications</div>
-                ) : notifications.map((n) => (
-                  <div
-                    key={n.id}
-                    className={`py-4 px-2 cursor-pointer ${n.read ? 'bg-white' : 'bg-indigo-50'} hover:bg-indigo-100 rounded`}
-                    onClick={() => markOneAsRead(n.id)}
-                  >
-                    <div className="font-medium text-slate-800 text-sm">{n.title}</div>
-                    <div className="text-slate-600 text-xs mt-1">{n.message}</div>
-                    <div className="text-slate-400 text-xs mt-1">{new Date(n.created_at).toLocaleString()}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </TabsContent>
         </Tabs>
       </main>

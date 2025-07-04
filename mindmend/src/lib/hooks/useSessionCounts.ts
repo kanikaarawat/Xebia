@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 interface SessionCounts {
   upcomingCount: number | null;
   completedCount: number | null;
+  todayCount: number | null;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -11,6 +12,7 @@ interface SessionCounts {
 export function useSessionCounts(userId: string | undefined): SessionCounts {
   const [upcomingCount, setUpcomingCount] = useState<number | null>(null);
   const [completedCount, setCompletedCount] = useState<number | null>(null);
+  const [todayCount, setTodayCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,6 +33,7 @@ export function useSessionCounts(userId: string | undefined): SessionCounts {
       console.log("data", data);
       setUpcomingCount(data.upcoming ?? 0);
       setCompletedCount(data.completed ?? 0);
+      setTodayCount(data.today ?? 0);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch session counts');
     } finally {
@@ -49,8 +52,9 @@ export function useSessionCounts(userId: string | undefined): SessionCounts {
   return {
     upcomingCount,
     completedCount,
+    todayCount,
     loading,
     error,
     refetch: fetchCounts,
   };
-} 
+}
