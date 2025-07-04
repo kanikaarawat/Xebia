@@ -49,6 +49,7 @@ import { useSessionCounts } from "@/lib/hooks/useSessionCounts";
 import { Textarea } from "@/components/ui/textarea";
 import { format, subDays } from 'date-fns';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { PersonalizedVideos } from "@/components/booking/PersonalizedVideos";
 
 interface UserProfile {
   id: string;
@@ -1346,6 +1347,18 @@ export default function UserDashboard() {
                     </Card>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+            <Card className="border-blue-100 bg-blue-50/60 shadow-md mt-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-blue-800 text-lg lg:text-xl">
+                  <Video className="h-5 w-5 lg:h-6 lg:w-6 text-blue-600" />
+                  Personalized Calming Videos
+                </CardTitle>
+                <CardDescription>Curated for your current mood</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {user?.id && <PersonalizedVideos userId={user.id} />}
               </CardContent>
             </Card>
           </TabsContent>
