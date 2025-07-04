@@ -10,6 +10,7 @@ import { Calendar, Clock, X, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useAppointments } from '@/lib/hooks/useAppointments';
 import { getFreeSlotsFixed as getFreeSlots } from '@/lib/freeSlotsFixed';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import CancellationModal from './CancellationModal';
 
 interface AppointmentActionsProps {
   appointment: {
@@ -34,8 +35,6 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
   const { actions, loading, error } = useAppointments();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
-  const [cancellationInfo, setCancellationInfo] = useState<any>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [availableSlots, setAvailableSlots] = useState<{ start_time: string; end_time: string }[]>([]);
@@ -78,21 +77,15 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
     }
   }, [showRescheduleDialog, appointment.type, appointment.duration, appointment.notes]);
 
-  const handleCancelClick = async () => {
-    const info = await actions.getCancellationInfo(appointment.id);
-    setCancellationInfo(info);
+  const handleCancelClick = () => {
     setShowCancelDialog(true);
   };
 
-  const handleCancelAppointment = async () => {
-    const success = await actions.cancelAppointment(appointment.id, cancelReason);
-    if (success) {
-      setActionSuccess('Appointment cancelled successfully');
-      setShowCancelDialog(false);
-      setCancelReason('');
-      onActionComplete?.();
-      setTimeout(() => setActionSuccess(null), 3000);
-    }
+  const handleCancellationSuccess = () => {
+    setActionSuccess('Appointment cancelled successfully');
+    setShowCancelDialog(false);
+    onActionComplete?.();
+    setTimeout(() => setActionSuccess(null), 3000);
   };
 
   const handleRescheduleAppointment = async () => {
@@ -164,7 +157,6 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
 
   const { date, time } = formatDateTime(appointment.scheduled_at);
   const isUpcoming = appointment.status === 'upcoming';
-  const canCancel = cancellationInfo?.can_cancel ?? true;
 
   // Calculate if appointment is within 24 hours
   const now = new Date();
@@ -332,77 +324,29 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
                   </DialogContent>
                 </Dialog>
 
-                <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      disabled={loading || !canCancel}
-                      onClick={handleCancelClick}
-                      className="flex-1 min-w-[80px] max-w-[100px] whitespace-nowrap text-red-600 border-red-200 hover:bg-red-50"
-                    >
-                      <X className="w-4 h-4 mr-1" />
-                      Cancel
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Cancel Appointment</DialogTitle>
-                      <DialogDescription>
-                        Are you sure you want to cancel your session with Dr. {appointment.therapist?.profiles.first_name} {appointment.therapist?.profiles.last_name}?
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-sm font-medium text-slate-700">Appointment Details</p>
-                        <p className="text-sm text-slate-600">{date} at {time}</p>
-                        <p className="text-sm text-slate-600">{appointment.type} • {getDurationText(appointment.duration)}</p>
-                      </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={loading}
+                  onClick={handleCancelClick}
+                  className="flex-1 min-w-[80px] max-w-[100px] whitespace-nowrap text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Cancel
+                </Button>
 
-                      {cancellationInfo && (
-                        <div className="p-4 bg-blue-50 rounded-lg">
-                          <p className="text-sm font-medium text-blue-700">Cancellation Policy</p>
-                          <p className="text-sm text-blue-600">{cancellationInfo.cancellation_policy.message}</p>
-                          <p className="text-sm text-blue-600 mt-1">
-                            {cancellationInfo.hours_until_appointment} hours until appointment
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="space-y-2">
-                        <Label htmlFor="cancel-reason">Reason for cancellation (optional)</Label>
-                        <Textarea
-                          id="cancel-reason"
-                          placeholder="Please let us know why you're cancelling..."
-                          value={cancelReason}
-                          onChange={(e) => setCancelReason(e.target.value)}
-                          rows={3}
-                        />
-                      </div>
-
-                      {!canCancel && cancellationInfo && (
-                        <Alert className="border-orange-200 bg-orange-50">
-                          <AlertTriangle className="h-4 w-4 text-orange-600" />
-                          <AlertDescription className="text-orange-800">
-                            {cancellationInfo.cancellation_policy.message}
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
-                        Keep Appointment
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        onClick={handleCancelAppointment}
-                        disabled={loading || !canCancel}
-                      >
-                        {loading ? 'Cancelling...' : 'Cancel Appointment'}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <CancellationModal
+                  isOpen={showCancelDialog}
+                  onClose={() => setShowCancelDialog(false)}
+                  appointment={{
+                    id: appointment.id,
+                    date: new Date(appointment.scheduled_at).toISOString().split('T')[0],
+                    start_time: new Date(appointment.scheduled_at).toTimeString().slice(0, 5),
+                    amount: 0, // You'll need to get this from the appointment data
+                    status: appointment.status
+                  }}
+                  onCancellationSuccess={handleCancellationSuccess}
+                />
               </>
             )}
           </>

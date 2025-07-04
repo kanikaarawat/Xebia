@@ -20,8 +20,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
 import { getFreeSlotsFixed as getFreeSlots } from '@/lib/freeSlotsFixed';
 import { debugTimeConversion } from '@/lib/timeTest';
-import { Calendar, Clock, User, MessageSquare, Star } from 'lucide-react';
+import { Calendar, Clock, User, MessageSquare, Star, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
+import RazorpayPayment from '@/components/booking/RazorpayPayment';
 
 interface Therapist {
   id: string;
@@ -62,6 +63,30 @@ export default function BookSessionPage() {
   const [success, setSuccess] = useState(false);
   const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null);
   const [therapistSearch, setTherapistSearch] = useState('');
+  const [showPayment, setShowPayment] = useState(false);
+  const [bookedAppointment, setBookedAppointment] = useState<any>(null);
+  const [paymentAmount, setPaymentAmount] = useState(30000); // Default 30 mins = ₹300
+
+  // Calculate payment amount based on duration
+  const calculatePaymentAmount = (durationMinutes: number) => {
+    switch (durationMinutes) {
+      case 30:
+        return 30000; // ₹300
+      case 60:
+        return 50000; // ₹500
+      case 90:
+        return 65000; // ₹650
+      case 120:
+        return 80000; // ₹800
+      default:
+        return 30000; // Default to ₹300
+    }
+  };
+
+  // Update payment amount when duration changes
+  useEffect(() => {
+    setPaymentAmount(calculatePaymentAmount(duration));
+  }, [duration]);
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -194,7 +219,6 @@ export default function BookSessionPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setBooking(true);
 
     try {
       if (!user) throw new Error('Please log in first');
@@ -211,127 +235,50 @@ export default function BookSessionPage() {
         throw new Error('This time slot is no longer available. Please select a different time.');
       }
 
-      const appointmentData = {
-        patient_id: user.id,
-        therapist_id: therapistId,
-        scheduled_at: `${date}T${selectedSlot}:00`,
-        duration,
-        type,
-        notes,
-        status: 'upcoming',
-      };
+      // Create a short session ID for Razorpay (max 40 characters)
+      const shortSessionId = `sess_${Date.now().toString().slice(-8)}`;
 
-      console.log('📅 Booking appointment:', appointmentData);
-      console.log('⏰ This will block therapist time from', selectedSlot, 'to', getSessionEndTime(selectedSlot, duration));
-
-      // Insert appointment
-      const { data: appointment, error: apptErr } = await supabase
-        .from('appointments')
-        .insert(appointmentData)
-        .select()
-        .single();
-      
-      console.log('📊 Appointment creation result:', { appointment, error: apptErr });
-      
-      if (apptErr) {
-        console.error('❌ Appointment creation error:', apptErr);
-        throw new Error(`Appointment creation failed: ${apptErr.message || 'Unknown error'}`);
-      }
-
-      console.log('✅ Appointment created successfully:', appointment);
-      console.log('🚫 Therapist is now blocked from', selectedSlot, 'to', getSessionEndTime(selectedSlot, duration));
-
-      // Manual fallback: Create unavailability record if trigger didn't work
-      console.log('🔧 Creating unavailability record manually...');
-      
-      // Try to create unavailability record with detailed error logging
-      const unavailabilityData = {
-        therapist_id: therapistId,
-        appointment_id: appointment.id,
-        start_time: `${date}T${selectedSlot}:00`,
-        end_time: `${date}T${getSessionEndTime(selectedSlot, duration)}:00`,
-        reason: `Booked session - ${type}`
-      };
-      
-      console.log('📝 Attempting to insert unavailability data:', unavailabilityData);
-      
-      const { data: unavailData, error: unavailErr } = await supabase
-        .from('therapist_unavailability')
-        .insert(unavailabilityData)
-        .select();
-
-      if (unavailErr) {
-        console.error('⚠️ Manual unavailability creation failed:', {
-          message: unavailErr.message,
-          details: unavailErr.details,
-          hint: unavailErr.hint,
-          code: unavailErr.code,
-          error: unavailErr
-        });
-        
-        // Try alternative schema if the first one fails
-        console.log('🔄 Trying alternative schema...');
-        const alternativeData = {
-          therapist_id: therapistId,
-          appointment_id: appointment.id,
-          date: date,
-          start_time: selectedSlot,
-          end_time: getSessionEndTime(selectedSlot, duration),
-          reason: `Booked session - ${type}`
-        };
-        
-        console.log('📝 Attempting alternative unavailability data:', alternativeData);
-        
-        const { error: altUnavailErr } = await supabase
-          .from('therapist_unavailability')
-          .insert(alternativeData);
-          
-        if (altUnavailErr) {
-          console.error('⚠️ Alternative unavailability creation also failed:', {
-            message: altUnavailErr.message,
-            details: altUnavailErr.details,
-            hint: altUnavailErr.hint,
-            code: altUnavailErr.code,
-            error: altUnavailErr
-          });
-          
-          // Try without appointment_id as it might not exist in the table
-          console.log('🔄 Trying without appointment_id...');
-          const simpleData = {
-            therapist_id: therapistId,
-            start_time: `${date}T${selectedSlot}:00`,
-            end_time: `${date}T${getSessionEndTime(selectedSlot, duration)}:00`,
-            reason: `Booked session - ${type}`
-          };
-          
-          const { error: simpleUnavailErr } = await supabase
-            .from('therapist_unavailability')
-            .insert(simpleData);
-            
-          if (simpleUnavailErr) {
-            console.error('⚠️ Simple unavailability creation also failed:', {
-              message: simpleUnavailErr.message,
-              details: simpleUnavailErr.details,
-              hint: simpleUnavailErr.hint,
-              code: simpleUnavailErr.code,
-              error: simpleUnavailErr
-            });
-          } else {
-            console.log('✅ Unavailability record created with simple schema');
+      // Create Razorpay order first
+      console.log('💰 Creating Razorpay order...');
+      const orderResponse = await fetch('/api/create-razorpay-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: paymentAmount,
+          currency: 'INR',
+          sessionId: shortSessionId,
+          userId: user.id,
+          notes: {
+            therapistId,
+            date,
+            time: selectedSlot,
+            type,
+            duration,
+            therapistName: selectedTherapist?.name
           }
-        } else {
-          console.log('✅ Unavailability record created with alternative schema');
-        }
-      } else {
-        console.log('✅ Unavailability record created manually:', unavailData);
+        }),
+      });
+
+      const orderData = await orderResponse.json();
+
+      if (!orderData.success) {
+        throw new Error(orderData.error || 'Failed to create payment order');
       }
 
-      setSuccess(true);
+      console.log('✅ Order created:', orderData.order);
+      setBookedAppointment({
+        orderId: orderData.order.id,
+        amount: orderData.order.amount,
+        currency: orderData.order.currency
+      });
+
+      // Show payment gateway
+      setShowPayment(true);
     } catch (err: any) {
-      console.error('❌ Booking error:', err);
-      setError(err.message ?? 'Booking failed');
-    } finally {
-      setBooking(false);
+      console.error('❌ Validation error:', err);
+      setError(err.message ?? 'Validation failed');
     }
   };
 
@@ -358,6 +305,118 @@ export default function BookSessionPage() {
     const hours = String(end.getHours()).padStart(2, '0');
     const minutes = String(end.getMinutes()).padStart(2, '0');
     return `${hours}:${minutes}`;
+  };
+
+  // Payment handlers
+  const handlePaymentSuccess = async (response: any) => {
+    const paymentId = response.razorpay_payment_id;
+    try {
+      setBooking(true);
+      
+      console.log('💰 Payment successful, creating appointment...');
+      console.log('📋 Payment response:', response);
+      
+      // Validate required data
+      if (!user?.id) {
+        throw new Error('User ID is missing');
+      }
+      
+      if (!therapistId) {
+        throw new Error('Therapist ID is missing');
+      }
+      
+      if (!date || !selectedSlot) {
+        throw new Error('Date or time slot is missing');
+      }
+      
+      console.log('✅ Validation passed:', {
+        userId: user.id,
+        therapistId: therapistId,
+        date: date,
+        time: selectedSlot,
+        paymentId: paymentId
+      });
+      
+      // Create appointment after successful payment
+      const appointmentData = {
+        patient_id: user.id,
+        therapist_id: therapistId,
+        scheduled_at: `${date}T${selectedSlot}:00`,
+        duration: duration || 30,
+        type: type || 'Video Call',
+        notes: notes || '',
+        status: 'upcoming',
+        payment_id: paymentId,
+        payment_status: 'paid',
+        payment_amount: paymentAmount / 100, // Convert from paise to rupees for database storage
+        payment_currency: 'INR',
+      };
+
+      console.log('📅 Creating appointment with data:', appointmentData);
+
+      // Insert appointment
+      const { data: appointment, error: apptErr } = await supabase
+        .from('appointments')
+        .insert(appointmentData)
+        .select()
+        .single();
+      
+      if (apptErr) {
+        console.error('❌ Appointment creation error:', apptErr);
+        console.error('❌ Error details:', {
+          code: apptErr.code,
+          message: apptErr.message,
+          details: apptErr.details,
+          hint: apptErr.hint
+        });
+        throw new Error(`Appointment creation failed: ${apptErr.message || 'Unknown error'}`);
+      }
+
+      console.log('✅ Appointment created successfully:', appointment);
+
+      // Create unavailability record
+      const unavailabilityData = {
+        therapist_id: therapistId,
+        appointment_id: appointment.id,
+        start_time: `${date}T${selectedSlot}:00`,
+        end_time: `${date}T${getSessionEndTime(selectedSlot, duration)}:00`,
+        reason: `Booked session - ${type}`
+      };
+      
+      console.log('⏰ Creating unavailability record:', unavailabilityData);
+      
+      const { error: unavailErr } = await supabase
+        .from('therapist_unavailability')
+        .insert(unavailabilityData);
+
+      if (unavailErr) {
+        console.error('⚠️ Unavailability creation failed:', unavailErr);
+        // Don't throw error here as appointment is already created
+      } else {
+        console.log('✅ Unavailability record created successfully');
+      }
+
+      setSuccess(true);
+      setShowPayment(false);
+      setBookedAppointment(null);
+      
+      // Redirect to appointments page
+      setTimeout(() => {
+        router.push('/dashboard/appointments');
+      }, 2000);
+    } catch (err: any) {
+      console.error('❌ Error creating appointment after payment:', err);
+      console.error('❌ Error stack:', err.stack);
+      setError(`Payment successful but appointment creation failed: ${err.message}`);
+      setShowPayment(false);
+    } finally {
+      setBooking(false);
+    }
+  };
+
+  const handlePaymentFailure = (error: string) => {
+    setError(`Payment failed: ${error}`);
+    setShowPayment(false);
   };
 
   // Don't render until mounted to prevent hydration issues
@@ -446,6 +505,14 @@ export default function BookSessionPage() {
                     <Alert className="border-red-200 bg-red-50">
                       <AlertDescription className="text-red-700">
                         {error}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {success && (
+                    <Alert className="border-green-200 bg-green-50">
+                      <AlertDescription className="text-green-700">
+                        Payment successful! Your session has been confirmed. Redirecting to appointments...
                       </AlertDescription>
                     </Alert>
                   )}
@@ -572,50 +639,7 @@ export default function BookSessionPage() {
                     )}
                   </div>
 
-                  {/* Session Duration */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <Label className="text-base sm:text-lg font-semibold text-slate-700 flex items-center gap-2 mt-6 sm:mt-8">
-                      <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
-                      Session Duration
-                    </Label>
-                    
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mt-2 mb-4 text-sm sm:text-base">
-                      {[
-                        { value: 30, label: '30 min', description: 'Quick session' },
-                        { value: 60, label: '1 hour', description: 'Standard session' },
-                        { value: 90, label: '1.5 hours', description: 'Extended session' },
-                        { value: 120, label: '2 hours', description: 'Comprehensive session' }
-                      ].map((option) => {
-                        const isSelected = duration === option.value;
-                        return (
-                          <motion.button
-                            key={option.value}
-                            type="button"
-                            whileHover={{ scale: 1.06 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setDuration(option.value)}
-                            className={`relative px-6 py-4 rounded-full border-2 transition-all duration-200 text-center group font-medium shadow-md
-                              bg-gradient-to-br from-pink-50 via-indigo-50 to-blue-50
-                              ${isSelected ? 'border-pink-400 shadow-pink-100 scale-105 ring-2 ring-pink-200 font-bold text-indigo-700' : 'border-slate-200 text-slate-700 hover:border-pink-300 hover:ring-1 hover:ring-pink-100'}
-                            `}
-                            style={{ fontFamily: 'Poppins, Inter, sans-serif' }}
-                          >
-                            {isSelected && (
-                              <div className="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-pink-400 to-indigo-400 rounded-full flex items-center justify-center shadow-lg">
-                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                            )}
-                            <div className="space-y-1">
-                              <div className={`text-sm sm:text-base ${isSelected ? 'font-bold' : 'font-medium'}`}>{option.label}</div>
-                              <div className={`text-xs sm:text-sm ${isSelected ? 'text-pink-500' : 'text-slate-500'}`}>{option.description}</div>
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </div>
+
 
                   {/* Time Slot Selection */}
                   <div className="space-y-3 sm:space-y-4">
@@ -742,19 +766,101 @@ export default function BookSessionPage() {
                     )}
                   </div>
 
-                  {/* Session Type */}
-                  <div className="space-y-4">
-                    <Label className="text-lg font-semibold text-slate-700">Session Type</Label>
-                    <Select value={type} onValueChange={setType} required>
-                      <SelectTrigger className="h-12 text-lg bg-white border-slate-200 hover:bg-slate-50">
-                        <SelectValue placeholder="Select session type" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border border-slate-200 shadow-lg z-50">
-                        <SelectItem value="Video Call" className="hover:bg-slate-100">Video Call</SelectItem>
-                        <SelectItem value="Phone Call" className="hover:bg-slate-100">Phone Call</SelectItem>
-                        <SelectItem value="In-Person" className="hover:bg-slate-100">In-Person</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  {/* Session Duration & Type */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Session Duration */}
+                    <div className="space-y-4">
+                      <Label className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-blue-500" />
+                        Session Duration
+                      </Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { value: 30, label: "30 min", price: "₹300", color: "from-purple-400 to-pink-400" },
+                          { value: 60, label: "60 min", price: "₹500", color: "from-pink-400 to-purple-500" },
+                          { value: 90, label: "90 min", price: "₹650", color: "from-purple-500 to-pink-500" },
+                          { value: 120, label: "120 min", price: "₹800", color: "from-pink-500 to-purple-600" }
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setDuration(option.value)}
+                            className={`
+                              relative p-5 rounded-2xl border-2 transition-all duration-300 text-center group overflow-hidden
+                              ${duration === option.value 
+                                ? `border-transparent bg-gradient-to-r ${option.color} text-white shadow-xl scale-105 ring-2 ring-purple-200/50` 
+                                : 'border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 hover:border-purple-300 hover:shadow-lg hover:scale-102 hover:bg-gradient-to-br hover:from-purple-100 hover:to-pink-100'
+                              }
+                            `}
+                          >
+                            {duration === option.value && (
+                              <div className="absolute -top-2 -right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-lg ring-2 ring-purple-200">
+                                <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            )}
+                            <div className="space-y-3">
+                              <div className={`font-bold text-base ${duration === option.value ? 'text-white' : 'text-purple-700'}`}>
+                                {option.label}
+                              </div>
+                              <div className={`text-xl font-bold ${duration === option.value ? 'text-white' : 'text-pink-600'}`}>
+                                {option.price}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Session Type */}
+                    <div className="space-y-4">
+                      <Label className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                        <Phone className="w-5 h-5 text-indigo-500" />
+                        Session Type
+                      </Label>
+                      <div className="grid grid-cols-1 gap-3">
+                        {[
+                          { value: "Video Call", label: "Video Call", icon: "📹", desc: "Face-to-face video session", color: "from-purple-400 to-pink-400" },
+                          { value: "Phone Call", label: "Phone Call", icon: "📞", desc: "Audio-only phone session", color: "from-pink-400 to-purple-500" },
+                          { value: "In-Person", label: "In-Person", icon: "🏢", desc: "Physical office visit", color: "from-purple-500 to-pink-500" }
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setType(option.value)}
+                            className={`
+                              relative p-5 rounded-2xl border-2 transition-all duration-300 text-left group overflow-hidden
+                              ${type === option.value 
+                                ? `border-transparent bg-gradient-to-r ${option.color} text-white shadow-xl ring-2 ring-purple-200/50` 
+                                : 'border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 hover:border-purple-300 hover:shadow-lg hover:bg-gradient-to-br hover:from-purple-100 hover:to-pink-100'
+                              }
+                            `}
+                          >
+                            {type === option.value && (
+                              <div className="absolute -top-2 -right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-lg ring-2 ring-purple-200">
+                                <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-4">
+                              <div className={`text-3xl ${type === option.value ? 'text-white' : 'text-purple-600'}`}>
+                                {option.icon}
+                              </div>
+                              <div className="flex-1">
+                                <div className={`font-bold text-lg ${type === option.value ? 'text-white' : 'text-purple-700'}`}>
+                                  {option.label}
+                                </div>
+                                <div className={`text-sm ${type === option.value ? 'text-white/80' : 'text-pink-600'}`}>
+                                  {option.desc}
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Notes */}
@@ -772,7 +878,7 @@ export default function BookSessionPage() {
                   </div>
 
                   {/* Debug Info */}
-                  {process.env.NODE_ENV === 'development' && (
+                  {/* {process.env.NODE_ENV === 'development' && (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <h4 className="font-semibold text-yellow-700 mb-2">Debug Info</h4>
                       <div className="text-xs text-yellow-600 space-y-1">
@@ -799,16 +905,169 @@ export default function BookSessionPage() {
                         Test Time Conversion
                       </Button>
                     </div>
-                  )}
+                  )} */}
+
+                  {/* Price Display */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6 shadow-lg">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-green-800 font-bold text-lg">Session Cost</h3>
+                          <p className="text-green-600 text-sm">{duration} minute session</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                          ₹{(paymentAmount / 100).toFixed(2)}
+                        </div>
+                        <p className="text-green-600 text-sm font-medium">Total Amount</p>
+                      </div>
+                    </div>
+                    <div className="bg-white/50 rounded-xl p-3 border border-green-100">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-green-700">Session Type:</span>
+                        <span className="font-semibold text-green-800">{type}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mt-1">
+                        <span className="text-green-700">Rate per minute:</span>
+                        <span className="font-semibold text-green-800">₹{((paymentAmount / 100) / duration).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Submit Button */}
                   <Button 
                     type="submit" 
                     className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white py-6 text-lg font-semibold hover:from-indigo-600 hover:to-pink-600"
-                    disabled={booking || !therapistId || !date || !selectedSlot || !type}
+                    disabled={booking || !therapistId || !date || !selectedSlot || !type || showPayment}
                   >
-                    {booking ? 'Booking Your Session...' : 'Book Session'}
+                    {booking ? 'Processing Payment...' : 'Proceed to Payment'}
                   </Button>
+
+                  {/* Payment Toast Notification */}
+                  {showPayment && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                      <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden w-full max-w-lg">
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                </svg>
+                              </div>
+                              <div>
+                                <h3 className="text-xl font-bold text-white">Complete Payment</h3>
+                                <p className="text-base text-blue-100">Secure payment for your session</p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => setShowPayment(false)}
+                              className="w-8 h-8 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors"
+                            >
+                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-8 space-y-6">
+                          {/* Session Summary */}
+                          <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
+                            <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-base">
+                              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              Session Details
+                            </h4>
+                            <div className="space-y-3 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Therapist:</span>
+                                <span className="font-semibold text-gray-900">{selectedTherapist?.name}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Date:</span>
+                                <span className="font-semibold text-gray-900">{date} ({getDayOfWeek(date)})</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Time:</span>
+                                <span className="font-semibold text-gray-900">{selectedSlot} - {getSessionEndTime(selectedSlot, duration)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Duration:</span>
+                                <span className="font-semibold text-gray-900">{duration} minutes</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Amount:</span>
+                                <span className="text-xl font-bold text-green-600">₹{(paymentAmount / 100).toFixed(2)}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Payment Tips */}
+                          <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+                            <h4 className="font-bold text-amber-800 mb-3 flex items-center gap-2 text-base">
+                              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Payment Tips
+                            </h4>
+                            <div className="text-sm text-amber-700 space-y-2">
+                              <div className="flex items-start gap-2">
+                                <span className="text-green-600 font-bold">✓</span>
+                                <span><strong>UPI:</strong> Best option - use Google Pay, PhonePe, or Paytm</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-green-600 font-bold">✓</span>
+                                <span><strong>Net Banking:</strong> Use your Indian bank's net banking</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-green-600 font-bold">✓</span>
+                                <span><strong>Cards:</strong> Indian debit/credit cards only</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-red-600 font-bold">✗</span>
+                                <span><strong>International cards:</strong> Not supported - use UPI instead</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Payment Component */}
+                          <div className="bg-white border border-gray-200 rounded-xl p-6">
+                            <RazorpayPayment
+                              orderId={bookedAppointment?.orderId || ''}
+                              amount={paymentAmount}
+                              currency="INR"
+                              onSuccess={handlePaymentSuccess}
+                              onFailure={handlePaymentFailure}
+                              onClose={() => setShowPayment(false)}
+                            />
+                          </div>
+
+                          {/* Footer */}
+                          <div className="text-center space-y-3">
+                            <button
+                              onClick={() => setShowPayment(false)}
+                              className="text-sm text-gray-500 hover:text-gray-700 underline transition-colors"
+                            >
+                              Cancel and book a different session
+                            </button>
+                            <div className="text-sm text-gray-400">
+                              <p>Need help? Contact support at support@mindmend.com</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </form>
               )}
             </CardContent>
