@@ -160,3 +160,8 @@ select:focus {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
+iframe {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100vh !important;
+}
