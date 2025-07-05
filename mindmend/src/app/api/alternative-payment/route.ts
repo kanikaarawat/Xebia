@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       message: 'Alternative payment request received. We will contact you within 2 hours with payment instructions.',
       reference: `ALT-${Date.now()}`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Alternative payment error:', error);
     return NextResponse.json(
       { error: 'Failed to process alternative payment request' },

@@ -8,6 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 
+interface Therapist {
+  id: string;
+  name: string;
+  email: string;
+}
+
 const daysOfWeek = [
   { value: 'Monday', label: 'Monday' },
   { value: 'Tuesday', label: 'Tuesday' },
@@ -21,7 +27,7 @@ const daysOfWeek = [
 export default function SeedAvailabilityPage() {
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
-  const [therapists, setTherapists] = useState<any[]>([]);
+  const [therapists, setTherapists] = useState<Therapist[]>([]);
   const [selectedDays, setSelectedDays] = useState<string[]>(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
@@ -31,7 +37,7 @@ export default function SeedAvailabilityPage() {
   }, []);
 
   const fetchTherapists = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('therapists')
       .select(`
         id,
@@ -42,7 +48,7 @@ export default function SeedAvailabilityPage() {
         )
       `);
     
-    if (!error && data) {
+    if (data) {
       setTherapists(data.map(t => ({
         id: t.id,
         name: `${t.profiles?.[0]?.first_name || ''} ${t.profiles?.[0]?.last_name || ''}`.trim(),
@@ -124,7 +130,7 @@ export default function SeedAvailabilityPage() {
       } else {
         setStatus('✅ All availability cleared successfully!');
       }
-    } catch (error) {
+    } catch {
       setStatus('❌ An error occurred while clearing availability.');
     } finally {
       setLoading(false);
