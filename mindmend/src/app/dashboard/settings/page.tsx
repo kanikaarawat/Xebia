@@ -349,11 +349,11 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100">
-      <div className="container mx-auto px-6 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-6xl">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Settings</h1>
-          <p className="text-slate-600">Manage your account preferences and privacy</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Settings</h1>
+          <p className="text-sm sm:text-base text-slate-600">Manage your account preferences and privacy</p>
         </div>
 
         {/* Success/Error Messages */}
@@ -371,60 +371,60 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white/70 backdrop-blur p-1 h-14">
-            <TabsTrigger value="profile" className="rounded-lg text-base font-medium">
-              <User className="w-4 h-4 mr-2" />
+        <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-4 bg-white/70 backdrop-blur p-1 h-10 sm:h-14">
+            <TabsTrigger value="profile" className="rounded-lg text-xs sm:text-base font-medium">
+              <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Profile
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="rounded-lg text-base font-medium">
-              <Bell className="w-4 h-4 mr-2" />
+            <TabsTrigger value="notifications" className="rounded-lg text-xs sm:text-base font-medium">
+              <Bell className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Notifications
             </TabsTrigger>
-            <TabsTrigger value="privacy" className="rounded-lg text-base font-medium">
-              <Shield className="w-4 h-4 mr-2" />
+            <TabsTrigger value="privacy" className="rounded-lg text-xs sm:text-base font-medium">
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Privacy
             </TabsTrigger>
-            <TabsTrigger value="account" className="rounded-lg text-base font-medium">
-              <Lock className="w-4 h-4 mr-2" />
+            <TabsTrigger value="account" className="rounded-lg text-xs sm:text-base font-medium">
+              <Lock className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Account
             </TabsTrigger>
           </TabsList>
 
           {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6">
+          <TabsContent value="profile" className="space-y-4 sm:space-y-6">
             <Card className="border-indigo-100 bg-white/80 shadow-md">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-indigo-800 text-xl">
-                  <User className="h-6 w-6 text-indigo-600" />
+                <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-lg sm:text-xl">
+                  <User className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                   Profile Information
                 </CardTitle>
-                <CardDescription>Update your personal information and preferences</CardDescription>
+                <CardDescription className="text-sm sm:text-base">Update your personal information and preferences</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4 sm:space-y-6">
                 {/* Avatar Section */}
-                <div className="flex items-center space-x-6">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
                   <div className="relative">
-                    <Avatar className="w-20 h-20 ring-4 ring-white shadow-lg">
+                    <Avatar className="w-16 h-16 sm:w-20 sm:h-20 ring-4 ring-white shadow-lg">
                       <AvatarImage src={userProfile?.avatar_url} />
-                      <AvatarFallback className="bg-indigo-100 text-indigo-700 text-2xl font-bold">
+                      <AvatarFallback className="bg-indigo-100 text-indigo-700 text-lg sm:text-2xl font-bold">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="absolute -bottom-2 -right-2 w-8 h-8 p-0 rounded-full bg-white border-2"
+                      className="absolute -bottom-2 -right-2 w-6 h-6 sm:w-8 sm:h-8 p-0 rounded-full bg-white border-2"
                     >
-                      <Camera className="w-4 h-4" />
+                      <Camera className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-800">
+                  <div className="text-center sm:text-left">
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-800">
                       {userProfile?.first_name} {userProfile?.last_name}
                     </h3>
-                    <p className="text-slate-600">{userProfile?.email}</p>
-                    <Badge className="mt-2 bg-indigo-100 text-indigo-700">
+                    <p className="text-sm sm:text-base text-slate-600">{userProfile?.email}</p>
+                    <Badge className="mt-2 bg-indigo-100 text-indigo-700 text-xs sm:text-sm">
                       {userProfile?.role || 'User'}
                     </Badge>
                   </div>
@@ -433,9 +433,9 @@ export default function SettingsPage() {
                 <Separator />
 
                 {/* Form Fields */}
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="first_name">First Name</Label>
+                    <Label htmlFor="first_name" className="text-sm sm:text-base">First Name</Label>
                     <Input
                       id="first_name"
                       value={formData.first_name}
@@ -444,11 +444,12 @@ export default function SettingsPage() {
                         setIsFormModified(true);
                       }}
                       placeholder="Enter your first name"
+                      className="text-sm sm:text-base"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="last_name">Last Name</Label>
+                    <Label htmlFor="last_name" className="text-sm sm:text-base">Last Name</Label>
                     <Input
                       id="last_name"
                       value={formData.last_name}
@@ -457,11 +458,12 @@ export default function SettingsPage() {
                         setIsFormModified(true);
                       }}
                       placeholder="Enter your last name"
+                      className="text-sm sm:text-base"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="phone" className="text-sm sm:text-base">Phone Number</Label>
                     <Input
                       id="phone"
                       value={formData.phone}
@@ -470,11 +472,12 @@ export default function SettingsPage() {
                         setIsFormModified(true);
                       }}
                       placeholder="Enter your phone number"
+                      className="text-sm sm:text-base"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="timezone">Timezone</Label>
+                    <Label htmlFor="timezone" className="text-sm sm:text-base">Timezone</Label>
                     <Select
                       value={formData.timezone}
                       onValueChange={(value) => {
@@ -482,7 +485,7 @@ export default function SettingsPage() {
                         setIsFormModified(true);
                       }}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="text-sm sm:text-base">
                         <SelectValue placeholder="Select timezone" />
                       </SelectTrigger>
                       <SelectContent>
@@ -500,7 +503,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
+                  <Label htmlFor="bio" className="text-sm sm:text-base">Bio</Label>
                   <Textarea
                     id="bio"
                     value={formData.bio}
@@ -510,21 +513,22 @@ export default function SettingsPage() {
                     }}
                     placeholder="Tell us about yourself..."
                     rows={4}
+                    className="text-sm sm:text-base"
                   />
                 </div>
 
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0">
                   <Button
                     variant="outline"
                     onClick={debugProfile}
-                    className="text-slate-600 border-slate-200"
+                    className="text-slate-600 border-slate-200 text-sm sm:text-base"
                   >
                     Debug Profile
                   </Button>
                   <Button
                     onClick={handleProfileUpdate}
                     disabled={saving || !formData.first_name.trim() || !formData.last_name.trim()}
-                    className="bg-indigo-600 hover:bg-indigo-700"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-sm sm:text-base"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     {saving ? 'Saving...' : 'Save Changes'}
@@ -535,21 +539,21 @@ export default function SettingsPage() {
           </TabsContent>
 
           {/* Notifications Tab */}
-          <TabsContent value="notifications" className="space-y-6">
+          <TabsContent value="notifications" className="space-y-4 sm:space-y-6">
             <Card className="border-indigo-100 bg-white/80 shadow-md">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-indigo-800 text-xl">
-                  <Bell className="h-6 w-6 text-indigo-600" />
+                <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-lg sm:text-xl">
+                  <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                   Notification Preferences
                 </CardTitle>
-                <CardDescription>Choose how and when you want to be notified</CardDescription>
+                <CardDescription className="text-sm sm:text-base">Choose how and when you want to be notified</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+              <CardContent className="space-y-4 sm:space-y-6">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex items-center justify-between p-3 sm:p-4 border border-slate-200 rounded-lg">
                     <div>
-                      <h4 className="font-medium text-slate-800">Email Notifications</h4>
-                      <p className="text-sm text-slate-600">Receive notifications via email</p>
+                      <h4 className="font-medium text-slate-800 text-sm sm:text-base">Email Notifications</h4>
+                      <p className="text-xs sm:text-sm text-slate-600">Receive notifications via email</p>
                     </div>
                     <Switch
                       checked={notifications.email_notifications}
@@ -559,10 +563,10 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                  <div className="flex items-center justify-between p-3 sm:p-4 border border-slate-200 rounded-lg">
                     <div>
-                      <h4 className="font-medium text-slate-800">Appointment Reminders</h4>
-                      <p className="text-sm text-slate-600">Get reminded about upcoming sessions</p>
+                      <h4 className="font-medium text-slate-800 text-sm sm:text-base">Appointment Reminders</h4>
+                      <p className="text-xs sm:text-sm text-slate-600">Get reminded about upcoming sessions</p>
                     </div>
                     <Switch
                       checked={notifications.appointment_reminders}
@@ -572,10 +576,10 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                  <div className="flex items-center justify-between p-3 sm:p-4 border border-slate-200 rounded-lg">
                     <div>
-                      <h4 className="font-medium text-slate-800">Mood Check-ins</h4>
-                      <p className="text-sm text-slate-600">Daily reminders to log your mood</p>
+                      <h4 className="font-medium text-slate-800 text-sm sm:text-base">Mood Check-ins</h4>
+                      <p className="text-xs sm:text-sm text-slate-600">Daily reminders to log your mood</p>
                     </div>
                     <Switch
                       checked={notifications.mood_reminders}
@@ -585,10 +589,10 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                  <div className="flex items-center justify-between p-3 sm:p-4 border border-slate-200 rounded-lg">
                     <div>
-                      <h4 className="font-medium text-slate-800">Weekly Reports</h4>
-                      <p className="text-sm text-slate-600">Receive weekly progress summaries</p>
+                      <h4 className="font-medium text-slate-800 text-sm sm:text-base">Weekly Reports</h4>
+                      <p className="text-xs sm:text-sm text-slate-600">Receive weekly progress summaries</p>
                     </div>
                     <Switch
                       checked={notifications.weekly_reports}
@@ -598,10 +602,10 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                  <div className="flex items-center justify-between p-3 sm:p-4 border border-slate-200 rounded-lg">
                     <div>
-                      <h4 className="font-medium text-slate-800">Marketing Emails</h4>
-                      <p className="text-sm text-slate-600">Receive updates about new features</p>
+                      <h4 className="font-medium text-slate-800 text-sm sm:text-base">Marketing Emails</h4>
+                      <p className="text-xs sm:text-sm text-slate-600">Receive updates about new features</p>
                     </div>
                     <Switch
                       checked={notifications.marketing_emails}
@@ -615,7 +619,7 @@ export default function SettingsPage() {
                 <div className="flex justify-end">
                   <Button
                     onClick={() => setSuccess('Notification preferences saved!')}
-                    className="bg-indigo-600 hover:bg-indigo-700"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-sm sm:text-base"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Save Preferences
@@ -626,24 +630,24 @@ export default function SettingsPage() {
           </TabsContent>
 
           {/* Privacy Tab */}
-          <TabsContent value="privacy" className="space-y-6">
+          <TabsContent value="privacy" className="space-y-4 sm:space-y-6">
             <Card className="border-indigo-100 bg-white/80 shadow-md">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-indigo-800 text-xl">
-                  <Shield className="h-6 w-6 text-indigo-600" />
+                <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-lg sm:text-xl">
+                  <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                   Privacy & Security
                 </CardTitle>
-                <CardDescription>Control your privacy settings and data sharing</CardDescription>
+                <CardDescription className="text-sm sm:text-base">Control your privacy settings and data sharing</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
+              <CardContent className="space-y-4 sm:space-y-6">
+                <div className="space-y-3 sm:space-y-4">
                   <div className="space-y-2">
-                    <Label>Profile Visibility</Label>
+                    <Label className="text-sm sm:text-base">Profile Visibility</Label>
                     <Select
                       value={privacy.profile_visibility}
                       onValueChange={(value) => setPrivacy({ ...privacy, profile_visibility: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="text-sm sm:text-base">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -654,10 +658,10 @@ export default function SettingsPage() {
                     </Select>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                  <div className="flex items-center justify-between p-3 sm:p-4 border border-slate-200 rounded-lg">
                     <div>
-                      <h4 className="font-medium text-slate-800">Share Mood Data</h4>
-                      <p className="text-sm text-slate-600">Allow therapists to see your mood trends</p>
+                      <h4 className="font-medium text-slate-800 text-sm sm:text-base">Share Mood Data</h4>
+                      <p className="text-xs sm:text-sm text-slate-600">Allow therapists to see your mood trends</p>
                     </div>
                     <Switch
                       checked={privacy.share_mood_data}
@@ -667,10 +671,10 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                  <div className="flex items-center justify-between p-3 sm:p-4 border border-slate-200 rounded-lg">
                     <div>
-                      <h4 className="font-medium text-slate-800">Analytics</h4>
-                      <p className="text-sm text-slate-600">Help us improve by sharing usage data</p>
+                      <h4 className="font-medium text-slate-800 text-sm sm:text-base">Analytics</h4>
+                      <p className="text-xs sm:text-sm text-slate-600">Help us improve by sharing usage data</p>
                     </div>
                     <Switch
                       checked={privacy.allow_analytics}
@@ -684,7 +688,7 @@ export default function SettingsPage() {
                 <div className="flex justify-end">
                   <Button
                     onClick={() => setSuccess('Privacy settings saved!')}
-                    className="bg-indigo-600 hover:bg-indigo-700"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-sm sm:text-base"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Save Settings
@@ -695,19 +699,19 @@ export default function SettingsPage() {
           </TabsContent>
 
           {/* Account Tab */}
-          <TabsContent value="account" className="space-y-6">
+          <TabsContent value="account" className="space-y-4 sm:space-y-6">
             {/* Password Change */}
             <Card className="border-indigo-100 bg-white/80 shadow-md">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-indigo-800 text-xl">
-                  <Lock className="h-6 w-6 text-indigo-600" />
+                <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-lg sm:text-xl">
+                  <Lock className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                   Change Password
                 </CardTitle>
-                <CardDescription>Update your account password</CardDescription>
+                <CardDescription className="text-sm sm:text-base">Update your account password</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="current_password">Current Password</Label>
+                  <Label htmlFor="current_password" className="text-sm sm:text-base">Current Password</Label>
                   <div className="relative">
                     <Input
                       id="current_password"
@@ -715,6 +719,7 @@ export default function SettingsPage() {
                       value={passwordData.current_password}
                       onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
                       placeholder="Enter current password"
+                      className="text-sm sm:text-base"
                     />
                     <Button
                       type="button"
@@ -729,24 +734,26 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="new_password">New Password</Label>
+                  <Label htmlFor="new_password" className="text-sm sm:text-base">New Password</Label>
                   <Input
                     id="new_password"
                     type={showPasswords ? "text" : "password"}
                     value={passwordData.new_password}
                     onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
                     placeholder="Enter new password"
+                    className="text-sm sm:text-base"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirm_password">Confirm New Password</Label>
+                  <Label htmlFor="confirm_password" className="text-sm sm:text-base">Confirm New Password</Label>
                   <Input
                     id="confirm_password"
                     type={showPasswords ? "text" : "password"}
                     value={passwordData.confirm_password}
                     onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
                     placeholder="Confirm new password"
+                    className="text-sm sm:text-base"
                   />
                 </div>
 
@@ -754,7 +761,7 @@ export default function SettingsPage() {
                   <Button
                     onClick={handlePasswordChange}
                     disabled={saving || !passwordData.new_password || !passwordData.confirm_password}
-                    className="bg-indigo-600 hover:bg-indigo-700"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-sm sm:text-base"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     {saving ? 'Updating...' : 'Update Password'}
@@ -766,22 +773,22 @@ export default function SettingsPage() {
             {/* Account Actions */}
             <Card className="border-indigo-100 bg-white/80 shadow-md">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-indigo-800 text-xl">
-                  <AlertTriangle className="h-6 w-6 text-indigo-600" />
+                <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-lg sm:text-xl">
+                  <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                   Account Actions
                 </CardTitle>
-                <CardDescription>Manage your account and data</CardDescription>
+                <CardDescription className="text-sm sm:text-base">Manage your account and data</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border border-slate-200 rounded-lg gap-3 sm:gap-0">
                   <div>
-                    <h4 className="font-medium text-slate-800">Sign Out</h4>
-                    <p className="text-sm text-slate-600">Sign out of your account</p>
+                    <h4 className="font-medium text-slate-800 text-sm sm:text-base">Sign Out</h4>
+                    <p className="text-xs sm:text-sm text-slate-600">Sign out of your account</p>
                   </div>
                   <Button
                     variant="outline"
                     onClick={handleSignOut}
-                    className="border-slate-200 text-slate-700 hover:bg-slate-50"
+                    className="border-slate-200 text-slate-700 hover:bg-slate-50 text-sm sm:text-base"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
@@ -790,16 +797,16 @@ export default function SettingsPage() {
 
                 <Separator />
 
-                <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border border-red-200 rounded-lg bg-red-50 gap-3 sm:gap-0">
                   <div>
-                    <h4 className="font-medium text-red-800">Delete Account</h4>
-                    <p className="text-sm text-red-600">Permanently delete your account and all data</p>
+                    <h4 className="font-medium text-red-800 text-sm sm:text-base">Delete Account</h4>
+                    <p className="text-xs sm:text-sm text-red-600">Permanently delete your account and all data</p>
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
                         variant="outline"
-                        className="border-red-200 text-red-700 hover:bg-red-50"
+                        className="border-red-200 text-red-700 hover:bg-red-50 text-sm sm:text-base"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
                         Delete Account

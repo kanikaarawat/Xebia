@@ -345,7 +345,7 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
                       Cancel
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="bg-white">
                     <DialogHeader>
                       <DialogTitle>Cancel Appointment</DialogTitle>
                       <DialogDescription>
