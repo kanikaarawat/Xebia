@@ -57,6 +57,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { format, subDays } from 'date-fns';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { PersonalizedVideos } from "@/components/booking/PersonalizedVideos";
+import MentalHealthCards from "@/components/ui/mental-health-cards";
 
 interface UserProfile {
   id: string;
@@ -770,7 +771,12 @@ export default function UserDashboard() {
   <TabsTrigger value="resources" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden xl:block">Resources</TabsTrigger>
 </TabsList>
 
-
+          <TabsContent value="resources">
+  <div className="p-4">
+    <h2 className="text-2xl font-semibold mb-4">Resources for Your Mental Wellness</h2>
+    <MentalHealthCards />
+  </div>
+</TabsContent>
           {/* ── Overview tab ── */}
           <TabsContent value="overview" className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8">
             <div className="grid gap-3 sm:gap-4 lg:gap-6 xl:gap-8 xl:grid-cols-3">
