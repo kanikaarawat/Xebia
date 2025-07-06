@@ -2167,7 +2167,7 @@ export default function TherapistDashboard() {
           {/* Center: Page Title */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-2xl font-bold text-indigo-700">
-              Therapist Dashboard
+              Dashboard
             </h1>
           </div>
 
@@ -2362,7 +2362,7 @@ export default function TherapistDashboard() {
               {/* Left (2 cols) */}
               <div className="space-y-8 lg:col-span-2">
                 {/* Quick stats */}
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 sm:gap-6 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
                   {[
                     {
                       icon: Calendar,
@@ -2389,19 +2389,58 @@ export default function TherapistDashboard() {
                       key={label}
                       className="border-indigo-100 bg-white/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-shadow"
                     >
-                      <CardContent className="flex items-center gap-5 p-8">
-                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100">
-                          <Icon className="h-7 w-7 text-indigo-600" />
+                      <CardContent className="flex items-center gap-3 sm:gap-5 p-4 sm:p-8">
+                        <span className="flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-indigo-100">
+                          <Icon className="h-5 w-5 sm:h-7 sm:w-7 text-indigo-600" />
                         </span>
                         <div>
-                          <p className="text-3xl font-bold text-indigo-800 mb-1">
+                          <p className="text-xl sm:text-3xl font-bold text-indigo-800 mb-1">
                             {value}
                           </p>
-                          <p className="text-sm text-slate-600 font-medium">{label}</p>
+                          <p className="text-xs sm:text-sm text-slate-600 font-medium">{label}</p>
                         </div>
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+
+                {/* Mobile Quick Actions Card - Only visible on mobile */}
+                <div className="block lg:hidden">
+                  <Card className="border-indigo-100 bg-white/80 backdrop-blur-sm shadow-md">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-indigo-800 text-lg">
+                        Quick Actions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-3 gap-3">
+                        <Button 
+                          variant="outline"
+                          className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 text-sm"
+                          onClick={() => setActiveTab("patients")}
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Patients
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 text-sm"
+                          onClick={() => setActiveTab("availability")}
+                        >
+                          <Clock className="mr-2 h-4 w-4" />
+                          Availability
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 text-sm"
+                          onClick={() => setActiveTab("analytics")}
+                        >
+                          <BarChart3 className="mr-2 h-4 w-4" />
+                          Analytics
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
 
                 {/* Today's Appointments Card */}
@@ -2432,64 +2471,153 @@ export default function TherapistDashboard() {
                           <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
                           <p className="text-slate-600 text-lg">No appointments today</p>
                           <p className="text-slate-500 text-sm mt-2">You have a free day!</p>
-                          </div>
+                        </div>
                       ) : (
-                        <div className="space-y-3 max-h-64 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                        <div className="space-y-4 max-h-96 overflow-y-auto overflow-x-hidden custom-scrollbar">
                           {todaysAppointments.map((appt) => {
                             const dateObj = new Date(appt.scheduled_at);
+                            const dateShort = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                             const time = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                             const isUpcoming = new Date(appt.scheduled_at) > new Date();
                             
                             return (
                               <div
                                 key={appt.id}
-                                className={`rounded-lg p-3 border ${
+                                className={`appointment-card group relative overflow-hidden rounded-xl p-3 ${
                                   isUpcoming 
-                                    ? 'bg-blue-50 border-blue-200' 
-                                    : 'bg-slate-50 border-slate-200'
+                                    ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 hover:border-blue-300' 
+                                    : 'bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200 hover:border-slate-300'
                                 }`}
                               >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <Avatar className="h-8 w-8">
-                                      <AvatarImage src={appt.patient?.avatar_url || "/placeholder.svg"} />
-                                      <AvatarFallback className="bg-indigo-100 text-indigo-700 text-xs">
-                                        {appt.patient ? `${appt.patient.first_name[0]}${appt.patient.last_name[0]}` : 'NA'}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                      <p className="font-medium text-slate-800 text-sm">
-                                        {appt.patient ? `${appt.patient.first_name} ${appt.patient.last_name}` : 'Unknown Patient'}
-                                      </p>
-                                      <p className="text-xs text-slate-600">{appt.type} • {appt.duration} min</p>
+                                {/* Decorative background pattern */}
+                                <div className={`absolute inset-0 opacity-5 ${
+                                  isUpcoming ? 'bg-blue-500' : 'bg-slate-500'
+                                }`} style={{
+                                  backgroundImage: `radial-gradient(circle at 20% 80%, currentColor 1px, transparent 1px),
+                                                  radial-gradient(circle at 80% 20%, currentColor 1px, transparent 1px)`,
+                                  backgroundSize: '20px 20px'
+                                }}></div>
+                                
+                                <div className="relative flex flex-col space-y-3">
+                                  <div className="flex items-center space-x-3">
+                                    {/* Enhanced Avatar */}
+                                    <div className="relative">
+                                      <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 ring-2 ring-white shadow-md">
+                                        <AvatarImage src={appt.patient?.avatar_url} />
+                                        <AvatarFallback className={`text-sm font-semibold ${
+                                          isUpcoming ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700'
+                                        }`}>
+                                          {appt.patient?.first_name?.[0] || ''}{appt.patient?.last_name?.[0] || ''}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      {/* Status indicator */}
+                                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                                        isUpcoming ? 'bg-green-500' : 'bg-slate-400'
+                                      }`}></div>
+                                    </div>
+                                    
+                                    <div className="min-w-0 flex-1">
+                                      {/* Patient name with enhanced styling */}
+                                      <h3 className="font-bold text-indigo-900 text-sm sm:text-base truncate break-words mb-1">
+                                        {appt.patient?.first_name} {appt.patient?.last_name}
+                                      </h3>
+                                      
+                                      {/* Patient email with icon */}
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                                        <p className="text-slate-600 text-xs sm:text-sm font-medium truncate break-words">
+                                          {appt.patient?.email}
+                                        </p>
+                                      </div>
+                                      
+                                      {/* Date and time with enhanced styling */}
+                                      <div className="flex flex-col space-y-1 text-xs">
+                                        <div className="flex items-center gap-1 text-slate-500">
+                                          <Calendar className="w-3 h-3" />
+                                          <span>{dateShort}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 text-slate-500">
+                                          <Clock className="w-3 h-3" />
+                                          <span>{time}</span>
+                                          <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                                          <span>{appt.duration} min</span>
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Notes with enhanced styling */}
+                                      {appt.notes && (
+                                        <div className="mt-2 p-2 bg-white/60 rounded-lg border border-slate-200">
+                                          <p className="text-xs text-slate-600 italic max-w-full truncate">
+                                            "{appt.notes}"
+                                          </p>
+                                          {/* Show rejection reason if present in notes */}
+                                          {appt.status === 'rejected' && appt.notes && appt.notes.includes('Rejection reason:') && (
+                                            <p className="text-red-600 text-sm font-semibold">
+                                              {appt.notes.split('Rejection reason:')[1].trim()}
+                                            </p>
+                                          )}
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                   
-                                  <div className="text-right">
-                                    <p className="text-sm font-bold text-slate-800">{time}</p>
-                                    <div className="flex items-center gap-1 justify-end mt-1">
+                                  {/* Right side actions */}
+                                  <div className="flex flex-col gap-2">
+                                    {/* First row: session type, status badge, join video call */}
+                                    <div className="flex flex-row flex-wrap items-center gap-2">
+                                      {/* Session type with enhanced badge */}
+                                      <div className="flex items-center space-x-1">
+                                        {appt.type?.toLowerCase() === 'video call' ? (
+                                          <Video className="w-3 h-3 text-blue-600" />
+                                        ) : appt.type?.toLowerCase() === 'phone call' ? (
+                                          <MessageCircle className="w-3 h-3 text-green-600" />
+                                        ) : (
+                                          <Calendar className="w-3 h-3 text-indigo-600" />
+                                        )}
+                                        <span className="text-xs text-slate-600 font-medium">
+                                          {appt.type || 'Session'}
+                                        </span>
+                                      </div>
+                                      {/* Enhanced status badge */}
                                       {statusBadge(appt.status)}
+                                      {/* Join Video Call button (inline) */}
+                                      {isUpcoming && appt.status === 'upcoming' && appt.type?.toLowerCase() === 'video call' && (
+                                        <Button
+                                          variant="default"
+                                          size="sm"
+                                          className="ml-2 bg-green-600 text-white hover:bg-green-700 px-3 py-1 h-8 text-xs"
+                                          onClick={() => window.location.href = `/video/${appt.id}`}
+                                        >
+                                          Join Video Call
+                                        </Button>
+                                      )}
                                     </div>
-                                    {shouldShowCompleteButton(appt) && (
-                                      <Button
-                                        size="sm"
-                                        onClick={() => handleOpenCompleteDialog(appt.id)}
-                                        className="mt-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1 h-8 text-xs"
-                                      >
-                                        <CheckCircle className="w-3 h-3 mr-1" />
-                                        Mark Complete
-                                      </Button>
+                                    {/* Second row: reject action */}
+                                    {isUpcoming && appt.status === 'upcoming' && (
+                                      <div className="flex flex-row flex-wrap gap-2 mt-1">
+                                        <Button
+                                          size="sm"
+                                          onClick={() => handleOpenRejectDialog(appt.id)}
+                                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 h-8 text-xs"
+                                        >
+                                          Reject Appointment
+                                        </Button>
+                                        {shouldShowCompleteButton(appt) && (
+                                          <Button
+                                            size="sm"
+                                            onClick={() => handleOpenCompleteDialog(appt.id)}
+                                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 h-8 text-xs"
+                                          >
+                                            <CheckCircle className="w-3 h-3 mr-1" />
+                                            Mark Complete
+                                          </Button>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                 </div>
-                                
-                                {appt.notes && (
-                                  <div className="mt-2 p-2 bg-white rounded border border-slate-200">
-                                    <p className="text-xs text-slate-600">{appt.notes}</p>
-                                  </div>
-                                )}
-                        </div>
-                      );
+                              </div>
+                            );
                           })}
                         </div>
                       )}
@@ -2541,34 +2669,7 @@ export default function TherapistDashboard() {
                   </CardContent>
                 </Card>
 
-                {/* Quick actions (optional) */}
-                <Card className="border-indigo-100 bg-white/80">
-                  <CardHeader>
-                    <CardTitle className="text-indigo-800">
-                      Quick Actions
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white">
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      Send Message
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full border-slate-200 text-slate-700 hover:bg-slate-50"
-                    >
-                      <FileText className="mr-2 h-4 w-4" />
-                      Create Note
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full border-slate-200 text-slate-700 hover:bg-slate-50"
-                    >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      Schedule Session
-                    </Button>
-                  </CardContent>
-                </Card>
+
               </div>
             </div>
           </TabsContent>
@@ -2661,27 +2762,24 @@ export default function TherapistDashboard() {
                           }
                         })
                         .sort((a, b) => {
-                          // Define priority order: upcoming, cancelled, rejected (ascending date), expired, completed
-                          const statusPriority: Record<string, number> = {
-                            'upcoming': 1,
-                            'cancelled': 2,
-                            'rejected': 3,
-                            'expired': 4,
-                            'completed': 5
-                          };
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0); // Start of today
                           
-                          const aPriority = statusPriority[a.status] || 6;
-                          const bPriority = statusPriority[b.status] || 6;
+                          const aDate = new Date(a.scheduled_at);
+                          const bDate = new Date(b.scheduled_at);
                           
-                          // If same priority, sort by date (ascending for cancelled/rejected, descending for others)
+                          // Determine priority based on date relative to today
+                          const aPriority = aDate >= today ? 1 : 2;
+                          const bPriority = bDate >= today ? 1 : 2;
+                          
+                          // If same priority, sort by date
                           if (aPriority === bPriority) {
-                            const aDate = new Date(a.scheduled_at).getTime();
-                            const bDate = new Date(b.scheduled_at).getTime();
-                            
-                            if (a.status === 'cancelled' || a.status === 'rejected') {
-                              return aDate - bDate; // Ascending for cancelled/rejected
+                            if (aPriority === 1) {
+                              // Priority 1: ascending (oldest to newest)
+                              return aDate.getTime() - bDate.getTime();
                             } else {
-                              return bDate - aDate; // Descending for others
+                              // Priority 2: descending (newest to oldest)
+                              return bDate.getTime() - aDate.getTime();
                             }
                           }
                           
@@ -2933,115 +3031,102 @@ export default function TherapistDashboard() {
                       return (
                         <div
                           key={patient.id}
-                          className="group relative overflow-hidden rounded-xl p-4 bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-200"
+                          className="group relative overflow-hidden rounded-xl p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-200"
                         >
-                          <div className="flex items-start gap-4">
+                          <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
                             {/* Patient Avatar */}
-                            <div className="relative">
-                              <Avatar className="w-12 h-12 sm:w-14 sm:h-14 ring-2 ring-white shadow-md">
+                            <div className="relative flex-shrink-0">
+                              <Avatar className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 ring-2 ring-white shadow-md">
                                 <AvatarImage src={patient.avatar_url} />
-                                <AvatarFallback className="bg-indigo-100 text-indigo-700 font-semibold">
+                                <AvatarFallback className="bg-indigo-100 text-indigo-700 font-semibold text-xs sm:text-sm">
                                   {patient.name.split(' ').map((n: string) => n[0]).join('')}
                                 </AvatarFallback>
                               </Avatar>
                               {/* Status indicator */}
-                              <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                              <div className={`absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-white ${
                                 compliance >= 70 ? 'bg-green-500' : 
                                 compliance >= 40 ? 'bg-yellow-500' : 'bg-red-500'
                               }`}></div>
                             </div>
 
                             {/* Patient Info */}
-                            <div className="flex items-start justify-between flex-1">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-slate-900 text-sm sm:text-base mb-1">
-                                  {patient.name}
-                                </h3>
-                                <p className="text-slate-600 text-xs sm:text-sm mb-2">{patient.email}</p>
-                                
-                                {/* Patient Stats */}
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                  <Badge className="bg-blue-100 text-blue-700 text-xs">
-                                    {sessionCount} Sessions
-                                  </Badge>
-                                  {lastSession && (
-                                    <Badge className="bg-purple-100 text-purple-700 text-xs">
-                                      Last: {formatTimeAgo(lastSession)} ({lastSessionStatus})
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold text-slate-900 text-sm sm:text-base mb-1 truncate">
+                                    {patient.name}
+                                  </h3>
+                                  <p className="text-slate-600 text-xs sm:text-sm mb-2 truncate">{patient.email}</p>
+                                  
+                                  {/* Patient Stats */}
+                                  <div className="flex flex-wrap gap-1 sm:gap-2 mb-2 sm:mb-3">
+                                    <Badge className="bg-blue-100 text-blue-700 text-xs px-2 py-1">
+                                      {sessionCount} Sessions
                                     </Badge>
-                                  )}
+                                    {lastSession && (
+                                      <Badge className="bg-purple-100 text-purple-700 text-xs px-2 py-1">
+                                        Last: {formatTimeAgo(lastSession)} ({lastSessionStatus})
+                                      </Badge>
+                                    )}
+                                  </div>
+
+                                  {/* Session Breakdown - Mobile Optimized */}
+                                  <div className="bg-white/60 rounded-lg p-2 sm:p-3 border border-slate-200">
+                                    <p className="text-xs text-slate-600 mb-1 leading-relaxed">
+                                      <strong>Session Breakdown:</strong> {sessionBreakdown.completed} completed, {sessionBreakdown.cancelled} cancelled, {sessionBreakdown.rejected} rejected, {sessionBreakdown.upcoming} upcoming, {sessionBreakdown.expired} expired
+                                    </p>
+                                    <p className="text-xs text-slate-600 italic leading-relaxed">
+                                      {compliance >= 70 ? 
+                                        "Patient showing excellent compliance with therapy sessions." :
+                                        compliance >= 40 ?
+                                        "Patient has moderate compliance. Consider follow-up." :
+                                        "Patient has low compliance. May need additional support."
+                                      }
+                                    </p>
+                                  </div>
                                 </div>
 
-                                {/* Session Breakdown */}
-                                <div className="bg-white/60 rounded-lg p-2 border border-slate-200">
-                                  <p className="text-xs text-slate-600 mb-1">
-                                    <strong>Session Breakdown:</strong> {sessionBreakdown.completed} completed, {sessionBreakdown.cancelled} cancelled, {sessionBreakdown.rejected} rejected, {sessionBreakdown.upcoming} upcoming, {sessionBreakdown.expired} expired
-                                  </p>
-                                  <p className="text-xs text-slate-600 italic">
-                                    {compliance >= 70 ? 
-                                      "Patient showing excellent compliance with therapy sessions." :
-                                      compliance >= 40 ?
-                                      "Patient has moderate compliance. Consider follow-up." :
-                                      "Patient has low compliance. May need additional support."
-                                    }
-                                  </p>
+                                {/* Quick Actions - Mobile Optimized */}
+                                <div className="flex sm:flex-col gap-2 sm:gap-2 flex-shrink-0">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-green-200 text-green-700 hover:bg-green-50 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 h-8 sm:h-9"
+                                    onClick={() => handleOpenScheduleDialog(patient)}
+                                  >
+                                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                                    <span className="hidden sm:inline">Schedule</span>
+                                    <span className="sm:hidden">Book</span>
+                                  </Button>
                                 </div>
-                              </div>
-
-                              {/* Quick Actions */}
-                              <div className="flex flex-col gap-2 ml-4">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
-                                >
-                                  <MessageCircle className="h-3 w-3 mr-1" />
-                                  Message
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="border-green-200 text-green-700 hover:bg-green-50"
-                                  onClick={() => handleOpenScheduleDialog(patient)}
-                                >
-                                  <Calendar className="h-3 w-3 mr-1" />
-                                  Schedule
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                                >
-                                  <FileText className="h-3 w-3 mr-1" />
-                                  Notes
-                                </Button>
                               </div>
                             </div>
                           </div>
 
-                          {/* Compliance Score */}
+                          {/* Compliance Score - Mobile Optimized */}
                           <div className="mt-3 pt-3 border-t border-slate-200">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
                               <div className="flex items-center gap-2">
                                 <span className="text-xs font-medium text-slate-600">Compliance:</span>
-                                <Badge className={`text-xs ${
+                                <Badge className={`text-xs px-2 py-1 ${
                                   compliance >= 70 ? 'bg-green-100 text-green-700' :
                                   compliance >= 40 ? 'bg-yellow-100 text-yellow-700' :
                                   'bg-red-100 text-red-700'
                                 }`}>
-                                  {compliance >= 70 ? 'High Compliance' : 
-                                   compliance >= 40 ? 'Medium Compliance' : 'Low Compliance'}
+                                  {compliance >= 70 ? 'High' : 
+                                   compliance >= 40 ? 'Medium' : 'Low'}
                                 </Badge>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs font-medium text-slate-600">Score:</span>
-                                <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                <div className="w-12 sm:w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
                                   <div className={`h-full rounded-full ${
                                     compliance >= 70 ? 'bg-gradient-to-r from-green-400 to-green-600' :
                                     compliance >= 40 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600' :
                                     'bg-gradient-to-r from-red-400 to-red-600'
                                   }`} style={{ width: `${compliance}%` }}></div>
                                 </div>
-                                <span className="text-xs text-slate-600">{compliance}%</span>
+                                <span className="text-xs text-slate-600 font-medium">{compliance}%</span>
                               </div>
                             </div>
                           </div>
@@ -3099,24 +3184,20 @@ export default function TherapistDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="availability">
-            <div className="space-y-8">
-              
-
-
+          <TabsContent value="availability" className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8">
+            <div className="space-y-6 sm:space-y-8">
               {/* Main Content Grid */}
-            <div className="grid gap-8 lg:grid-cols-3">
-                                {/* Left Column - Block Time and Manage Unavailability */}
+              <div className="grid gap-6 sm:gap-8 lg:grid-cols-3">
+                {/* Left Column - Block Time and Manage Unavailability */}
                 <div className="lg:col-span-2 space-y-6">
-
-                                    {/* Enhanced Block Time Slot */}
+                  {/* Enhanced Block Time Slot */}
                   <Card className="border-indigo-100 bg-white/80 shadow-md">
-                    <CardHeader className="pb-6">
-                      <CardTitle className="flex items-center gap-3 text-indigo-800 text-xl">
-                        <Calendar className="h-6 w-6 text-indigo-600" />
+                    <CardHeader className="pb-4 sm:pb-6">
+                      <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-lg sm:text-xl">
+                        <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                         Block Time Slot
                       </CardTitle>
-                      <p className="text-slate-600 text-sm">
+                      <p className="text-slate-600 text-xs sm:text-sm">
                         Block time when you're unavailable. Choose between whole day or specific time slot.
                       </p>
                     </CardHeader>
@@ -3124,7 +3205,7 @@ export default function TherapistDashboard() {
                       {/* Block Type Selection */}
                       <div className="space-y-3">
                         <label className="block text-sm font-medium text-slate-700">Block Type</label>
-                        <div className="flex gap-4">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="radio"
@@ -3151,7 +3232,7 @@ export default function TherapistDashboard() {
                       </div>
 
                       {/* Date and Reason */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">Date</label>
                           <input
@@ -3176,7 +3257,7 @@ export default function TherapistDashboard() {
 
                       {/* Time inputs - only show for specific time */}
                       {blockType === 'specific-time' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">Start Time</label>
                             <input
@@ -3225,12 +3306,12 @@ export default function TherapistDashboard() {
 
                   {/* Manage Unavailability */}
                   <Card className="border-indigo-100 bg-white/80 shadow-md">
-                    <CardHeader className="pb-6">
-                      <CardTitle className="flex items-center gap-3 text-indigo-800 text-xl">
-                        <Trash2 className="h-6 w-6 text-indigo-600" />
+                    <CardHeader className="pb-4 sm:pb-6">
+                      <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-lg sm:text-xl">
+                        <Trash2 className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                         Manage Unavailability
                       </CardTitle>
-                      <p className="text-slate-600 text-sm">
+                      <p className="text-slate-600 text-xs sm:text-sm">
                         View and remove your blocked time slots. You can only remove manual blocks, not appointment blocks.
                       </p>
                     </CardHeader>
@@ -3246,25 +3327,25 @@ export default function TherapistDashboard() {
                             .map((record) => (
                               <div
                                 key={record.id}
-                                className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50"
+                                className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50 gap-3"
                               >
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                                     <Calendar className="h-4 w-4 text-slate-600" />
-                                    <span className="font-medium text-slate-800">
+                                    <span className="font-medium text-slate-800 text-sm">
                                       {new Date(record.start_time).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
                                     </span>
-                                    <span className="text-sm text-slate-600">
+                                    <span className="text-xs sm:text-sm text-slate-600">
                                       {new Date(record.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(record.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                   </div>
-                                  <p className="text-sm text-slate-600 mt-1">{record.reason}</p>
+                                  <p className="text-xs sm:text-sm text-slate-600 mt-1">{record.reason}</p>
                                 </div>
                                 <Button
                                   onClick={() => removeUnavailability(record.id)}
                                   variant="outline"
                                   size="sm"
-                                  className="border-red-200 text-red-700 hover:bg-red-50"
+                                  className="border-red-200 text-red-700 hover:bg-red-50 self-start sm:self-center"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -3274,156 +3355,153 @@ export default function TherapistDashboard() {
                       )}
                     </CardContent>
                   </Card>
-
-
-
-
                 </div>
 
-                {/* Right Column - Tips */}
-              <div className="space-y-6">
+                {/* Right Column - Summary and Tips */}
+                <div className="space-y-6">
+                  {/* Availability Summary */}
+                  <Card className="border-indigo-100 bg-white/80">
+                    <CardHeader>
+                      <CardTitle className="text-indigo-800 text-base sm:text-lg">Availability Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-600">
+                            {availabilitySlots.filter(slot => slot.is_available).length}
+                          </div>
+                          <div className="text-xs sm:text-sm text-slate-600">Available Days</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {unavailabilityRecords.length}
+                          </div>
+                          <div className="text-xs sm:text-sm text-slate-600">Total Blocks</div>
+                        </div>
+                      </div>
+                      
+                      {/* Current Schedule */}
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium text-slate-700">Current Schedule</h4>
+                        <div className="space-y-1">
+                          {availabilitySlots
+                            .filter(slot => slot.is_available)
+                            .map((slot) => (
+                              <div key={slot.day_of_week} className="flex justify-between items-center text-xs sm:text-sm">
+                                <span className="font-medium text-slate-600 capitalize">
+                                  {slot.day_of_week}
+                                </span>
+                                <span className="text-slate-500">
+                                  {slot.start_time} - {slot.end_time}
+                                </span>
+                              </div>
+                            ))}
+                          {availabilitySlots.filter(slot => slot.is_available).length === 0 && (
+                            <p className="text-xs text-slate-500 italic">No availability set</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Quick Stats */}
+                      <div className="pt-3 border-t border-slate-200">
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="text-center">
+                            <div className="text-lg font-semibold text-indigo-600">
+                              {(() => {
+                                const totalHours = availabilitySlots
+                                  .filter(slot => slot.is_available)
+                                  .reduce((acc, slot) => {
+                                    const start = parseInt(slot.start_time.split(':')[0]);
+                                    const end = parseInt(slot.end_time.split(':')[0]);
+                                    return acc + (end - start);
+                                  }, 0);
+                                return totalHours;
+                              })()}h
+                            </div>
+                            <div className="text-xs text-slate-600">Weekly Hours</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-semibold text-purple-600">
+                              {(() => {
+                                const manualBlocks = unavailabilityRecords.filter(record => !record.appointment_id).length;
+                                return manualBlocks;
+                              })()}
+                            </div>
+                            <div className="text-xs text-slate-600">Manual Blocks</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-semibold text-orange-600">
+                              {(() => {
+                                const now = new Date();
+                                const startOfWeek = new Date(now);
+                                startOfWeek.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
+                                startOfWeek.setHours(0, 0, 0, 0);
+                                
+                                const endOfWeek = new Date(startOfWeek);
+                                endOfWeek.setDate(startOfWeek.getDate() + 7); // End of week (next Sunday)
+                                endOfWeek.setHours(23, 59, 59, 999);
+                                
+                                const appointmentBlocks = unavailabilityRecords.filter(record => 
+                                  record.appointment_id && 
+                                  new Date(record.start_time) >= startOfWeek && 
+                                  new Date(record.start_time) < endOfWeek
+                                ).length;
+                                return appointmentBlocks;
+                              })()}
+                            </div>
+                            <div className="text-xs text-slate-600">This Week's Appointments</div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
                   {/* Tips */}
                   <Card className="border-indigo-100 bg-white/80">
                     <CardHeader>
-                      <CardTitle className="text-indigo-800">Tips for Setting Availability</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
-                      <p className="text-sm text-slate-600">
-                        Set realistic hours that you can consistently maintain
-                      </p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
-                      <p className="text-sm text-slate-600">
-                        Consider buffer time between appointments
-                      </p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
-                      <p className="text-sm text-slate-600">
-                        Update your availability regularly as needed
-                      </p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
-                      <p className="text-sm text-slate-600">
-                          Use manual unavailability for vacations and sick days
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* This Week's Summary */}
-                <Card className="border-indigo-100 bg-white/80 shadow-md">
-                  <CardHeader className="pb-6">
-                    <CardTitle className="flex items-center gap-3 text-indigo-800 text-xl">
-                      <Calendar className="h-6 w-6 text-indigo-600" />
-                      This Week's Summary
-                    </CardTitle>
-                    <p className="text-slate-600 text-sm">
-                      Overview of your appointments, availability, and blocked times for the current week.
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Weekly Stats */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <p className="text-2xl font-bold text-green-600">
-                          {appointments.filter(apt => apt.status === 'upcoming' && 
-                            new Date(apt.scheduled_at) >= new Date() && 
-                            new Date(apt.scheduled_at) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-                          ).length}
+                      <CardTitle className="text-indigo-800 text-base sm:text-lg">Tips for Setting Availability</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <p className="text-xs sm:text-sm text-slate-600">
+                          Set realistic hours that you can consistently maintain
                         </p>
-                        <p className="text-xs text-green-700">Upcoming</p>
                       </div>
-                      <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <p className="text-2xl font-bold text-blue-600">
-                          {appointments.filter(apt => apt.status === 'completed' && 
-                            new Date(apt.scheduled_at) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && 
-                            new Date(apt.scheduled_at) < new Date()
-                          ).length}
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <p className="text-xs sm:text-sm text-slate-600">
+                          Consider your energy levels throughout the day
                         </p>
-                        <p className="text-xs text-blue-700">Completed</p>
                       </div>
-                                              <div className="text-center p-3 bg-red-50 rounded-lg">
-                          <p className="text-2xl font-bold text-red-600">
-                            {thisWeekUnavailability.length}
-                          </p>
-                          <p className="text-xs text-red-700">Unavailable</p>
-                        </div>
-                      <div className="text-center p-3 bg-indigo-50 rounded-lg">
-                        <p className="text-2xl font-bold text-indigo-600">
-                          {availabilitySlots.filter(slot => slot.is_available).length}
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <p className="text-xs sm:text-sm text-slate-600">
+                          Leave buffer time between sessions for breaks
                         </p>
-                        <p className="text-xs text-indigo-700">Available Days</p>
                       </div>
-                    </div>
-
-                    {/* This Week's Blocked Times */}
-                    {thisWeekUnavailability.length === 0 ? (
-                      <div className="text-center py-4">
-                        <p className="text-slate-600">No blocked times scheduled for this week.</p>
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <p className="text-xs sm:text-sm text-slate-600">
+                          Block time for administrative tasks and self-care
+                        </p>
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <h4 className="font-medium text-slate-800 mb-3">Blocked Times This Week:</h4>
-                        {thisWeekUnavailability
-                          .filter((record, index, self) => 
-                            // Remove duplicates based on start_time, end_time, and reason
-                            index === self.findIndex(r => 
-                              r.start_time === record.start_time && 
-                              r.end_time === record.end_time && 
-                              r.reason === record.reason
-                            )
-                          )
-                          .map((record) => (
-                          <div
-                            key={record.id}
-                            className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50"
-                          >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-slate-600" />
-                                <span className="font-medium text-slate-800">
-                                  {new Date(record.start_time).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
-                                </span>
-                                <span className="text-sm text-slate-600">
-                                  {new Date(record.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(record.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                              </div>
-                              <p className="text-sm text-slate-600 mt-1">{record.reason}</p>
-                              {record.appointment && (
-                                <div className="mt-1 text-xs text-slate-500">
-                                  Patient: {record.appointment.patient?.first_name} {record.appointment.patient?.last_name}
-                                </div>
-                              )}
-                            </div>
-                            <Badge className={`${record.appointment_id ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
-                              {record.appointment_id ? 'Appointment' : 'Manual'}
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                    </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-6 lg:space-y-8">
+          <TabsContent value="analytics" className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8">
             {/* Analytics Header */}
-            <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-xl p-6 border border-indigo-100">
-              <div className="flex items-center gap-3 mb-4">
-                <TrendingUp className="h-8 w-8 text-indigo-600" />
+            <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-xl p-4 sm:p-6 border border-indigo-100">
+              <div className="flex items-center gap-2 sm:gap-3 mb-4">
+                <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
                 <div>
-                  <h2 className="text-2xl font-bold text-indigo-800">Practice Analytics</h2>
-                  <p className="text-indigo-600">Comprehensive insights into your therapy practice performance</p>
-                  <p className="text-sm text-indigo-500 mt-1">
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-indigo-800">Practice Analytics</h2>
+                  <p className="text-indigo-600 text-sm sm:text-base">Comprehensive insights into your therapy practice performance</p>
+                  <p className="text-xs sm:text-sm text-indigo-500 mt-1">
                     Showing data for: {selectedTimePeriod === '7' ? 'Last 7 Days' : 
                     selectedTimePeriod === '30' ? 'Last 30 Days' : 
                     selectedTimePeriod === '90' ? 'Last 3 Months' : 'Last Year'}
@@ -3432,14 +3510,14 @@ export default function TherapistDashboard() {
               </div>
               
               {/* Time Period Selector */}
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button 
                   variant={selectedTimePeriod === '7' ? 'default' : 'outline'}
                   size="sm"
-                  className={selectedTimePeriod === '7' 
+                  className={`text-xs sm:text-sm ${selectedTimePeriod === '7' 
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
                     : 'border-indigo-200 text-indigo-700 hover:bg-indigo-50'
-                  }
+                  }`}
                   onClick={() => {
                     setSelectedTimePeriod('7');
                     loadAnalyticsData(7);
@@ -3450,10 +3528,10 @@ export default function TherapistDashboard() {
                 <Button 
                   variant={selectedTimePeriod === '30' ? 'default' : 'outline'}
                   size="sm"
-                  className={selectedTimePeriod === '30' 
+                  className={`text-xs sm:text-sm ${selectedTimePeriod === '30' 
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
                     : 'border-indigo-200 text-indigo-700 hover:bg-indigo-50'
-                  }
+                  }`}
                   onClick={() => {
                     setSelectedTimePeriod('30');
                     loadAnalyticsData(30);
@@ -3464,10 +3542,10 @@ export default function TherapistDashboard() {
                 <Button 
                   variant={selectedTimePeriod === '90' ? 'default' : 'outline'}
                   size="sm"
-                  className={selectedTimePeriod === '90' 
+                  className={`text-xs sm:text-sm ${selectedTimePeriod === '90' 
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
                     : 'border-indigo-200 text-indigo-700 hover:bg-indigo-50'
-                  }
+                  }`}
                   onClick={() => {
                     setSelectedTimePeriod('90');
                     loadAnalyticsData(90);
@@ -3478,10 +3556,10 @@ export default function TherapistDashboard() {
                 <Button 
                   variant={selectedTimePeriod === '365' ? 'default' : 'outline'}
                   size="sm"
-                  className={selectedTimePeriod === '365' 
+                  className={`text-xs sm:text-sm ${selectedTimePeriod === '365' 
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
                     : 'border-indigo-200 text-indigo-700 hover:bg-indigo-50'
-                  }
+                  }`}
                   onClick={() => {
                     setSelectedTimePeriod('365');
                     loadAnalyticsData(365);
@@ -3493,7 +3571,7 @@ export default function TherapistDashboard() {
             </div>
 
             {/* Key Performance Metrics */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:gap-6 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
               {(() => {
                 // Calculate data for the selected time period
                 const startDate = new Date(Date.now() - parseInt(selectedTimePeriod) * 24 * 60 * 60 * 1000);
@@ -3556,54 +3634,52 @@ export default function TherapistDashboard() {
                 ];
               })().map(({ icon: Icon, value, label, change, changeType }) => (
                 <Card key={label} className="border-indigo-100 bg-white/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
-                        <Icon className="h-6 w-6 text-indigo-600" />
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                      <span className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-indigo-100">
+                        <Icon className="h-4 w-4 sm:h-6 sm:w-6 text-indigo-600" />
                       </span>
-                      <span className={`text-sm font-medium ${
+                      <span className={`text-xs sm:text-sm font-medium ${
                         changeType === 'positive' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {change}
                       </span>
                     </div>
                     <div>
-                      <p className="text-3xl font-bold text-indigo-800 mb-1">{value}</p>
-                      <p className="text-sm text-slate-600 font-medium">{label}</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-indigo-800 mb-1">{value}</p>
+                      <p className="text-xs sm:text-sm text-slate-600 font-medium">{label}</p>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
 
-
-
             {/* Availability Breakdown */}
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
               {/* Weekly Schedule Overview */}
               <Card className="border-indigo-100 bg-white/80 shadow-md">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-indigo-800">
-                    <Calendar className="h-6 w-6 text-indigo-600" />
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-base sm:text-lg">
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                     Weekly Schedule Overview
                   </CardTitle>
-                  <CardDescription>Your availability and booking patterns this week</CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">Your availability and booking patterns this week</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {availabilitySlots.map((slot) => (
                       <div key={slot.day_of_week} className="flex items-center justify-between p-3 rounded-lg bg-slate-50">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           <div className={`w-3 h-3 rounded-full ${slot.is_available ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                          <span className="font-medium text-slate-700">{slot.day_of_week}</span>
+                          <span className="font-medium text-slate-700 text-sm sm:text-base">{slot.day_of_week}</span>
                         </div>
                         <div className="text-right">
                           {slot.is_available ? (
-                            <span className="text-sm text-green-600 font-medium">
+                            <span className="text-xs sm:text-sm text-green-600 font-medium">
                               {slot.start_time} - {slot.end_time}
                             </span>
                           ) : (
-                            <span className="text-sm text-red-600 font-medium">Unavailable</span>
+                            <span className="text-xs sm:text-sm text-red-600 font-medium">Unavailable</span>
                           )}
                         </div>
                       </div>
