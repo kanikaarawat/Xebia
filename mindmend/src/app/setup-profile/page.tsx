@@ -23,7 +23,7 @@ export default function SetupProfile() {
   const session = useSession();
   const supabase = useSupabaseClient();
 
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<unknown>(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [bio, setBio] = useState('');

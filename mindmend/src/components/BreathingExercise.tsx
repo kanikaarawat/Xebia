@@ -12,7 +12,7 @@ export default function BreathingExercise() {
     setRunning(true);
     setPhase('inhale');
     setProgress(0);
-    let startTime = Date.now();
+    const startTime = Date.now();
     intervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
       setProgress((elapsed % BREATH_DURATION) / BREATH_DURATION);

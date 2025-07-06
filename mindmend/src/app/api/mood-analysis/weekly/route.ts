@@ -130,8 +130,8 @@ Keep the tone warm and conversational. Use bullet points (•) for easy reading.
       moodData: moodData
     });
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Weekly mood analysis error:', err);
-    return NextResponse.json({ error: err.message || 'Weekly analysis failed' }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Weekly analysis failed' }, { status: 500 });
   }
 } 

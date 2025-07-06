@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const preferences = await NotificationService.getNotificationPreferences(userId);
 
     return NextResponse.json({ preferences });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching notification preferences:', error);
     return NextResponse.json(
       { error: 'Failed to fetch notification preferences' },
@@ -49,7 +49,7 @@ export async function PUT(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating notification preferences:', error);
     return NextResponse.json(
       { error: 'Failed to update notification preferences' },

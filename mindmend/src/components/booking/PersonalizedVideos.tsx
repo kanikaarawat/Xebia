@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 export function PersonalizedVideos({ userId }: { userId: string }) {
-  const [videos, setVideos] = useState<any[]>([]);
+  const [videos, setVideos] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

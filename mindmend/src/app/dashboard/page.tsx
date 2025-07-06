@@ -24,15 +24,15 @@ export default function Dashboard() {
     if (!user) return;
     const fetchProfile = async () => {
       try {
-        const { data: profile, error } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
-        if (error) {
-          setUserRole(user.user_metadata?.role || 'user');
-        } else {
+        if (profile) {
           setUserRole(profile.role || 'user');
+        } else {
+          setUserRole(user.user_metadata?.role || 'user');
         }
       } catch (error) {
         setUserRole(user.user_metadata?.role || 'user');

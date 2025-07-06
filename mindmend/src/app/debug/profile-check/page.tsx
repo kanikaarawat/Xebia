@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 export default function ProfileCheck() {
   const user = useUser();
   const supabase = useSupabaseClient();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

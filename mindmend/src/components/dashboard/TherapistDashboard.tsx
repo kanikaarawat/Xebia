@@ -48,112 +48,31 @@ import {
   User,
   Plus,
   Trash2,
-  Save,
   LogOut,
   Search,
-  AlertCircle,
   XCircle,
   PieChart,
-  MapPin,
   DollarSign,
-  CalendarCheck,
   BarChart3,
-  Ban,
-  CalendarDays,
   Timer,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { getFreeSlotsFixed as getFreeSlots } from '@/lib/freeSlotsFixed';
-import DatabaseDebug from '@/components/debug/DatabaseDebug';
+import {
+  UnavailabilityRecord,
+  Patient,
+  AvailabilityAnalytics,
+  Appointment,
+  TherapistProfile,
+  AvailabilitySlot,
+  TimeSlot,
+} from '@/lib/types';
 
-/* ---------- Types ---------- */
-interface Appointment {
-  id: string;
-  patient_id: string;
-  scheduled_at: string;
-  notes: string;
-  status: string;
-  patient?: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    avatar_url?: string;
-  };
-  type: string;
-  duration: number;
-  created_at: string;
-  payment_id?: string;
-  payment_status?: string;
-  payment_amount?: number;
-  payment_currency?: string;
-}
-
-interface TherapistProfile {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  bio: string;
-  avatar_url?: string;
-  specialization: string;
-  license_number: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface AvailabilitySlot {
-  id?: string;
-  day_of_week: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-}
-
-interface TimeSlot {
-  start_time: string;
-  end_time: string;
-}
-
-interface UnavailabilityRecord {
-  id: string;
-  therapist_id: string;
-  appointment_id?: string;
-  start_time: string;
-  end_time: string;
-  reason: string;
-  created_at: string;
-  appointment?: {
-    id: string;
-    patient_id: string;
-    type: string;
-    duration: number;
-    status: string;
-    patient?: {
-      first_name: string;
-      last_name: string;
-    };
-  };
-}
-
-interface Patient {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  avatar_url?: string;
-  created_at: string;
-}
-
-interface AvailabilityAnalytics {
-  totalAvailableHours: number;
-  totalBookedHours: number;
-  utilizationRate: number;
-  busiestDay: string;
-  leastBusyDay: string;
-  averageSessionDuration: number;
+// Add at the top level (after imports, before component):
+function updateAvailabilitySlot(day: string, field: string, value: unknown) {
+  // TODO: Implement this function
 }
 
 /* ---------- Component ---------- */
@@ -170,8 +89,6 @@ export default function TherapistDashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState("overview");
-  const [savingAvailability, setSavingAvailability] = useState(false);
-  const [now, setNow] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [rejectError, setRejectError] = useState<string | null>(null);
   const [rejectLoading, setRejectLoading] = useState(false);
@@ -208,9 +125,6 @@ export default function TherapistDashboard() {
   const [manualUnavailabilityStartTime, setManualUnavailabilityStartTime] = useState('');
   const [manualUnavailabilityEndTime, setManualUnavailabilityEndTime] = useState('');
   const [manualUnavailabilityReason, setManualUnavailabilityReason] = useState('');
-  const [loadingUnavailability, setLoadingUnavailability] = useState(false);
-  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
-  const [currentAvailabilityStatus, setCurrentAvailabilityStatus] = useState<string>('Unknown');
   const [selectedTimePeriod, setSelectedTimePeriod] = useState<'7' | '30' | '90' | '365'>('30');
   
   // Analytics data state
@@ -246,6 +160,9 @@ export default function TherapistDashboard() {
   const user = useUser();
   const session = useSession();
   const router = useRouter();
+
+  // Add after other useState declarations:
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
 
   // Helper functions for patient statistics
   const getPatientSessionCount = (patientId: string) => {
@@ -565,22 +482,6 @@ export default function TherapistDashboard() {
            a.status === 'completed';
   }).length;
 
-  /* ── risk badge helper ── */
-  const riskBadge = (level: string) => {
-    switch (level) {
-      case "low":
-        return <Badge className="bg-green-100 text-green-700">Low Risk</Badge>;
-      case "medium":
-        return (
-          <Badge className="bg-yellow-100 text-yellow-700">Medium Risk</Badge>
-        );
-      case "high":
-        return <Badge className="bg-red-100 text-red-700">High Risk</Badge>;
-      default:
-        return <Badge className="bg-slate-100 text-slate-600">Unknown</Badge>;
-    }
-  };
-
   // Move these two functions above the first useEffect
   const initializeAvailabilitySlots = () => {
     console.log('🔄 Initializing default availability slots');
@@ -831,62 +732,6 @@ export default function TherapistDashboard() {
       return `Dr. ${therapistProfile.first_name}`;
     }
     return "Therapist";
-  };
-
-  const saveAvailabilitySlots = async () => {
-    if (!therapistProfile) return;
-    setSavingAvailability(true);
-    try {
-      // Delete existing slots
-      await supabase
-        .from('therapist_availability')
-        .delete()
-        .eq('therapist_id', therapistProfile.id);
-
-      // Insert new slots
-      const slotsToInsert = availabilitySlots.map(slot => ({
-          therapist_id: therapistProfile.id,
-          day_of_week: slot.day_of_week,
-          start_time: slot.start_time,
-        end_time: slot.end_time,
-        is_available: slot.is_available
-        }));
-
-        const { error } = await supabase
-          .from('therapist_availability')
-        .insert(slotsToInsert);
-
-        if (error) {
-          console.error('Error saving availability:', error);
-        } else {
-          console.log('Availability saved successfully');
-          
-          // Show success message
-          alert('Weekly availability saved successfully!');
-        }
-    } catch (error) {
-      console.error('Error saving availability:', error);
-    } finally {
-      setSavingAvailability(false);
-    }
-  };
-
-  const updateAvailabilitySlot = (dayOfWeek: string, field: keyof AvailabilitySlot, value: any) => {
-    setAvailabilitySlots(prev => prev.map(slot => {
-      if (slot.day_of_week === dayOfWeek) {
-        // If marking as available, automatically set time to 9 AM - 5 PM
-        if (field === 'is_available' && value === true) {
-          return { 
-            ...slot, 
-            [field]: value,
-            start_time: '09:00',
-            end_time: '17:00'
-          };
-        }
-        return { ...slot, [field]: value };
-      }
-      return slot;
-    }));
   };
 
   const handleOpenRejectDialog = (appointmentId: string) => {
@@ -1160,7 +1005,7 @@ export default function TherapistDashboard() {
       return;
     }
     
-    setLoadingUnavailability(true);
+    setLoadingAnalytics(true);
     try {
       // Get today's date range
       const today = new Date();
@@ -1273,7 +1118,7 @@ export default function TherapistDashboard() {
     } catch (error) {
       console.error('Error loading unavailability data:', error);
     } finally {
-      setLoadingUnavailability(false);
+      setLoadingAnalytics(false);
     }
   };
 
@@ -1658,7 +1503,6 @@ export default function TherapistDashboard() {
   // Update current availability status when data changes
   useEffect(() => {
     const status = checkCurrentAvailability();
-    setCurrentAvailabilityStatus(status);
     console.log('🔄 Current availability status updated:', status);
     console.log('📊 Current data state:', {
       availabilitySlots: availabilitySlots.length,
@@ -4306,28 +4150,5 @@ export default function TherapistDashboard() {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-/* ---------- Small placeholder card ---------- */
-function PlaceholderCard({
-  icon: Icon,
-  title,
-  text,
-}: {
-  icon: any;
-  title: string;
-  text: string;
-}) {
-  return (
-    <Card className="border-indigo-100 bg-white/80">
-      <CardHeader>
-        <CardTitle className="text-indigo-800">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center gap-4 py-12">
-        <Icon className="h-16 w-16 text-slate-400" />
-        <p className="max-w-xs text-center text-slate-600">{text}</p>
-      </CardContent>
-    </Card>
   );
 }

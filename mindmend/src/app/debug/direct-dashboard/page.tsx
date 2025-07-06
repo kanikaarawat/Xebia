@@ -2,8 +2,6 @@
 
 import { useUser, useSession } from '@supabase/auth-helpers-react';
 import UserDashboard from '@/components/dashboard/UserDashboard';
-import TherapistDashboard from '@/components/dashboard/TherapistDashboard';
-import AdminDashboard from '@/components/dashboard/AdminDashboard';
 
 export default function DirectDashboard() {
   const user = useUser();

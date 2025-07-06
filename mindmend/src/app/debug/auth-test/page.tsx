@@ -9,7 +9,7 @@ export default function AuthTest() {
   const user = useUser();
   const session = useSession();
   const supabase = useSupabaseClient();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

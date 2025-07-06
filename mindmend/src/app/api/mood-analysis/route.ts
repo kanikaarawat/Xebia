@@ -78,8 +78,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ reflection: text });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Gemini API Error:', err);
-    return NextResponse.json({ error: err.message || 'Gemini API call failed' }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Gemini API call failed' }, { status: 500 });
   }
 }

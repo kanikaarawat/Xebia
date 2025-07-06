@@ -9,7 +9,7 @@ interface TestResult {
   name: string;
   success: boolean;
   error?: string;
-  data?: any;
+  data?: unknown;
   errorCode?: string;
   expected?: string;
 }

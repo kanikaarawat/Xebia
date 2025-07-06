@@ -27,7 +27,7 @@ interface AppointmentActions {
   fetchAppointments: (status?: string, limit?: number) => Promise<Appointment[]>;
   cancelAppointment: (appointmentId: string, reason?: string) => Promise<boolean>;
   rescheduleAppointment: (appointmentId: string, newScheduledAt: string, newDuration?: number, newType?: string, notes?: string) => Promise<boolean>;
-  getCancellationInfo: (appointmentId: string) => Promise<any>;
+  getCancellationInfo: (appointmentId: string) => Promise<unknown>;
   markAsCompleted: (appointmentId: string) => Promise<boolean>;
 }
 
@@ -65,8 +65,8 @@ export function useAppointments(): {
 
       setAppointments(data.appointments || []);
       return data.appointments || [];
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to fetch appointments';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch appointments';
       setError(errorMessage);
       console.error('Error fetching appointments:', err);
       return [];
@@ -113,8 +113,8 @@ export function useAppointments(): {
 
       console.log('Appointment cancelled successfully:', data);
       return true;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to cancel appointment';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to cancel appointment';
       setError(errorMessage);
       console.error('Error cancelling appointment:', err);
       return false;
@@ -177,8 +177,8 @@ export function useAppointments(): {
 
       console.log('Appointment rescheduled successfully:', data);
       return true;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to reschedule appointment';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to reschedule appointment';
       setError(errorMessage);
       console.error('Error rescheduling appointment:', err);
       return false;
@@ -187,7 +187,7 @@ export function useAppointments(): {
     }
   }, [user]);
 
-  const getCancellationInfo = useCallback(async (appointmentId: string): Promise<any> => {
+  const getCancellationInfo = useCallback(async (appointmentId: string): Promise<unknown> => {
     if (!user) {
       setError('User not authenticated');
       return null;
@@ -202,8 +202,8 @@ export function useAppointments(): {
       }
 
       return data;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to get cancellation info';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to get cancellation info';
       setError(errorMessage);
       console.error('Error getting cancellation info:', err);
       return null;
@@ -237,8 +237,8 @@ export function useAppointments(): {
         )
       );
       return true;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to mark appointment as completed';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to mark appointment as completed';
       setError(errorMessage);
       console.error('Error marking appointment as completed:', err);
       return false;

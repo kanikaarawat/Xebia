@@ -65,7 +65,7 @@ Please respond within 24 hours with alternative payment options.
       ticketId: `SUPPORT-${Date.now()}`
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Contact support error:', error);
     return NextResponse.json(
       { error: 'Failed to submit support request. Please email us directly at support@mindmend.com' },

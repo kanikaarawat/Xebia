@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,16 +40,10 @@ import {
   User,
   Bell,
   Shield,
-  CreditCard,
   LogOut,
   Trash2,
   Save,
   Camera,
-  Mail,
-  Phone,
-  Calendar,
-  Globe,
-  Lock,
   Eye,
   EyeOff,
   AlertTriangle,
@@ -73,7 +67,6 @@ interface UserProfile {
 
 export default function SettingsPage() {
   const user = useUser();
-  const session = useSession();
   const supabase = useSupabaseClient();
   const router = useRouter();
   
@@ -91,9 +84,6 @@ export default function SettingsPage() {
     phone: '',
     timezone: 'UTC',
   });
-  
-  // Track if form has been modified
-  const [isFormModified, setIsFormModified] = useState(false);
   
   // Notification settings
   const [notifications, setNotifications] = useState({
@@ -176,7 +166,7 @@ export default function SettingsPage() {
       setError(null);
       setSuccess(null);
       
-      const updateData: any = {
+      const updateData: unknown = {
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         bio: formData.bio.trim(),
@@ -185,10 +175,10 @@ export default function SettingsPage() {
 
       // Only include phone and timezone if they exist in the database
       if (formData.phone.trim()) {
-        updateData.phone = formData.phone.trim();
+        (updateData as unknown).phone = formData.phone.trim();
       }
       if (formData.timezone) {
-        updateData.timezone = formData.timezone;
+        (updateData as unknown).timezone = formData.timezone;
       }
 
       const { data, error: updateError } = await supabase
@@ -441,7 +431,6 @@ export default function SettingsPage() {
                       value={formData.first_name}
                       onChange={(e) => {
                         setFormData({ ...formData, first_name: e.target.value });
-                        setIsFormModified(true);
                       }}
                       placeholder="Enter your first name"
                       className="text-sm sm:text-base"
@@ -455,7 +444,6 @@ export default function SettingsPage() {
                       value={formData.last_name}
                       onChange={(e) => {
                         setFormData({ ...formData, last_name: e.target.value });
-                        setIsFormModified(true);
                       }}
                       placeholder="Enter your last name"
                       className="text-sm sm:text-base"
@@ -469,7 +457,6 @@ export default function SettingsPage() {
                       value={formData.phone}
                       onChange={(e) => {
                         setFormData({ ...formData, phone: e.target.value });
-                        setIsFormModified(true);
                       }}
                       placeholder="Enter your phone number"
                       className="text-sm sm:text-base"
@@ -482,7 +469,6 @@ export default function SettingsPage() {
                       value={formData.timezone}
                       onValueChange={(value) => {
                         setFormData({ ...formData, timezone: value });
-                        setIsFormModified(true);
                       }}
                     >
                       <SelectTrigger className="text-sm sm:text-base">
@@ -509,7 +495,6 @@ export default function SettingsPage() {
                     value={formData.bio}
                     onChange={(e) => {
                       setFormData({ ...formData, bio: e.target.value });
-                      setIsFormModified(true);
                     }}
                     placeholder="Tell us about yourself..."
                     rows={4}

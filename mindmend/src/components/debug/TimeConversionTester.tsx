@@ -9,12 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getFreeSlots } from "@/lib/freeSlots";
 import { getFreeSlotsFixed, testTimeConversion } from "@/lib/freeSlotsFixed";
 
+// Define a type for the result objects:
+type Slot = { start_time: string; end_time: string; reason?: string };
+type Result = { available?: Slot[]; unavailable?: Slot[]; error?: string };
+
 export function TimeConversionTester() {
   const [therapistId, setTherapistId] = useState("test-therapist-1");
   const [selectedDate, setSelectedDate] = useState("2025-07-09");
   const [sessionDuration, setSessionDuration] = useState("30");
-  const [originalResult, setOriginalResult] = useState<any>(null);
-  const [fixedResult, setFixedResult] = useState<any>(null);
+  const [originalResult, setOriginalResult] = useState<Result>({});
+  const [fixedResult, setFixedResult] = useState<Result>({});
   const [loading, setLoading] = useState(false);
   const [timeTestResult, setTimeTestResult] = useState<string>("");
 
@@ -27,7 +31,7 @@ export function TimeConversionTester() {
       console.log("✅ Original result:", result);
     } catch (error) {
       console.error("❌ Original test failed:", error);
-      setOriginalResult({ error: error.message });
+      setOriginalResult({ error: (error as Error).message });
     } finally {
       setLoading(false);
     }
@@ -42,7 +46,7 @@ export function TimeConversionTester() {
       console.log("✅ Fixed result:", result);
     } catch (error) {
       console.error("❌ Fixed test failed:", error);
-      setFixedResult({ error: error.message });
+      setFixedResult({ error: (error as Error).message });
     } finally {
       setLoading(false);
     }
@@ -57,10 +61,10 @@ export function TimeConversionTester() {
   const compareResults = () => {
     if (!originalResult || !fixedResult) return null;
 
-    const originalAvailable = originalResult.available?.length || 0;
-    const fixedAvailable = fixedResult.available?.length || 0;
-    const originalUnavailable = originalResult.unavailable?.length || 0;
-    const fixedUnavailable = fixedResult.unavailable?.length || 0;
+    const originalAvailable = Array.isArray(originalResult.available) ? originalResult.available.length : 0;
+    const fixedAvailable = Array.isArray(fixedResult.available) ? fixedResult.available.length : 0;
+    const originalUnavailable = Array.isArray(originalResult.unavailable) ? originalResult.unavailable.length : 0;
+    const fixedUnavailable = Array.isArray(fixedResult.unavailable) ? fixedResult.unavailable.length : 0;
 
     return {
       availableDifference: fixedAvailable - originalAvailable,
@@ -170,9 +174,9 @@ export function TimeConversionTester() {
                 <div>
                   <h4 className="font-semibold text-green-600">Available Slots ({originalResult.available?.length || 0})</h4>
                   <div className="max-h-40 overflow-y-auto">
-                    {originalResult.available?.map((slot: any, index: number) => (
+                    {Array.isArray(originalResult.available) && originalResult.available.map((slot: Slot, index: number) => (
                       <div key={index} className="text-sm bg-green-50 p-1 rounded mb-1">
-                        {slot.start_time} - {slot.end_time}
+                        {(slot as Slot).start_time} - {(slot as Slot).end_time}
                       </div>
                     )) || <p className="text-gray-500">No available slots</p>}
                   </div>
@@ -180,14 +184,14 @@ export function TimeConversionTester() {
                 <div>
                   <h4 className="font-semibold text-red-600">Unavailable Slots ({originalResult.unavailable?.length || 0})</h4>
                   <div className="max-h-40 overflow-y-auto">
-                    {originalResult.unavailable?.map((slot: any, index: number) => (
+                    {Array.isArray(originalResult.unavailable) && originalResult.unavailable.map((slot: Slot, index: number) => (
                       <div key={index} className="text-sm bg-red-50 p-1 rounded mb-1">
-                        {slot.start_time} - {slot.end_time} ({slot.reason})
+                        {(slot as Slot).start_time} - {(slot as Slot).end_time} ({slot.reason})
                       </div>
                     )) || <p className="text-gray-500">No unavailable slots</p>}
                   </div>
                 </div>
-                {originalResult.error && (
+                {typeof originalResult.error === 'string' && (
                   <div className="p-2 bg-red-50 border border-red-200 rounded">
                     <p className="text-red-800 text-sm">Error: {originalResult.error}</p>
                   </div>
@@ -209,9 +213,9 @@ export function TimeConversionTester() {
                 <div>
                   <h4 className="font-semibold text-green-600">Available Slots ({fixedResult.available?.length || 0})</h4>
                   <div className="max-h-40 overflow-y-auto">
-                    {fixedResult.available?.map((slot: any, index: number) => (
+                    {Array.isArray(fixedResult.available) && fixedResult.available.map((slot: Slot, index: number) => (
                       <div key={index} className="text-sm bg-green-50 p-1 rounded mb-1">
-                        {slot.start_time} - {slot.end_time}
+                        {(slot as Slot).start_time} - {(slot as Slot).end_time}
                       </div>
                     )) || <p className="text-gray-500">No available slots</p>}
                   </div>
@@ -219,14 +223,14 @@ export function TimeConversionTester() {
                 <div>
                   <h4 className="font-semibold text-red-600">Unavailable Slots ({fixedResult.unavailable?.length || 0})</h4>
                   <div className="max-h-40 overflow-y-auto">
-                    {fixedResult.unavailable?.map((slot: any, index: number) => (
+                    {Array.isArray(fixedResult.unavailable) && fixedResult.unavailable.map((slot: Slot, index: number) => (
                       <div key={index} className="text-sm bg-red-50 p-1 rounded mb-1">
-                        {slot.start_time} - {slot.end_time} ({slot.reason})
+                        {(slot as Slot).start_time} - {(slot as Slot).end_time} ({slot.reason})
                       </div>
                     )) || <p className="text-gray-500">No unavailable slots</p>}
                   </div>
                 </div>
-                {fixedResult.error && (
+                {typeof fixedResult.error === 'string' && (
                   <div className="p-2 bg-red-50 border border-red-200 rounded">
                     <p className="text-red-800 text-sm">Error: {fixedResult.error}</p>
                   </div>

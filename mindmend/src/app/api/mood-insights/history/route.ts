@@ -17,10 +17,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const moodValues = data.map(d => d.mood_score);
+  const moodValues = data.map((d: { mood_score: number }) => d.mood_score);
   const average =
     moodValues.length > 0
-      ? moodValues.reduce((sum, score) => sum + score, 0) / moodValues.length
+      ? moodValues.reduce((sum: number, score: number) => sum + score, 0) / moodValues.length
       : null;
 
   return NextResponse.json({

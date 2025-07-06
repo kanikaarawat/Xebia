@@ -6,11 +6,7 @@ import { Play, Heart, Wind, Coffee, Package, Sparkles, Cloud } from "lucide-reac
 import { Card, CardContent } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
 
-interface MindMendHubProps {
-  onCardClick?: (cardId: string) => void
-}
-
-export default function Component({ onCardClick }: MindMendHubProps = {}) {
+export default function Component() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const router = useRouter();
 
@@ -23,15 +19,11 @@ export default function Component({ onCardClick }: MindMendHubProps = {}) {
     "loud-thoughts": "/cloud-thoughts",
   }
   const handleCardClick = (cardId: string) => {
-    if (onCardClick) {
-      onCardClick(cardId)
+    const route = routeMap[cardId as keyof typeof routeMap]
+    if (route) {
+      router.push(route)
     } else {
-      const route = routeMap[cardId as keyof typeof routeMap]
-      if (route) {
-        router.push(route)
-      } else {
-        console.warn(`No route found for card: ${cardId}`)
-      }
+      console.warn(`No route found for card: ${cardId}`)
     }
   }
   const cards = [

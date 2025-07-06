@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
       orderId: razorpay_order_id,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Payment verification error:', error);
     return NextResponse.json({
       success: false,

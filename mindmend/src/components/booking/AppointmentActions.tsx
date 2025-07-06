@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Clock, X, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Clock, X, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useAppointments } from '@/lib/hooks/useAppointments';
 import { getFreeSlotsFixed as getFreeSlots } from '@/lib/freeSlotsFixed';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
@@ -35,7 +35,7 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
-  const [cancellationInfo, setCancellationInfo] = useState<any>(null);
+  const [cancellationInfo, setCancellationInfo] = useState<unknown>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [availableSlots, setAvailableSlots] = useState<{ start_time: string; end_time: string }[]>([]);
@@ -43,7 +43,6 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
   const [rescheduleLoading, setRescheduleLoading] = useState(false);
   const [rescheduleError, setRescheduleError] = useState<string | null>(null);
   const [fetchingSlots, setFetchingSlots] = useState(false);
-  const [debugSlots, setDebugSlots] = useState<any>(null);
   const [newType, setNewType] = useState(appointment.type);
   const [newDuration, setNewDuration] = useState(appointment.duration);
   const [newNotes, setNewNotes] = useState(appointment.notes || "");
@@ -54,17 +53,14 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
     setAvailableSlots([]);
     setSelectedSlot("");
     setRescheduleError(null);
-    setDebugSlots(null);
     if (rescheduleDate && newDuration) {
       setFetchingSlots(true);
       getFreeSlots(appointment.therapist_id, rescheduleDate, 30, newDuration)
         .then((result) => {
           setAvailableSlots(result.available);
-          setDebugSlots(result);
         })
         .catch((err) => {
           setAvailableSlots([]);
-          setDebugSlots({ error: err?.message || String(err) });
         })
         .finally(() => setFetchingSlots(false));
     }
@@ -131,8 +127,8 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
         onActionComplete?.();
         setTimeout(() => setActionSuccess(null), 3000);
       }
-    } catch (err: any) {
-      setRescheduleError(err.message || "Failed to reschedule appointment.");
+    } catch (err: unknown) {
+      setRescheduleError(err instanceof Error ? err.message : "Failed to reschedule appointment.");
     } finally {
       setRescheduleLoading(false);
     }

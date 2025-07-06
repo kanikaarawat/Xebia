@@ -46,10 +46,10 @@ export default function RegisterForm() {
   };
 
   // Function to get user-friendly error message
-  const getErrorMessage = (error: any): string => {
+  const getErrorMessage = (error: unknown): string => {
     if (!error) return 'An error occurred';
     
-    const message = error.message || error.toString();
+    const message = error instanceof Error ? error.message : error.toString();
     console.log('🔍 Error message:', message);
     
     // Check for specific Supabase auth errors
@@ -152,7 +152,7 @@ export default function RegisterForm() {
         router.push("/setup-profile");
       }, 1500); // short delay to show success message
     
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.log('❌ Caught error in registration:', error);
       const friendlyMessage = getErrorMessage(error);
       setError(friendlyMessage);

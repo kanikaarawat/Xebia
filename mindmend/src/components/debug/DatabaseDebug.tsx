@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 export default function DatabaseDebug() {
-  const [debugData, setDebugData] = useState<any>(null);
+  const [debugData, setDebugData] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
   const supabase = useSupabaseClient();
   const user = useUser();

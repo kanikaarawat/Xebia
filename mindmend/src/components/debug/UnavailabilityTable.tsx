@@ -47,7 +47,7 @@ export default function UnavailabilityTable() {
 
       // Get therapist names
       const therapistIds = [...new Set(unavailabilityRecords?.map(r => r.therapist_id) || [])];
-      let therapistProfiles: any = {};
+      let therapistProfiles: Record<string, unknown> = {};
       
       if (therapistIds.length > 0) {
         const { data: profiles, error: profilesError } = await supabase
@@ -59,7 +59,7 @@ export default function UnavailabilityTable() {
           therapistProfiles = profiles.reduce((acc, profile) => {
             acc[profile.id] = profile;
             return acc;
-          }, {} as Record<string, any>);
+          }, {} as Record<string, unknown>);
         }
       }
 
@@ -69,7 +69,7 @@ export default function UnavailabilityTable() {
         return {
           ...record,
           therapist_name: profile 
-            ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown Therapist'
+            ? `${(profile as { first_name?: string; last_name?: string }).first_name || ''} ${(profile as { first_name?: string; last_name?: string }).last_name || ''}`.trim() || 'Unknown Therapist'
             : 'Unknown Therapist'
         };
       });
@@ -100,7 +100,7 @@ export default function UnavailabilityTable() {
       );
     })
     .sort((a, b) => {
-      let aValue: any, bValue: any;
+      let aValue: unknown, bValue: unknown;
       
       switch (sortBy) {
         case 'therapist_name':
@@ -117,9 +117,21 @@ export default function UnavailabilityTable() {
       }
       
       if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return aValue.localeCompare(bValue);
+        } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return aValue - bValue;
+        } else {
+          return String(aValue).localeCompare(String(bValue));
+        }
       } else {
-        return aValue < bValue ? 1 : -1;
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return bValue.localeCompare(aValue);
+        } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return bValue - aValue;
+        } else {
+          return String(bValue).localeCompare(String(aValue));
+        }
       }
     });
 

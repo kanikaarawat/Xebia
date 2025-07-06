@@ -10,7 +10,7 @@ const missing = (v: unknown) =>
 export default function MissingTest() {
   const user = useUser();
   const supabase = useSupabaseClient();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function MissingTest() {
           });
           
           // Test the completeness logic
-          let incomplete = first_name_missing || last_name_missing;
+          const incomplete = first_name_missing || last_name_missing;
           
           console.log('🔍 Completeness test:', {
             incomplete,

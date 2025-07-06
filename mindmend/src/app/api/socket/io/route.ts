@@ -1,14 +1,14 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { Server as SocketIOServer } from "socket.io"
 import { getChatManager } from "@/lib/socket-manager"
 
 // We need to store the Socket.IO server instance globally
 let io: SocketIOServer | undefined
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     if (!io) {
         // Initialize Socket.IO server
-        const httpServer = (global as any).httpServer
+        const httpServer = (global as unknown).httpServer
         if (!httpServer) {
             return NextResponse.json({ error: "HTTP server not available" }, { status: 500 })
         }

@@ -8,7 +8,7 @@ import { Loader2, CreditCard, CheckCircle } from 'lucide-react'
 
 export default function TestPaymentSimplePage() {
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const testOrderCreation = async () => {
@@ -37,13 +37,13 @@ export default function TestPaymentSimplePage() {
       const data = await response.json()
 
       if (data.success) {
-        setResult(data)
+        setResult(JSON.stringify(data, null, 2))
       } else {
         throw new Error(data.error || 'Failed to create order')
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Test error:', err)
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
@@ -68,10 +68,10 @@ export default function TestPaymentSimplePage() {
       })
 
       const data = await response.json()
-      setResult(data)
-    } catch (err: any) {
+      setResult(JSON.stringify(data, null, 2))
+    } catch (err: unknown) {
       console.error('Verification test error:', err)
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
@@ -143,7 +143,7 @@ export default function TestPaymentSimplePage() {
               <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                 <h3 className="font-semibold text-green-800 mb-2">✅ Test Result</h3>
                 <pre className="text-sm text-green-700 bg-green-100 p-2 rounded overflow-auto">
-                  {JSON.stringify(result, null, 2)}
+                  {result}
                 </pre>
               </div>
             )}

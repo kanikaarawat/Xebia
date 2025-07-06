@@ -1,10 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // POST - Reschedule an appointment
 export async function POST(req: NextRequest) {
@@ -109,7 +103,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Check therapist availability for the new time
-    const newDate = newAppointmentDate.toISOString().split('T')[0];
     const newTime = newAppointmentDate.toTimeString().split(' ')[0];
     const dayOfWeek = newAppointmentDate.toLocaleDateString('en-US', { weekday: 'long' });
 
@@ -136,14 +129,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Update the appointment
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       scheduled_at: new_scheduled_at,
       updated_at: new Date().toISOString()
     };
-
     if (new_duration) updateData.duration = new_duration;
     if (new_type) updateData.type = new_type;
-    if (notes !== undefined) updateData.notes = notes;
+    if (notes) updateData.notes = notes;
 
     const { data: rescheduledAppointment, error } = await supabase
       .from("appointments")
@@ -166,10 +158,10 @@ export async function POST(req: NextRequest) {
       old_time: currentAppointment.scheduled_at,
       new_time: new_scheduled_at
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Unexpected error:', err);
     return NextResponse.json(
-      { error: err.message || "Failed to reschedule appointment" },
+      { error: err instanceof Error ? err.message : "Failed to reschedule appointment" },
       { status: 500 }
     );
   }

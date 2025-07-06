@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Calendar, Clock, User, AlertCircle, CheckCircle, XCircle, Video, Phone } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import AppointmentActions from './AppointmentActions';
 import { isToday, isThisWeek, isThisMonth, addDays } from 'date-fns';
 
@@ -543,7 +543,7 @@ export default function AppointmentsList({
                       {appointment.notes && (
                         <div className="mt-2 p-2 bg-white/60 rounded-lg border border-slate-200">
                           <p className="text-xs text-slate-600 italic max-w-full truncate">
-                            "{appointment.notes}"
+                            &quot;{appointment.notes}&quot;
                           </p>
                           {/* Show rejection reason if present in notes */}
                           {appointment.status === 'rejected' && appointment.notes && appointment.notes.includes('Rejection reason:') && (

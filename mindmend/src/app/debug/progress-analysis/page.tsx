@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 export default function ProgressAnalysisDebug() {
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
