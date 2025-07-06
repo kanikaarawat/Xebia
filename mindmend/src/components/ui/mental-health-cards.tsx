@@ -48,10 +48,7 @@ export default function MentalHealthCards() {
                         Connect with a supportive community, share experiences, and find encouragement in a safe, moderated environment
                     </p>
                     <button
-                        onClick={() => {
-                            document.title = "Chatroom – MindMend";
-                            router.push('/chatrooms/chat-room'); // Adjusted route
-                        }}
+                        onClick={() => window.location.href = 'https://finalworkingchatroom-production.up.railway.app/'}
                         className="group/btn inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white font-medium rounded-full hover:from-teal-600 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-teal-500/25 hover:scale-105"
                     >
                         Join Community
