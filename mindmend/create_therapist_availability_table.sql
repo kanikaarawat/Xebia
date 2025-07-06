@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS therapist_availability (
   day_of_week text NOT NULL CHECK (day_of_week IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')),
   start_time time NOT NULL,
   end_time time NOT NULL,
+  is_available boolean NOT NULL DEFAULT true,
   created_at timestamp DEFAULT now(),
   updated_at timestamp DEFAULT now(),
   UNIQUE(therapist_id, day_of_week)

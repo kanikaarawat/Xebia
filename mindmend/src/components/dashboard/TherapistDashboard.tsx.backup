@@ -176,14 +176,6 @@ export default function TherapistDashboard() {
   const [rejectError, setRejectError] = useState<string | null>(null);
   const [rejectLoading, setRejectLoading] = useState(false);
   
-  // Complete appointment state
-  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
-  const [selectedCompleteAppointmentId, setSelectedCompleteAppointmentId] = useState<string | null>(null);
-  const [completeLoading, setCompleteLoading] = useState(false);
-  const [completeError, setCompleteError] = useState<string | null>(null);
-  const [autoCompleteDialogOpen, setAutoCompleteDialogOpen] = useState(false);
-  const [autoCompleteAppointmentId, setAutoCompleteAppointmentId] = useState<string | null>(null);
-  
   // Schedule dialog state
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -934,136 +926,6 @@ export default function TherapistDashboard() {
       setRejectLoading(false);
     }
   };
-
-  // Complete appointment functions
-  const handleOpenCompleteDialog = (appointmentId: string) => {
-    setSelectedCompleteAppointmentId(appointmentId);
-    setCompleteDialogOpen(true);
-    setCompleteError(null);
-  };
-
-  const handleCompleteAppointment = async () => {
-    if (!selectedCompleteAppointmentId) return;
-
-    setCompleteLoading(true);
-    setCompleteError(null);
-
-    try {
-      const response = await fetch('/api/appointments/complete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          appointment_id: selectedCompleteAppointmentId
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to complete appointment');
-      }
-
-      // Update the appointment in the local state
-      setAppointments(prev => prev.map(appt => 
-        appt.id === selectedCompleteAppointmentId 
-          ? { ...appt, status: 'completed' }
-          : appt
-      ));
-
-      setCompleteDialogOpen(false);
-      setSelectedCompleteAppointmentId(null);
-    } catch (error: any) {
-      console.error('Error completing appointment:', error);
-      setCompleteError(error.message);
-    } finally {
-      setCompleteLoading(false);
-    }
-  };
-
-  const handleAutoCompleteAppointment = async () => {
-    if (!autoCompleteAppointmentId) return;
-
-    setCompleteLoading(true);
-    setCompleteError(null);
-
-    try {
-      const response = await fetch('/api/appointments/complete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          appointment_id: autoCompleteAppointmentId
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to complete appointment');
-      }
-
-      // Update the appointment in the local state
-      setAppointments(prev => prev.map(appt => 
-        appt.id === autoCompleteAppointmentId 
-          ? { ...appt, status: 'completed' }
-          : appt
-      ));
-
-      setAutoCompleteDialogOpen(false);
-      setAutoCompleteAppointmentId(null);
-    } catch (error: any) {
-      console.error('Error completing appointment:', error);
-      setCompleteError(error.message);
-    } finally {
-      setCompleteLoading(false);
-    }
-  };
-
-  // Function to check if appointment should show complete button
-  const shouldShowCompleteButton = (appointment: Appointment) => {
-    if (appointment.status !== 'upcoming') return false;
-    
-    const now = new Date();
-    const appointmentStart = new Date(appointment.scheduled_at);
-    const appointmentEnd = new Date(appointmentStart.getTime() + appointment.duration * 60000);
-    
-    // Show button from start time until end of day
-    return now >= appointmentStart && now <= new Date(appointmentStart.setHours(23, 59, 59, 999));
-  };
-
-  // Function to check if appointment should show auto-complete dialog
-  const shouldShowAutoCompleteDialog = (appointment: Appointment) => {
-    if (appointment.status !== 'upcoming') return false;
-    
-    const now = new Date();
-    const appointmentStart = new Date(appointment.scheduled_at);
-    const appointmentEnd = new Date(appointmentStart.getTime() + appointment.duration * 60000);
-    const fiveMinutesAfterEnd = new Date(appointmentEnd.getTime() + 5 * 60000);
-    
-    // Show dialog 5 minutes after session end time
-    return now >= fiveMinutesAfterEnd && now <= new Date(appointmentStart.setHours(23, 59, 59, 999));
-  };
-
-  // Check for appointments that need auto-complete dialog
-  useEffect(() => {
-    const checkAutoCompleteAppointments = () => {
-      appointments.forEach(appointment => {
-        if (shouldShowAutoCompleteDialog(appointment)) {
-          setAutoCompleteAppointmentId(appointment.id);
-          setAutoCompleteDialogOpen(true);
-        }
-      });
-    };
-
-    // Check every minute
-    const interval = setInterval(checkAutoCompleteAppointments, 60000);
-    checkAutoCompleteAppointments(); // Initial check
-
-    return () => clearInterval(interval);
-  }, [appointments]);
 
   // Schedule functions
   const handleOpenScheduleDialog = (patient: Patient) => {
@@ -2000,100 +1862,6 @@ export default function TherapistDashboard() {
     </Dialog>
   );
 
-  // Complete Appointment Dialog
-  const CompleteDialog = () => (
-    <Dialog open={completeDialogOpen} onOpenChange={setCompleteDialogOpen}>
-      <DialogContent className="max-w-md bg-white">
-        <DialogHeader>
-          <DialogTitle className="text-green-800">Mark Session Complete</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <p className="text-slate-600">
-            Are you sure you want to mark this session as complete? This action cannot be undone.
-          </p>
-          {completeError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">{completeError}</p>
-            </div>
-          )}
-        </div>
-        <DialogFooter className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setCompleteDialogOpen(false)}
-            className="border-slate-200 text-slate-700 hover:bg-slate-50"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleCompleteAppointment}
-            disabled={completeLoading}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            {completeLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Completing...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Mark Complete
-              </>
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
-  // Auto Complete Dialog
-  const AutoCompleteDialog = () => (
-    <Dialog open={autoCompleteDialogOpen} onOpenChange={setAutoCompleteDialogOpen}>
-      <DialogContent className="max-w-md bg-white">
-        <DialogHeader>
-          <DialogTitle className="text-orange-800">Session Time Expired</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <p className="text-slate-600">
-            A session has ended 5 minutes ago. Would you like to mark it as complete?
-          </p>
-          {completeError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">{completeError}</p>
-            </div>
-          )}
-        </div>
-        <DialogFooter className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setAutoCompleteDialogOpen(false)}
-            className="border-slate-200 text-slate-700 hover:bg-slate-50"
-          >
-            No, Keep as Upcoming
-          </Button>
-          <Button
-            onClick={handleAutoCompleteAppointment}
-            disabled={completeLoading}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            {completeLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Completing...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Mark Complete
-              </>
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
   // Loading state
   if (loading) {
     return (
@@ -2145,10 +1913,6 @@ export default function TherapistDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Conflict Resolution Dialog */}
       <ConflictDialog />
-      {/* Complete Appointment Dialog */}
-      <CompleteDialog />
-      {/* Auto Complete Dialog */}
-      <AutoCompleteDialog />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-lg border-b border-indigo-200 shadow-sm">
         <div className="container mx-auto flex items-center justify-between px-3 sm:px-4 lg:px-6 xl:px-8 py-1.5 sm:py-2.5 lg:py-3">
@@ -2348,21 +2112,21 @@ export default function TherapistDashboard() {
           onValueChange={setActiveTab}
           className="w-full max-w-7xl mx-auto"
         >
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 rounded-xl bg-white/70 backdrop-blur p-2 h-10 sm:h-12 lg:h-14 xl:h-16 gap-1">
-            <TabsTrigger value="overview" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium px-3 sm:px-4 lg:px-6">Overview</TabsTrigger>
-            <TabsTrigger value="appointments" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium px-3 sm:px-4 lg:px-6">Appointments</TabsTrigger>
-            <TabsTrigger value="patients" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium hidden sm:block px-3 sm:px-4 lg:px-6">Patients</TabsTrigger>
-            <TabsTrigger value="availability" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium hidden lg:block px-3 sm:px-4 lg:px-6">Availability</TabsTrigger>
-            <TabsTrigger value="analytics" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium hidden lg:block px-3 sm:px-4 lg:px-6">Analytics</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 rounded-xl bg-white/70 backdrop-blur p-1 h-8 sm:h-10 lg:h-12 xl:h-14">
+            <TabsTrigger value="overview" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium">Overview</TabsTrigger>
+            <TabsTrigger value="appointments" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium">Appointments</TabsTrigger>
+            <TabsTrigger value="patients" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium hidden sm:block">Patients</TabsTrigger>
+            <TabsTrigger value="availability" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium hidden lg:block">Availability</TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium hidden lg:block">Analytics</TabsTrigger>
           </TabsList>
 
           {/* ── Overview tab ── */}
-          <TabsContent value="overview" className="space-y-8">
-            <div className="grid gap-8 lg:grid-cols-3">
-              {/* Left (2 cols) */}
-              <div className="space-y-8 lg:col-span-2">
-                {/* Quick stats */}
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <TabsContent value="overview" className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8">
+            <div className="grid gap-3 sm:gap-4 lg:gap-6 xl:gap-8 xl:grid-cols-3">
+              {/* Left (2 cols on large screens, 1 col on smaller) */}
+              <div className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8 xl:col-span-2">
+                {/* Stats Cards */}
+                <div className="grid gap-2 sm:gap-3 lg:gap-4 grid-cols-2 lg:grid-cols-4">
                   {[
                     {
                       icon: Calendar,
@@ -2389,15 +2153,15 @@ export default function TherapistDashboard() {
                       key={label}
                       className="border-indigo-100 bg-white/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-shadow"
                     >
-                      <CardContent className="flex items-center gap-5 p-8">
-                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100">
-                          <Icon className="h-7 w-7 text-indigo-600" />
+                      <CardContent className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 lg:p-4 xl:p-5">
+                        <span className="flex h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 xl:h-11 xl:w-11 items-center justify-center rounded-full bg-indigo-100">
+                          <Icon className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 xl:h-6 xl:w-6 text-indigo-600" />
                         </span>
                         <div>
-                          <p className="text-3xl font-bold text-indigo-800 mb-1">
+                          <p className="text-sm sm:text-base lg:text-lg xl:text-xl 2xl:text-2xl font-bold mb-1 text-indigo-800">
                             {value}
                           </p>
-                          <p className="text-sm text-slate-600 font-medium">{label}</p>
+                          <p className="text-xs sm:text-sm text-slate-600 font-medium">{label}</p>
                         </div>
                       </CardContent>
                     </Card>
@@ -2405,36 +2169,29 @@ export default function TherapistDashboard() {
                 </div>
 
                 {/* Today's Appointments Card */}
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                  <Card className="border-indigo-100 bg-white/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-shadow md:col-span-2 lg:col-span-4">
-                    <CardContent className="p-8">
-                      <div className="flex items-center gap-5 mb-6">
-                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100">
-                          <Calendar className="h-7 w-7 text-indigo-600" />
-                        </span>
-                        <div className="flex-1">
-                          <p className="text-3xl font-bold text-indigo-800 mb-1">
-                            {todaysAppointments.length}
-                          </p>
-                          <p className="text-sm text-slate-600 font-medium">Today's Appointments</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-slate-500">Total for today</p>
-                          <p className="text-xs text-slate-400">
-                            {todaysAppointments.filter(apt => apt.status === 'completed').length} completed
-                          </p>
-                            </div>
-                            </div>
+                <Card className="border-indigo-100 bg-white/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-2 sm:pb-3 lg:pb-4 xl:pb-6">
+                    <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-sm sm:text-base lg:text-lg xl:text-xl">
+                      <div className="p-1 sm:p-2 bg-indigo-100 rounded-lg">
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                      </div>
+                      Today's Appointments
+                    </CardTitle>
+                    <CardDescription className="text-slate-600 text-xs sm:text-sm lg:text-base">
+                      Your scheduled sessions for today
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 sm:space-y-3 lg:space-y-4">
 
                       {/* Appointments List */}
                       {todaysAppointments.length === 0 ? (
-                        <div className="text-center py-8 text-slate-500 bg-slate-50 rounded-xl">
-                          <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                          <p className="text-slate-600 text-lg">No appointments today</p>
-                          <p className="text-slate-500 text-sm mt-2">You have a free day!</p>
-                          </div>
+                        <div className="text-center py-4 sm:py-6 lg:py-8 text-slate-500 bg-slate-50 rounded-xl">
+                          <Calendar className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-slate-400 mx-auto mb-2 sm:mb-3 lg:mb-4" />
+                          <p className="text-slate-600 text-sm sm:text-base lg:text-lg">No appointments today</p>
+                          <p className="text-slate-500 text-xs sm:text-sm mt-1 sm:mt-2">You have a free day!</p>
+                        </div>
                       ) : (
-                        <div className="space-y-3 max-h-64 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                        <div className="space-y-2 sm:space-y-3 max-h-48 sm:max-h-56 lg:max-h-64 overflow-y-auto overflow-x-hidden custom-scrollbar">
                           {todaysAppointments.map((appt) => {
                             const dateObj = new Date(appt.scheduled_at);
                             const time = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -2443,22 +2200,22 @@ export default function TherapistDashboard() {
                             return (
                               <div
                                 key={appt.id}
-                                className={`rounded-lg p-3 border ${
+                                className={`rounded-lg p-2 sm:p-3 border ${
                                   isUpcoming 
                                     ? 'bg-blue-50 border-blue-200' 
                                     : 'bg-slate-50 border-slate-200'
                                 }`}
                               >
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <Avatar className="h-8 w-8">
+                                  <div className="flex items-center gap-2 sm:gap-3">
+                                    <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                                       <AvatarImage src={appt.patient?.avatar_url || "/placeholder.svg"} />
                                       <AvatarFallback className="bg-indigo-100 text-indigo-700 text-xs">
                                         {appt.patient ? `${appt.patient.first_name[0]}${appt.patient.last_name[0]}` : 'NA'}
                                       </AvatarFallback>
                                     </Avatar>
                                     <div>
-                                      <p className="font-medium text-slate-800 text-sm">
+                                      <p className="font-medium text-slate-800 text-xs sm:text-sm">
                                         {appt.patient ? `${appt.patient.first_name} ${appt.patient.last_name}` : 'Unknown Patient'}
                                       </p>
                                       <p className="text-xs text-slate-600">{appt.type} • {appt.duration} min</p>
@@ -2466,20 +2223,10 @@ export default function TherapistDashboard() {
                                   </div>
                                   
                                   <div className="text-right">
-                                    <p className="text-sm font-bold text-slate-800">{time}</p>
+                                    <p className="text-xs sm:text-sm font-bold text-slate-800">{time}</p>
                                     <div className="flex items-center gap-1 justify-end mt-1">
                                       {statusBadge(appt.status)}
                                     </div>
-                                    {shouldShowCompleteButton(appt) && (
-                                      <Button
-                                        size="sm"
-                                        onClick={() => handleOpenCompleteDialog(appt.id)}
-                                        className="mt-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1 h-8 text-xs"
-                                      >
-                                        <CheckCircle className="w-3 h-3 mr-1" />
-                                        Mark Complete
-                                      </Button>
-                                    )}
                                   </div>
                                 </div>
                                 
@@ -2488,8 +2235,8 @@ export default function TherapistDashboard() {
                                     <p className="text-xs text-slate-600">{appt.notes}</p>
                                   </div>
                                 )}
-                        </div>
-                      );
+                              </div>
+                            );
                           })}
                         </div>
                       )}
@@ -2499,37 +2246,47 @@ export default function TherapistDashboard() {
               </div>
 
               {/* Right sidebar */}
-              <div className="space-y-6">
-                <Card className="border-indigo-100 bg-white/80">
-                  <CardHeader>
-                    <CardTitle className="text-indigo-800">
+              <div className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8">
+                {/* Recent Patients */}
+                <Card className="border-indigo-100 bg-gradient-to-br from-white to-indigo-50/30 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <CardHeader className="pb-2 sm:pb-3 lg:pb-4 xl:pb-6">
+                    <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-sm sm:text-base lg:text-lg xl:text-xl">
+                      <div className="p-1 sm:p-2 bg-indigo-100 rounded-lg">
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                      </div>
                       Recent Patients
                     </CardTitle>
+                    <CardDescription className="text-slate-600 text-xs sm:text-sm lg:text-base">
+                      Your recent therapy sessions
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-2 sm:space-y-3 lg:space-y-4">
                     {recentPatients.length === 0 ? (
-                      <div className="text-center py-8 text-slate-500">No recent patients found.</div>
+                      <div className="text-center py-4 sm:py-6 text-slate-500">
+                        <Users className="h-6 w-6 sm:h-8 sm:w-8 text-slate-400 mx-auto mb-2" />
+                        <p className="text-xs sm:text-sm">No recent patients found.</p>
+                      </div>
                     ) : (
                       recentPatients.map((p) => (
                         <div
                           key={p.id}
-                          className="flex items-center gap-3 rounded-lg bg-indigo-50 p-3"
+                          className="flex items-center gap-2 sm:gap-3 rounded-lg bg-indigo-50 p-2 sm:p-3"
                         >
-                          <Avatar>
+                          <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                             <AvatarImage src={p.avatar_url || "/placeholder.svg"} />
-                            <AvatarFallback className="bg-indigo-200 text-indigo-700">
+                            <AvatarFallback className="bg-indigo-200 text-indigo-700 text-xs">
                               {p.name
                                 .split(" ")
                                 .map((n: string) => n[0])
                                 .join("")}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="flex-1">
-                            <p className="font-medium text-indigo-800">{p.name}</p>
-                            <p className="text-sm text-slate-600">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-indigo-800 text-xs sm:text-sm truncate">{p.name}</p>
+                            <p className="text-xs text-slate-600">
                               {new Date(p.lastSession).toLocaleDateString()} {new Date(p.lastSession).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                             </p>
-                            <div className="mt-1 flex gap-2">
+                            <div className="mt-1 flex gap-1 sm:gap-2">
                               <Badge className={`text-xs ${p.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                                 {p.status === 'completed' ? 'Completed' : 'Expired'}
                               </Badge>
@@ -2541,30 +2298,33 @@ export default function TherapistDashboard() {
                   </CardContent>
                 </Card>
 
-                {/* Quick actions (optional) */}
-                <Card className="border-indigo-100 bg-white/80">
-                  <CardHeader>
-                    <CardTitle className="text-indigo-800">
+                {/* Quick Actions */}
+                <Card className="border-indigo-100 bg-white/80 shadow-md">
+                  <CardHeader className="pb-2 sm:pb-3 lg:pb-4 xl:pb-6">
+                    <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-sm sm:text-base lg:text-lg xl:text-xl">
+                      <div className="p-1 sm:p-2 bg-indigo-100 rounded-lg">
+                        <Plus className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-indigo-600" />
+                      </div>
                       Quick Actions
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white">
-                      <MessageCircle className="mr-2 h-4 w-4" />
+                  <CardContent className="space-y-2 sm:space-y-3">
+                    <Button className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white text-xs sm:text-sm">
+                      <MessageCircle className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                       Send Message
                     </Button>
                     <Button
                       variant="outline"
-                      className="w-full border-slate-200 text-slate-700 hover:bg-slate-50"
+                      className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm"
                     >
-                      <FileText className="mr-2 h-4 w-4" />
+                      <FileText className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                       Create Note
                     </Button>
                     <Button
                       variant="outline"
-                      className="w-full border-slate-200 text-slate-700 hover:bg-slate-50"
+                      className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm"
                     >
-                      <Calendar className="mr-2 h-4 w-4" />
+                      <Calendar className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                       Schedule Session
                     </Button>
                   </CardContent>
@@ -2662,7 +2422,7 @@ export default function TherapistDashboard() {
                         })
                         .sort((a, b) => {
                           // Define priority order: upcoming, cancelled, rejected (ascending date), expired, completed
-                          const statusPriority: Record<string, number> = {
+                          const statusPriority = {
                             'upcoming': 1,
                             'cancelled': 2,
                             'rejected': 3,
@@ -2815,16 +2575,6 @@ export default function TherapistDashboard() {
                                        >
                                          Reject Appointment
                                        </Button>
-                                       {shouldShowCompleteButton(appt) && (
-                                         <Button
-                                           size="sm"
-                                           onClick={() => handleOpenCompleteDialog(appt.id)}
-                                           className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 h-8 text-xs"
-                                         >
-                                           <CheckCircle className="w-3 h-3 mr-1" />
-                                           Mark Complete
-                                         </Button>
-                                       )}
                                      </div>
                           )}
                         </div>
