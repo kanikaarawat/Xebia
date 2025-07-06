@@ -5,10 +5,10 @@ import { getChatManager } from "@/lib/socket-manager"
 // We need to store the Socket.IO server instance globally
 let io: SocketIOServer | undefined
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     if (!io) {
         // Initialize Socket.IO server
-        const httpServer = (global as any).httpServer
+        const httpServer = (global as unknown as { httpServer: unknown }).httpServer
         if (!httpServer) {
             return NextResponse.json({ error: "HTTP server not available" }, { status: 500 })
         }
@@ -62,8 +62,8 @@ export async function GET(req: NextRequest) {
                     })
 
                     console.log(`User ${userName} (${userId}) joined ${room.id} - Total users: ${room.users.length}`)
-                } catch (error) {
-                    console.error("Error joining room:", error)
+                } catch (err: unknown) {
+                    console.error("Error joining room:", err instanceof Error ? err.message : 'Unknown error')
                     socket.emit("error", { message: "Failed to join room" })
                 }
             })
@@ -102,8 +102,8 @@ export async function GET(req: NextRequest) {
                             console.log(`User ${userName} (${userId}) left ${room.id} - Reason: ${reason}`)
                         }
                     }
-                } catch (error) {
-                    console.error("Error handling disconnect:", error)
+                } catch (err: unknown) {
+                    console.error("Error handling disconnect:", err instanceof Error ? err.message : 'Unknown error')
                 }
             })
         })

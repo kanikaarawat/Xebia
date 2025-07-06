@@ -137,7 +137,7 @@ export default function CalmCat() {
 
             purrOscillatorRef.current = oscillator
             oscillator.start(audioContextRef.current.currentTime)
-        } catch (error) {
+        } catch {
             console.log("Audio not supported")
         }
     }, [soundEnabled, catState])
@@ -147,7 +147,7 @@ export default function CalmCat() {
             try {
                 purrOscillatorRef.current.stop()
                 purrOscillatorRef.current = null
-            } catch (error) {
+            } catch  {
                 console.log("Error stopping purr")
             }
         }

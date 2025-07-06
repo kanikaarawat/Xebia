@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useRouter } from 'next/navigation';
-import VideoCallManager from '@/components/ui/video-call-manager';
+import VideoCallManager from '../../../components/ui/video-call-manager';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Shield } from 'lucide-react';
@@ -15,11 +15,8 @@ export default function VideoCallsAdminPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkAdminAccess();
-  }, [user]);
-
-  const checkAdminAccess = async () => {
+  
+  const checkAdminAccess = useCallback(async () => {
     if (!user) {
       router.push('/login');
       return;
@@ -44,7 +41,11 @@ export default function VideoCallsAdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, router, supabase]);
+
+  useEffect(() => {
+    checkAdminAccess();
+  }, [checkAdminAccess]);
 
   if (loading) {
     return (
@@ -66,7 +67,7 @@ export default function VideoCallsAdminPage() {
           <CardContent className="p-8 text-center">
             <Shield className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-red-700 mb-2">Access Denied</h3>
-            <p className="text-red-600 mb-4">You don't have permission to access this page.</p>
+            <p className="text-red-600 mb-4">You don&apos;t have permission to access this page.</p>
             <Button onClick={() => router.push('/dashboard')}>
               Back to Dashboard
             </Button>

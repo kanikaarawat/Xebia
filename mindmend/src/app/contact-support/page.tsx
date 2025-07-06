@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Globe, Mail, Phone, MessageCircle, CreditCard, Smartphone } from 'lucide-react'
+import { Globe, Mail, MessageCircle, CreditCard } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 
 export default function ContactSupportPage() {
@@ -45,7 +45,7 @@ export default function ContactSupportPage() {
       } else {
         throw new Error('Failed to send message')
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to send message. Please try again or email us directly.",
@@ -68,12 +68,12 @@ export default function ContactSupportPage() {
             <div className="text-6xl mb-4">✅</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Message Sent!</h2>
             <p className="text-gray-600 mb-4">
-              Thank you for contacting us. We'll get back to you within 24 hours with alternative payment options.
+              Thank you for contacting us. We&apos;ll get back to you within 24 hours with alternative payment options.
             </p>
             <div className="space-y-2 text-sm text-gray-500">
               <p><strong>What happens next:</strong></p>
               <ul className="text-left space-y-1">
-                <li>• We'll review your payment preferences</li>
+                <li>• We&apos;ll review your payment preferences</li>
                 <li>• Send you PayPal or bank transfer details</li>
                 <li>• Help you complete your session booking</li>
               </ul>
@@ -222,7 +222,7 @@ export default function ContactSupportPage() {
               <Alert className="bg-blue-50 border-blue-200">
                 <Mail className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-blue-800">
-                  <strong>Response Time:</strong> We'll get back to you within 24 hours with payment instructions and session booking details.
+                  <strong>Response Time:</strong> We&apos;ll get back to you within 24 hours with payment instructions and session booking details.
                 </AlertDescription>
               </Alert>
 

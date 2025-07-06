@@ -103,7 +103,7 @@ export default function WorryBox({ maxWorries = 50 }: WorryBoxProps) {
 
             oscillator.start(audioContextRef.current.currentTime)
             oscillator.stop(audioContextRef.current.currentTime + 1.2)
-        } catch (error) {
+        } catch {
             console.log("Audio not supported")
         }
     }
@@ -130,7 +130,7 @@ export default function WorryBox({ maxWorries = 50 }: WorryBoxProps) {
 
             oscillator.start(audioContextRef.current.currentTime)
             oscillator.stop(audioContextRef.current.currentTime + 1.5)
-        } catch (error) {
+        } catch {
             console.log("Audio not supported")
         }
     }
@@ -296,7 +296,7 @@ export default function WorryBox({ maxWorries = 50 }: WorryBoxProps) {
                         className="bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/60 mb-8"
                     >
                         <div className="text-center mb-6">
-                            <h2 className="text-2xl font-light text-slate-800 mb-2">What's weighing on your mind?</h2>
+                            <h2 className="text-2xl font-light text-slate-800 mb-2">What&apos;s weighing on your mind?</h2>
                             <p className="text-slate-600 font-light">Write it down and let the worry box hold it for you.</p>
                         </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,13 +9,9 @@ import {
   VideoOff, 
   Mic, 
   MicOff, 
-  Phone, 
   PhoneOff, 
   Users, 
-  Clock,
   AlertCircle,
-  CheckCircle,
-  X
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
@@ -23,7 +19,6 @@ import {
   StreamCall,
   StreamVideo,
   StreamVideoClient,
-  useCall,
   useCallStateHooks,
   User,
   StreamTheme,
@@ -49,7 +44,6 @@ const STREAM_API_KEY = process.env.NEXT_PUBLIC_STREAM_API_KEY || 'mmhfdzb5evj2';
 
 export default function StreamVideoCall({ 
   appointmentId, 
-  roomName, 
   userName, 
   userRole, 
   onCallEnd 
@@ -170,7 +164,7 @@ export default function StreamVideoCall({
         setCall(streamCall);
         setIsLoading(false);
 
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Stream initialization error:', err);
         setError(err instanceof Error ? err.message : 'Failed to initialize video call');
         setIsLoading(false);
@@ -201,8 +195,8 @@ export default function StreamVideoCall({
           
           // Stream SDK handles track cleanup automatically
           
-        } catch (error) {
-          console.log('Error during cleanup:', error);
+        } catch (err: unknown) {
+          console.log('Error during cleanup:', err instanceof Error ? err.message : 'Unknown error');
         }
       };
       
@@ -292,8 +286,8 @@ export default function StreamVideoCall({
         duration: 3000,
       });
       
-    } catch (error) {
-      console.log('Error during call cleanup:', error);
+    } catch (err: unknown) {
+      console.log('Error during call cleanup:', err instanceof Error ? err.message : 'Unknown error');
       toast({
         title: "Error",
         description: "There was an issue leaving the call.",

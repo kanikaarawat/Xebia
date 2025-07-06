@@ -125,15 +125,15 @@ export async function getFreeSlots(therapist_id: string, date: string, interval 
     }
     
     // Add all time slots that are blocked by this unavailability
-    let current = new Date(`2000-01-01T${startTime}:00`);
+    const start = new Date(`2000-01-01T${startTime}:00`);
     const end = new Date(`2000-01-01T${endTime}:00`);
     
-    if (isNaN(current.getTime()) || isNaN(end.getTime())) {
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       console.warn('⚠️ Invalid date conversion for unavailability:', { startTime, endTime });
       return;
     }
     
-    while (current < end) {
+    for (let current = new Date(start); current < end; current.setMinutes(current.getMinutes() + interval)) {
       const hour = String(current.getHours()).padStart(2, "0");
       const min = String(current.getMinutes()).padStart(2, "0");
       const slotKey = `${hour}:${min}`;
@@ -151,8 +151,6 @@ export async function getFreeSlots(therapist_id: string, date: string, interval 
           reason: unavail.reason || 'Booked'
         });
       }
-      
-      current.setMinutes(current.getMinutes() + interval);
     }
     console.log('🚫 Unavailable slots for:', startTime, 'to', endTime, 'reason:', unavail.reason);
   });
@@ -168,8 +166,7 @@ export async function getFreeSlots(therapist_id: string, date: string, interval 
     const startTime = new Date(`2000-01-01T${slot.start_time}:00`);
     const endTime = new Date(startTime.getTime() + sessionDuration * 60 * 1000);
     
-    let current = new Date(startTime);
-    while (current < endTime) {
+    for (let current = new Date(startTime); current < endTime; current.setMinutes(current.getMinutes() + interval)) {
       const hour = String(current.getHours()).padStart(2, "0");
       const min = String(current.getMinutes()).padStart(2, "0");
       const slotKey = `${hour}:${min}`;
@@ -177,8 +174,6 @@ export async function getFreeSlots(therapist_id: string, date: string, interval 
       if (bookedSlots.has(slotKey)) {
         return false;
       }
-      
-      current.setMinutes(current.getMinutes() + interval);
     }
     
     return true;

@@ -193,8 +193,8 @@ Keep the tone warm, supportive, and encouraging. Focus on celebrating achievemen
       sessionData: progressData.appointments
     });
 
-  } catch (err: any) {
-    console.error('Progress analysis error:', err);
-    return NextResponse.json({ error: err.message || 'Progress analysis failed' }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('Progress analysis error:', err instanceof Error ? err.message : 'Unknown error');
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Progress analysis failed' }, { status: 500 });
   }
 } 

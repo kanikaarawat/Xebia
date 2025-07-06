@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check therapist availability for the new time
-    const newDate = newAppointmentDate.toISOString().split('T')[0];
+    // const newDate = newAppointmentDate.toISOString().split('T')[0];
     const newTime = newAppointmentDate.toTimeString().split(' ')[0];
     const dayOfWeek = newAppointmentDate.toLocaleDateString('en-US', { weekday: 'long' });
 
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
     if (error) {
       console.error('Error rescheduling appointment:', error);
       return NextResponse.json(
-        { error: error.message || "Failed to reschedule appointment" },
+        { error: error instanceof Error ? error.message : "Failed to reschedule appointment" },
         { status: 500 }
       );
     }
@@ -166,10 +166,10 @@ export async function POST(req: NextRequest) {
       old_time: currentAppointment.scheduled_at,
       new_time: new_scheduled_at
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Unexpected error:', err);
     return NextResponse.json(
-      { error: err.message || "Failed to reschedule appointment" },
+      { error: err instanceof Error ? err.message : "Failed to reschedule appointment" },
       { status: 500 }
     );
   }

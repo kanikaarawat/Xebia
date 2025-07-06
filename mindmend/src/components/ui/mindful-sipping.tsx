@@ -636,7 +636,7 @@ export default function MindfulSipping() {
                                 <div key={index} className="bg-gradient-to-r from-rose-50 to-amber-50 rounded-2xl p-4">
                                     <div className="text-sm text-slate-600 mb-2">{formatDate(session.date)}</div>
                                     {session.overallFeeling && (
-                                        <div className="text-slate-700 italic mb-2">"{session.overallFeeling}"</div>
+                                        <div className="text-slate-700 italic mb-2">&quot;{session.overallFeeling}&quot;</div>
                                     )}
                                     <div className="text-xs text-slate-500">{session.entries.length} reflections recorded</div>
                                 </div>
@@ -868,7 +868,7 @@ export default function MindfulSipping() {
                                 transition={{ delay: 0.5, duration: 0.6 }}
                                 className="text-slate-700 text-xl mb-6 leading-relaxed relative z-10"
                             >
-                                You've completed your mindful sipping practice.
+                                You&apos;ve completed your mindful sipping practice.
                             </motion.p>
 
                             {/* Final reflection */}
@@ -899,7 +899,7 @@ export default function MindfulSipping() {
                                 className="bg-gradient-to-r from-emerald-50/80 to-rose-50/80 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-white/40 shadow-inner relative z-10"
                             >
                                 <p className="text-emerald-700 leading-relaxed">
-                                    Carry this sense of awareness with you. You've created a beautiful moment of presence that ripples
+                                    Carry this sense of awareness with you. You&apos;ve created a beautiful moment of presence that ripples
                                     into the rest of your day.
                                 </p>
                             </motion.div>
@@ -937,7 +937,7 @@ export default function MindfulSipping() {
                     transition={{ delay: 1.2, duration: 0.8 }}
                     className="text-center mt-8"
                 >
-                    <p className="text-slate-500 text-sm">Take your time. There's no rush in this moment. 🌸</p>
+                    <p className="text-slate-500 text-sm">Take your time. There&apos;s no rush in this moment. 🌸</p>
                 </motion.div>
             </div>
         </div>

@@ -413,7 +413,7 @@ export default function CloudThoughts() {
 
       oscillator.start(audioContextRef.current.currentTime)
       oscillator.stop(audioContextRef.current.currentTime + 8)
-    } catch (error) {
+    } catch  {
       console.log("Audio not supported")
     }
   }
@@ -445,7 +445,7 @@ export default function CloudThoughts() {
       gain.connect(ctx.destination);
       source.start(ctx.currentTime);
       source.stop(ctx.currentTime + duration);
-    } catch (error) {
+    } catch  {
       console.log('Audio not supported');
     }
   };
@@ -720,7 +720,7 @@ export default function CloudThoughts() {
                 >
                   <Cloud className="w-7 h-7 text-white/80" />
                 </motion.div>
-                <span className="text-white font-light text-xl">What's floating through your mind?</span>
+                <span className="text-white font-light text-xl">What is floating through your mind?</span>
                 {currentThought.length > 0 && (
                   <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} className="ml-auto">
                     <div className="flex items-center gap-2 text-sm text-white bg-white/20 px-4 py-2 rounded-full font-medium backdrop-blur-sm">

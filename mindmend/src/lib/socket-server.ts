@@ -155,7 +155,7 @@ export function initializeSocketServer(httpServer: HTTPServer) {
                 })
 
                 console.log(`User ${userName} joined ${room.id}`)
-            } catch (error) {
+            } catch  {
                 socket.emit("error", { message: "Failed to join room" })
             }
         })
@@ -170,7 +170,7 @@ export function initializeSocketServer(httpServer: HTTPServer) {
                         id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     })
                 }
-            } catch (error) {
+            } catch  {
                 socket.emit("error", { message: "Failed to send message" })
             }
         })
@@ -189,7 +189,7 @@ export function initializeSocketServer(httpServer: HTTPServer) {
                     }
                 }
                 console.log("User disconnected:", socket.id)
-            } catch (error) {
+            } catch  {
                 console.error("Error handling disconnect:", error)
             }
         })

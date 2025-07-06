@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Bell, Mail, Smartphone, MessageSquare, Calendar, TrendingUp, Shield } from 'lucide-react';
 import { useNotifications } from '@/lib/hooks/useNotifications';
 import { NotificationPreferences } from '@/lib/notificationService';
@@ -33,7 +32,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
     try {
       await updatePreferences({ [key]: value });
       toast.success('Notification preferences updated');
-    } catch (error) {
+    } catch  {
       // Revert on error
       setLocalPreferences(preferences);
       toast.error('Failed to update notification preferences');
@@ -129,7 +128,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
       <div>
         <h3 className="text-lg font-semibold mb-2">Notification Preferences</h3>
         <p className="text-sm text-muted-foreground">
-          Choose how you'd like to receive notifications from MindMend
+          Choose how you&apos;d like to receive notifications from MindMend
         </p>
       </div>
 

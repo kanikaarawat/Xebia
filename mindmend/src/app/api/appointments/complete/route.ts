@@ -71,10 +71,10 @@ export async function POST(req: NextRequest) {
       appointment: updatedAppointment,
       message: "Appointment marked as complete successfully" 
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Unexpected error:', err);
     return NextResponse.json(
-      { error: err.message || "Failed to complete appointment" },
+      { error: err instanceof Error ? err.message : "Failed to complete appointment" },
       { status: 500 }
     );
   }

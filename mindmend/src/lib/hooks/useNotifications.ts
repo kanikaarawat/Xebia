@@ -42,8 +42,8 @@ export function useNotifications(userId: string | undefined): UseNotificationsRe
       // Calculate unread count
       const unread = data.notifications?.filter((n: Notification) => !n.read).length || 0;
       setUnreadCount(unread);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch notifications');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch notifications');
     } finally {
       setLoading(false);
     }
@@ -58,8 +58,8 @@ export function useNotifications(userId: string | undefined): UseNotificationsRe
         const data = await response.json();
         setPreferences(data.preferences);
       }
-    } catch (err: any) {
-      console.error('Error fetching notification preferences:', err);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch notification preferences');
     }
   }, [userId]);
 
@@ -85,8 +85,8 @@ export function useNotifications(userId: string | undefined): UseNotificationsRe
         )
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (err: any) {
-      setError(err.message || 'Failed to mark notification as read');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to mark notification as read');
     }
   }, []);
 
@@ -110,8 +110,8 @@ export function useNotifications(userId: string | undefined): UseNotificationsRe
       // Update local state
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
-    } catch (err: any) {
-      setError(err.message || 'Failed to mark all notifications as read');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to mark all notifications as read');
     }
   }, [userId]);
 
@@ -133,8 +133,8 @@ export function useNotifications(userId: string | undefined): UseNotificationsRe
       if (deletedNotification && !deletedNotification.read) {
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete notification');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to delete notification');
     }
   }, [notifications]);
 
@@ -157,8 +157,8 @@ export function useNotifications(userId: string | undefined): UseNotificationsRe
 
       // Update local state
       setPreferences(prev => prev ? { ...prev, ...newPreferences } : null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to update notification preferences');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update notification preferences');
     }
   }, [userId]);
 

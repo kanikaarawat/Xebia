@@ -175,7 +175,7 @@ export default function EmailConfirmationPage() {
         setStatus("success");
         setMessage("New confirmation email sent! Please check your inbox.");
       }
-    } catch (error) {
+    } catch {
       setStatus("error");
       setMessage("Failed to resend confirmation email.");
     }

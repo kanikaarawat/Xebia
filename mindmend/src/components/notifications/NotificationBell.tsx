@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, X, Check, Trash2 } from 'lucide-react';
+import { Bell, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { useNotifications } from '@/lib/hooks/useNotifications';
 import { Notification } from '@/lib/notificationService';
 import { formatDistanceToNow } from 'date-fns';

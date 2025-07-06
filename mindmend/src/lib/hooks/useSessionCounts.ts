@@ -34,8 +34,8 @@ export function useSessionCounts(userId: string | undefined): SessionCounts {
       setUpcomingCount(data.upcoming ?? 0);
       setCompletedCount(data.completed ?? 0);
       setTodayCount(data.today ?? 0);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch session counts');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch session counts');
     } finally {
       setLoading(false);
     }
