@@ -1,4 +1,5 @@
 'use client';
+
 import { useRouter } from 'next/navigation';
 import { Brain, MessageCircle } from 'lucide-react';
 
@@ -21,7 +22,10 @@ export default function MentalHealthCards() {
                         Access personalized mental health resources, expert tools, and guided wellness programs
                     </p>
                     <button
-                        onClick={() => router.push('/mindmend-hub')}
+                        onClick={() => {
+                            document.title = "MindMend Hub – MindMend";
+                            router.push('/mindmend-hub');
+                        }}
                         className="group/btn inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-full hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-blue-500/25 hover:scale-105"
                     >
                         Explore Resources
@@ -44,7 +48,10 @@ export default function MentalHealthCards() {
                         Connect with a supportive community, share experiences, and find encouragement in a safe, moderated environment
                     </p>
                     <button
-                        onClick={() => router.push('/chat-room')}
+                        onClick={() => {
+                            document.title = "Chatroom – MindMend";
+                            router.push('/chatrooms/chat-room'); // Adjusted route
+                        }}
                         className="group/btn inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white font-medium rounded-full hover:from-teal-600 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-teal-500/25 hover:scale-105"
                     >
                         Join Community
