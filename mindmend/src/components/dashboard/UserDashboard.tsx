@@ -761,13 +761,15 @@ export default function UserDashboard() {
           onValueChange={setActiveTab}
           className="w-full max-w-7xl mx-auto"
         >
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 rounded-xl bg-white/70 backdrop-blur p-1 h-8 sm:h-10 lg:h-12 xl:h-14">
-            <TabsTrigger value="overview" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium">Overview</TabsTrigger>
-            <TabsTrigger value="appointments" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium">Appointments</TabsTrigger>
-            <TabsTrigger value="therapists" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium hidden sm:block">Find Therapists</TabsTrigger>
-            <TabsTrigger value="mood" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium hidden lg:block">Mood</TabsTrigger>
-            <TabsTrigger value="progress" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium hidden lg:block">Progress</TabsTrigger>
-          </TabsList>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 rounded-xl bg-white/70 backdrop-blur p-1 h-10 sm:h-12 lg:h-14 xl:h-16">
+  <TabsTrigger value="overview" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium">Overview</TabsTrigger>
+  <TabsTrigger value="appointments" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium">Appointments</TabsTrigger>
+  <TabsTrigger value="therapists" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden sm:block">Find Therapists</TabsTrigger>
+  <TabsTrigger value="mood" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden lg:block">Mood</TabsTrigger>
+  <TabsTrigger value="progress" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden lg:block">Progress</TabsTrigger>
+  <TabsTrigger value="resources" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden xl:block">Resources</TabsTrigger>
+</TabsList>
+
 
           {/* ── Overview tab ── */}
           <TabsContent value="overview" className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8">
