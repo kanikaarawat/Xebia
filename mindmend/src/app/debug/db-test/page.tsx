@@ -4,6 +4,7 @@ import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { User } from '@supabase/supabase-js';
 
 interface TestResult {
   name: string;
@@ -14,10 +15,15 @@ interface TestResult {
   expected?: string;
 }
 
+interface TestResults {
+  user: User | null;
+  tests: TestResult[];
+}
+
 export default function DatabaseTest() {
   const user = useUser();
   const supabase = useSupabaseClient();
-  const [testResults, setTestResults] = useState<any>(null);
+  const [testResults, setTestResults] = useState<TestResults | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,9 +33,9 @@ export default function DatabaseTest() {
         return;
       }
 
-      const results = {
+      const results: TestResults = {
         user: user,
-        tests: [] as TestResult[]
+        tests: []
       };
 
       try {
@@ -79,7 +85,7 @@ export default function DatabaseTest() {
 
         // Test 4: Try to insert a test record (should fail due to RLS)
         console.log('🔍 Testing insert permissions...');
-        const { data: insertTest, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from('profiles')
           .insert({
             id: 'test-user-id',
@@ -146,7 +152,7 @@ export default function DatabaseTest() {
 
           <div>
             <h3 className="font-semibold mb-2">Test Results:</h3>
-            {testResults?.tests.map((test: any, index: number) => (
+            {testResults?.tests.map((test: TestResult, index: number) => (
               <div key={index} className={`p-4 rounded mb-3 ${test.success ? 'bg-green-100 border border-green-300' : 'bg-red-100 border border-red-300'}`}>
                 <h4 className="font-semibold mb-2">
                   {test.name} {test.success ? '✅ PASS' : '❌ FAIL'}
@@ -157,14 +163,15 @@ export default function DatabaseTest() {
                     {test.errorCode && <span className="ml-2">(Code: {test.errorCode})</span>}
                   </p>
                 )}
-                {test.data && (
-                  <details className="text-sm">
-                    <summary className="cursor-pointer">View Data</summary>
-                    <pre className="bg-white p-2 rounded mt-2 text-xs overflow-auto">
-                      {JSON.stringify(test.data, null, 2)}
-                    </pre>
-                  </details>
-                )}
+                {typeof test.data === 'object' && test.data !== null && (
+  <details className="text-sm">
+    <summary className="cursor-pointer">View Data</summary>
+    <pre className="bg-white p-2 rounded mt-2 text-xs overflow-auto">
+      {JSON.stringify(test.data, null, 4)}
+    </pre>
+  </details>
+)}
+
                 {test.expected && (
                   <p className="text-sm text-gray-600">
                     <strong>Expected:</strong> {test.expected}

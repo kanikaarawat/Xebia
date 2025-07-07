@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ export default function VideoCallTestPage() {
   const [status, setStatus] = useState('');
   const [testAppointmentId, setTestAppointmentId] = useState('');
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -48,7 +48,7 @@ export default function VideoCallTestPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, supabase]);
 
   useEffect(() => {
     if (!user) {

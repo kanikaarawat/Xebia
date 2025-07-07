@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 
 interface WeeklyAnalysis {
-  statistics?: any;
+  statistics?: Record<string, unknown>;
   analysis?: string;
-  moodData?: any;
+  moodData?: Record<string, unknown>;
 }
 
 export default function WeeklyAnalysisDebug() {

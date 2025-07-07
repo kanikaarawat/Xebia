@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 
 interface ProgressAnalysis {
-  statistics?: any;
+  statistics?: Record<string, unknown>;
   analysis?: string;
-  weeklyTrends?: any;
-  moodData?: any;
-  sessionData?: any;
+  weeklyTrends?: Record<string, unknown>;
+  moodData?: Record<string, unknown>;
+  sessionData?: Record<string, unknown>;
 }
 
 export default function ProgressAnalysisDebug() {

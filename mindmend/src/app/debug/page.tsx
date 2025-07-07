@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs';
-import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,18 +11,16 @@ import UnavailabilityTable from '@/components/debug/UnavailabilityTable';
 import FreeSlotsTester from '@/components/debug/FreeSlotsTester';
 import { TimeConversionTester } from '@/components/debug/TimeConversionTester';
 
-const supabase = createPagesBrowserClient();
 
 export default function DebugPage() {
   const user = useUser();
-  const session = useSession();
   const supabase = useSupabaseClient();
-  const [debugInfo, setDebugInfo] = useState<unknown>({});
+  const [debugInfo, setDebugInfo] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const runDebugChecks = async () => {
-      const info: unknown = {};
+      const info: Record<string, unknown> = {};
 
       // Check authentication
       info.auth = {
@@ -33,7 +30,7 @@ export default function DebugPage() {
 
       // Test basic connection
       try {
-        const { data, error } = await supabase.from('profiles').select('count').limit(1);
+        const { error } = await supabase.from('profiles').select('count').limit(1);
         info.connection = { success: !error, error: error?.message };
       } catch (err) {
         info.connection = { success: false, error: err };

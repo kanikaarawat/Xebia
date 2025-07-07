@@ -41,9 +41,14 @@ export default function EmailConfirmationPage() {
       if (error) throw error;
       setStatus('success');
       setMessage('Confirmation email resent! Please check your inbox.');
-    } catch (err: any) {
-      setStatus('error');
-      setMessage(err.message || 'Failed to resend confirmation email.');
+    } catch (err) {
+      if (err instanceof Error) {
+        setStatus('error');
+        setMessage(err.message || 'Failed to resend confirmation email.');
+      } else {
+        setStatus('error');
+        setMessage('An unknown error occurred.');
+      }
     }
   };
 

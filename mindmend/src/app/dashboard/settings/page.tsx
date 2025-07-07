@@ -50,6 +50,7 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 interface UserProfile {
   id: string;

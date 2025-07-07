@@ -35,6 +35,7 @@ export default function Dashboard() {
           setUserRole(user.user_metadata?.role || 'user');
         }
       } catch (error) {
+        console.log('Error fetching profile:', error);
         setUserRole(user.user_metadata?.role || 'user');
       } finally {
         setProfileLoading(false);
