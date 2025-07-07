@@ -129,7 +129,7 @@ export default function AlternativePayment({
           </div>
 
           <div className="text-xs text-slate-500 text-center">
-            <p>💳 We'll contact you with payment options</p>
+            <p>💳 We&apos;ll contact you with payment options</p>
             <p>📞 PayPal, bank transfer, or manual payment</p>
           </div>
         </CardContent>

@@ -540,11 +540,11 @@ export default function UserDashboard() {
             <CardContent className="p-8 text-center">
               <h2 className="text-2xl font-semibold text-indigo-800 mb-4">Profile Not Found</h2>
               <p className="text-slate-600 mb-6">
-                We couldn't load your user profile. This might be because:
+                We couldn&apos;t load your user profile. This might be because:
               </p>
               <ul className="text-slate-600 text-left max-w-md mx-auto mb-6 space-y-2">
-                <li>• Your profile hasn't been set up yet</li>
-                <li>• There's a database connection issue</li>
+                <li>• Your profile hasn&apos;t been set up yet</li>
+                <li>• There&apos;s a database connection issue</li>
                 <li>• You need to complete your registration</li>
               </ul>
               <Button
@@ -742,7 +742,7 @@ export default function UserDashboard() {
                 {getGreeting()}, {getDisplayName()}! 👋
               </h1>
               <p className="text-xs sm:text-sm lg:text-base xl:text-lg text-indigo-600 mb-2 sm:mb-3">
-                Welcome back to your wellness journey. Here's what's happening today.
+                Welcome back to your wellness journey. Here&apos;s what&apos;s happening today.
               </p>
               <div className="flex flex-wrap gap-1 sm:gap-2">
                 <Badge className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-medium">
@@ -1547,7 +1547,7 @@ export default function UserDashboard() {
                   </div>
 
                   <div className="pt-2 sm:pt-3 lg:pt-4 border-t border-slate-200">
-                    <h4 className="font-semibold text-indigo-800 mb-1 sm:mb-2 text-xs sm:text-sm lg:text-base">This Week's Pattern</h4>
+                    <h4 className="font-semibold text-indigo-800 mb-1 sm:mb-2 text-xs sm:text-sm lg:text-base">This Week&apos;s Pattern</h4>
                     <div className="flex space-x-1">
                       {moodData.map((day, index) => (
                         <div

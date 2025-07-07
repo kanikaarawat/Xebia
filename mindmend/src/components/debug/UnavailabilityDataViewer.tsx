@@ -225,7 +225,7 @@ export default function UnavailabilityDataViewer() {
         <TabsContent value="today" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Today's Unavailability</CardTitle>
+              <CardTitle>Today&apos;s Unavailability</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -297,7 +297,7 @@ export default function UnavailabilityDataViewer() {
 
             <Card>
               <CardHeader>
-                <CardTitle>This Week's Unavailability</CardTitle>
+                <CardTitle>This Week&apos;s Unavailability</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">

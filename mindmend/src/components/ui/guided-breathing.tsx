@@ -778,7 +778,7 @@ export default function GuidedBreathing({ duration = 60 }: GuidedBreathingProps)
 
     {/* Instructions */}
     <div className="text-center text-sm text-slate-700">
-    <p className="mb-3 text-base font-medium">Follow the circle's rhythm: 🎵</p>
+    <p className="mb-3 text-base font-medium">Follow the circle&apos;s rhythm: 🎵</p>
     <div className="flex justify-center gap-4 text-sm">
     <span className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-3 py-2 rounded-full shadow-md">
     <div className="w-4 h-4 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 shadow-sm"></div>

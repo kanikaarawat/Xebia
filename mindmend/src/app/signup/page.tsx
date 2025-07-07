@@ -182,7 +182,7 @@ export default function SignupPage() {
             <CardHeader className="text-center space-y-1">
               <CardTitle className="text-2xl text-indigo-700 font-bold">Check Your Email</CardTitle>
               <CardDescription className="text-slate-600">
-                We've sent a confirmation link to {email}
+                We&apos;ve sent a confirmation link to {email}
               </CardDescription>
             </CardHeader>
 
@@ -192,7 +192,7 @@ export default function SignupPage() {
                   Please check your email and click the confirmation link to verify your account.
                 </p>
                 <p className="text-sm text-slate-500">
-                  Once confirmed, you'll be redirected to complete your profile setup.
+                  Once confirmed, you&apos;ll be redirected to complete your profile setup.
                 </p>
               </div>
               

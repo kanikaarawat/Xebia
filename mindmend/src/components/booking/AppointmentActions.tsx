@@ -196,7 +196,7 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
           <>
             {isWithin24Hours ? (
               <div className="w-full p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm text-center">
-                You can't cancel or reschedule an appointment within 24 hours of its scheduled time as per our policy.
+                You can&apos;t cancel or reschedule an appointment within 24 hours of its scheduled time as per our policy.
               </div>
             ) : (
               <>

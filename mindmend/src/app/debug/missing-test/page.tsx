@@ -107,8 +107,8 @@ export default function MissingTest() {
           <div>
             <h3 className="font-semibold mb-2">Missing Function Results:</h3>
             <ul className="space-y-1 text-sm">
-              <li>✅ First Name: "{profile.first_name}" - Missing: {first_name_missing ? 'YES' : 'NO'}</li>
-              <li>✅ Last Name: "{profile.last_name}" - Missing: {last_name_missing ? 'YES' : 'NO'}</li>
+              <li>✅ First Name:  &quot;{profile.first_name}&quot; - Missing: {first_name_missing ? 'YES' : 'NO'}</li>
+              <li>✅ Last Name: &quot;{profile.last_name}&quot; - Missing: {last_name_missing ? 'YES' : 'NO'}</li>
               <li>✅ Role: {profile.role}</li>
               <li>✅ Is Therapist: {isTherapist ? 'YES' : 'NO'}</li>
             </ul>

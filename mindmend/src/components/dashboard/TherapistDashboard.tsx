@@ -1964,11 +1964,11 @@ export default function TherapistDashboard() {
             <CardContent className="p-8 text-center">
               <h2 className="text-2xl font-semibold text-indigo-800 mb-4">Profile Not Found</h2>
               <p className="text-slate-600 mb-6">
-                We couldn't load your therapist profile. This might be because:
+                We couldn&apos;t load your therapist profile. This might be because:
               </p>
               <ul className="text-slate-600 text-left max-w-md mx-auto mb-6 space-y-2">
-                <li>• Your profile hasn't been set up yet</li>
-                <li>• There's a database connection issue</li>
+                <li>• Your profile hasn&apos;t been set up yet</li>
+                <li>• There&apos;s a database connection issue</li>
                 <li>• You need to complete your registration</li>
               </ul>
               <Button
@@ -2169,7 +2169,7 @@ export default function TherapistDashboard() {
                 {getGreeting()}, {getDisplayName()}! 👋
               </h1>
               <p className="text-xs sm:text-sm lg:text-base xl:text-lg text-indigo-600 mb-2 sm:mb-3">
-                Welcome back to your therapy practice. Here's what's happening today.
+                Welcome back to your therapy practice. Here&apos;s what&apos;s happening today.
               </p>
               <div className="flex flex-wrap gap-1 sm:gap-2">
                 <Badge className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-medium">
@@ -2299,7 +2299,7 @@ export default function TherapistDashboard() {
                           <p className="text-3xl font-bold text-indigo-800 mb-1">
                             {todaysAppointments.length}
                           </p>
-                          <p className="text-sm text-slate-600 font-medium">Today's Appointments</p>
+                          <p className="text-sm text-slate-600 font-medium">Today&apos;s Appointments</p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-slate-500">Total for today</p>
@@ -2392,7 +2392,7 @@ export default function TherapistDashboard() {
                                       {appt.notes && (
                                         <div className="mt-2 p-2 bg-white/60 rounded-lg border border-slate-200">
                                           <p className="text-xs text-slate-600 italic max-w-full truncate">
-                                            "{appt.notes}"
+                                            &quot;{appt.notes}&quot;
                                           </p>
                                           {/* Show rejection reason if present in notes */}
                                           {appt.status === 'rejected' && appt.notes && appt.notes.includes('Rejection reason:') && (
@@ -2576,7 +2576,7 @@ export default function TherapistDashboard() {
                     <div className="text-center py-8 text-slate-500 bg-white/60 rounded-xl">
                       <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
                       <p className="text-slate-600 text-lg">No appointments found</p>
-                      <p className="text-slate-500 text-sm mt-2">You don't have any appointments scheduled yet.</p>
+                      <p className="text-slate-500 text-sm mt-2">You don&apos;t have any appointments scheduled yet.</p>
                     </div>
                   ) : (
                     <div className="space-y-4 max-h-96 overflow-y-auto overflow-x-hidden custom-scrollbar">
@@ -2703,7 +2703,7 @@ export default function TherapistDashboard() {
                                     {appt.notes && (
                                       <div className="mt-2 p-2 bg-white/60 rounded-lg border border-slate-200">
                                         <p className="text-xs text-slate-600 italic max-w-full truncate">
-                                          "{appt.notes}"
+                                          &quot;{appt.notes}&quot;
                                         </p>
                                         {/* Show rejection reason if present in notes */}
                                         {appt.status === 'rejected' && appt.notes && appt.notes.includes('Rejection reason:') && (
@@ -3042,7 +3042,7 @@ export default function TherapistDashboard() {
                         Block Time Slot
                       </CardTitle>
                       <p className="text-slate-600 text-xs sm:text-sm">
-                        Block time when you're unavailable. Choose between whole day or specific time slot.
+                        Block time when you&apos;re unavailable. Choose between whole day or specific time slot.
                       </p>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -3293,7 +3293,7 @@ export default function TherapistDashboard() {
                                 return appointmentBlocks;
                               })()}
                             </div>
-                            <div className="text-xs text-slate-600">This Week's Appointments</div>
+                            <div className="text-xs text-slate-600">This Week&apos;s Appointments</div>
                           </div>
                         </div>
                       </div>

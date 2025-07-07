@@ -321,7 +321,7 @@ export default function Component({ onCardClick }: MindMendHubProps = {}) {
                     className="text-center mt-12"
                 >
                     <p className="text-slate-500 text-sm">
-                        Take your time. There's no rush. You're exactly where you need to be. 💚
+                        Take your time. There&apos;s no rush. You&apos;re exactly where you need to be. 💚
                     </p>
                 </motion.div>
             </div>

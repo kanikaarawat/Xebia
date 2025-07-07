@@ -137,7 +137,7 @@ export async function getFreeSlotsFixed(therapist_id: string, date: string, inte
     }
     
     // FIXED: Add all time slots that are blocked by this unavailability
-    let current = new Date(`2000-01-01T${startTime}:00`);
+    const current = new Date(`2000-01-01T${startTime}:00`);
     const end = new Date(`2000-01-01T${endTime}:00`);
     
     if (isNaN(current.getTime()) || isNaN(end.getTime())) {
@@ -184,7 +184,7 @@ export async function getFreeSlotsFixed(therapist_id: string, date: string, inte
     const startTime = new Date(`2000-01-01T${slot.start_time}:00`);
     const endTime = new Date(startTime.getTime() + sessionDuration * 60 * 1000);
     
-    let current = new Date(startTime);
+    const current = new Date(startTime);
     while (current < endTime) {
       const hour = String(current.getHours()).padStart(2, "0");
       const min = String(current.getMinutes()).padStart(2, "0");

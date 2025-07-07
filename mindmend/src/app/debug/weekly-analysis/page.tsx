@@ -60,7 +60,7 @@ export default function WeeklyAnalysisDebug() {
                 Mood Summary
               </h4>
               <p style={{ fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
-                You've maintained a consistently positive mood this week, averaging 4/5! Your mood shows excellent stability with minimal fluctuations.
+                You&apos;ve maintained a consistently positive mood this week, averaging 4/5! Your mood shows excellent stability with minimal fluctuations.
               </p>
             </div>
 
@@ -143,7 +143,7 @@ export default function WeeklyAnalysisDebug() {
                 Encouragement
               </h4>
               <p style={{ fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
-                You're doing fantastic! Your consistent positive mood shows strong emotional well-being. Keep up the great work!
+                You&apos;re doing fantastic! Your consistent positive mood shows strong emotional well-being. Keep up the great work!
               </p>
             </div>
           </div>

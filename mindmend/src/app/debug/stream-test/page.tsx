@@ -121,7 +121,7 @@ export default function StreamTestPage() {
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <h4 className="font-semibold text-yellow-800 mb-2">Instructions</h4>
               <ul className="text-sm text-yellow-700 space-y-1">
-                <li>• Click "Start Test Video Call" to begin</li>
+                <li>• Click &quot;Start Test Video Call&quot; to begin</li>
                 <li>• Allow camera and microphone permissions</li>
                 <li>• Test video and audio controls</li>
                 <li>• Open another browser tab to test with multiple participants</li>

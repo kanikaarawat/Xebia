@@ -119,7 +119,7 @@ export default function TestPaymentPage() {
                 <strong>Payment Method Tips:</strong>
                 <ul className="mt-2 space-y-1">
                   <li>• <strong>UPI:</strong> Use Google Pay, PhonePe, or Paytm</li>
-                  <li>• <strong>Net Banking:</strong> Use your bank's net banking</li>
+                  <li>• <strong>Net Banking:</strong> Use your bank&apos;s net banking</li>
                   <li>• <strong>Cards:</strong> Indian cards only (international not supported)</li>
                   <li>• <strong>Wallets:</strong> Paytm, PhonePe, and other digital wallets</li>
                 </ul>
