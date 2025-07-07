@@ -2,6 +2,52 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
+
+// Helper for missing fields (copied from LoginForm)
+const missing = (v: unknown) => typeof v !== 'string' ? !v : v.trim().length === 0;
+
+// Reusable redirect logic (copied from LoginForm)
+async function redirectBasedOnProfile(supabase: any, router: any, userId: string, userEmail: string) {
+  const { data: profile, error: profileErr } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (profileErr || !profile) {
+    await supabase.from('profiles').insert({
+      id: userId,
+      email: userEmail,
+      role: 'user',
+    });
+    // Wait for the insert to propagate
+    await new Promise((res) => setTimeout(res, 300));
+    await router.push('/setup-profile');
+    return;
+  }
+
+  const isTherapist = profile.role === 'therapist';
+  const missingChecks = {
+    first_name: missing(profile.first_name),
+    last_name: missing(profile.last_name),
+    bio: missing(profile.bio),
+    specialization: isTherapist ? missing(profile.specialization) : false,
+    license_number: isTherapist ? missing(profile.license_number) : false,
+  };
+  const incomplete =
+    missingChecks.first_name ||
+    missingChecks.last_name ||
+    missingChecks.bio ||
+    missingChecks.specialization ||
+    missingChecks.license_number;
+
+  console.log('[DEBUG] Profile:', profile);
+  console.log('[DEBUG] Missing checks:', missingChecks);
+  console.log('[DEBUG] Incomplete:', incomplete);
+
+  await router.push(incomplete ? '/setup-profile' : '/dashboard');
+}
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -9,9 +55,11 @@ export default function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
+      setLoading(true);
       const urlError = searchParams.get('error');
       const urlErrorDesc = searchParams.get('error_description');
       if (urlError) {
@@ -19,11 +67,19 @@ export default function AuthCallback() {
         setLoading(false);
         return;
       }
-      setError('Not implemented: supabase removed');
+      // Get session/user from Supabase
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        setError(error?.message || 'Authentication failed.');
+        setLoading(false);
+        return;
+      }
+      // Use the same redirect logic as LoginForm, and await the redirect
+      await redirectBasedOnProfile(supabase, router, user.id, user.email!);
       setLoading(false);
     };
     handleAuthCallback();
-  }, [router, searchParams]);
+  }, [router, searchParams, supabase]);
 
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
