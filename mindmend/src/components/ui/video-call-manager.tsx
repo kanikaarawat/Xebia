@@ -27,6 +27,11 @@ interface VideoCall {
   patient_name?: string;
 }
 
+interface Appointment {
+  id: string;
+  [key: string]: unknown;
+}
+
 export default function VideoCallManager() {
   const [videoCalls, setVideoCalls] = useState<VideoCall[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,18 +83,18 @@ export default function VideoCallManager() {
       }
 
       // Transform appointments into video call format
-      const calls: VideoCall[] = appointments?.map((appointment: any) => ({
+      const calls: VideoCall[] = appointments?.map((appointment: Appointment) => ({
         id: appointment.id,
         appointment_id: appointment.id,
         room_name: `mindmend-${appointment.id}`,
         status: appointment.status === 'in_progress' ? 'active' : 'waiting',
-        created_at: appointment.created_at,
+        created_at: appointment.created_at as string,
         participants: [
           appointment.therapist?.name || 'Unknown Therapist',
           appointment.patient?.full_name || 'Unknown Patient'
         ],
-        therapist_name: appointment.therapist?.name,
-        patient_name: appointment.patient?.full_name
+        therapist_name: (appointment.therapist as { name?: string })?.name,
+        patient_name: (appointment.patient as { full_name?: string })?.full_name
       })) || [];
 
       setVideoCalls(calls);

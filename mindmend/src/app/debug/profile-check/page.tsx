@@ -5,10 +5,22 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
+interface Profile {
+  id?: string;
+  email?: string;
+  role?: string;
+  first_name?: string;
+  last_name?: string;
+  bio?: string;
+  avatar_url?: string;
+  specialization?: string;
+  license_number?: string;
+}
+
 export default function ProfileCheck() {
   const user = useUser();
   const supabase = useSupabaseClient();
-  const [profile, setProfile] = useState<unknown>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +46,7 @@ export default function ProfileCheck() {
         } else {
           setProfile(data);
         }
-      } catch (err) {
+      } catch {
         setError('Failed to fetch profile');
       } finally {
         setLoading(false);

@@ -147,7 +147,7 @@ export default function BookSessionPage() {
     };
 
     fetchTherapists();
-  }, [mounted]);
+  }, [mounted, supabase]);
 
   // Fetch free slots when therapist, date, or duration changes
   useEffect(() => {

@@ -24,6 +24,7 @@ import {
   StreamTheme,
   ParticipantView,
   StreamVideoParticipant,
+  StreamCallProvider,
 } from '@stream-io/video-react-sdk';
 
 import '@stream-io/video-react-sdk/dist/css/styles.css';
@@ -42,6 +43,12 @@ interface StreamVideoCallProps {
 // Stream configuration
 const STREAM_API_KEY = process.env.NEXT_PUBLIC_STREAM_API_KEY || 'mmhfdzb5evj2';
 
+interface Call {
+  camera: any;
+  microphone: any;
+  leave: () => void;
+}
+
 export default function StreamVideoCall({ 
   appointmentId, 
   userName, 
@@ -52,7 +59,7 @@ export default function StreamVideoCall({
   const session = useSession();
   const userId = session?.user?.id;
   const [client, setClient] = useState<StreamVideoClient | null>(null);
-  const [call, setCall] = useState<any>(null);
+  const [call, setCall] = useState<Call | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [callDuration, setCallDuration] = useState(0);
@@ -367,7 +374,7 @@ export default function StreamVideoCall({
     return (
       <div className="min-h-screen bg-black">
         <StreamVideo client={client}>
-          <StreamCall call={call}>
+          {call && <StreamCallProvider call={call}>
             <StreamTheme>
               <VideoCallUI 
                 call={call}
@@ -376,7 +383,7 @@ export default function StreamVideoCall({
                 onLeaveCall={handleLeaveCall}
               />
             </StreamTheme>
-          </StreamCall>
+          </StreamCallProvider>}
         </StreamVideo>
       </div>
     );
@@ -386,7 +393,7 @@ export default function StreamVideoCall({
 }
 
 interface VideoCallUIProps {
-  call: any;
+  call: Call | null;
   callDuration: number;
   userRole: string;
   onLeaveCall: () => void;
@@ -402,8 +409,8 @@ function VideoCallUI({ call, callDuration, userRole, onLeaveCall }: VideoCallUIP
   const [isLeaving, setIsLeaving] = useState(false);
 
   // Get camera/mic state from call controls
-  const isVideoEnabled = call.camera.isEnabled;
-  const isAudioEnabled = call.microphone.isEnabled;
+  const isVideoEnabled = call && call.camera && call.camera.isEnabled;
+  const isAudioEnabled = call && call.microphone && call.microphone.isEnabled;
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -468,7 +475,7 @@ function VideoCallUI({ call, callDuration, userRole, onLeaveCall }: VideoCallUIP
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
         <div className="bg-black/40 backdrop-blur-lg rounded-full px-6 py-4 flex items-center space-x-4 shadow-2xl border border-white/10">
           <Button
-            onClick={() => call.camera.toggle()}
+            onClick={() => call && call.camera && call.camera.toggle()}
             variant={isVideoEnabled ? "default" : "destructive"}
             size="lg"
             className="rounded-full w-14 h-14 bg-white/20 hover:bg-white/30 border-white/20"
@@ -481,7 +488,7 @@ function VideoCallUI({ call, callDuration, userRole, onLeaveCall }: VideoCallUIP
           </Button>
 
           <Button
-            onClick={() => call.microphone.toggle()}
+            onClick={() => call && call.microphone && call.microphone.toggle()}
             variant={isAudioEnabled ? "default" : "destructive"}
             size="lg"
             className="rounded-full w-14 h-14 bg-white/20 hover:bg-white/30 border-white/20"

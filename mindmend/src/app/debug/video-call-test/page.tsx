@@ -25,14 +25,6 @@ export default function VideoCallTestPage() {
   const [status, setStatus] = useState('');
   const [testAppointmentId, setTestAppointmentId] = useState('');
 
-  useEffect(() => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    fetchAppointments();
-  }, [user, router]);
-
   const fetchAppointments = async () => {
     try {
       setLoading(true);
@@ -57,6 +49,14 @@ export default function VideoCallTestPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    fetchAppointments();
+  }, [user, router, fetchAppointments]);
 
   const createTestAppointment = async () => {
     try {

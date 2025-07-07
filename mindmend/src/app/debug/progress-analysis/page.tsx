@@ -2,8 +2,16 @@
 
 import React, { useState } from 'react';
 
+interface ProgressAnalysis {
+  statistics?: any;
+  analysis?: string;
+  weeklyTrends?: any;
+  moodData?: any;
+  sessionData?: any;
+}
+
 export default function ProgressAnalysisDebug() {
-  const [analysis, setAnalysis] = useState<unknown>(null);
+  const [analysis, setAnalysis] = useState<ProgressAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -21,7 +29,7 @@ export default function ProgressAnalysisDebug() {
       } else {
         setAnalysis(data);
       }
-    } catch (err) {
+    } catch {
       setError('Network or server error');
     }
     setLoading(false);

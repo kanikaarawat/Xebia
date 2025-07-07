@@ -2,8 +2,14 @@
 
 import React, { useState } from 'react';
 
+interface WeeklyAnalysis {
+  statistics?: any;
+  analysis?: string;
+  moodData?: any;
+}
+
 export default function WeeklyAnalysisDebug() {
-  const [analysis, setAnalysis] = useState<unknown>(null);
+  const [analysis, setAnalysis] = useState<WeeklyAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -21,7 +27,7 @@ export default function WeeklyAnalysisDebug() {
       } else {
         setAnalysis(data);
       }
-    } catch (err) {
+    } catch {
       setError('Network or server error');
     }
     setLoading(false);

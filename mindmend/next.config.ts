@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
   // Handle potential permission issues
   distDir: '.next',
   // Add webpack configuration for better error handling
-  webpack: (config, { isServer }) => {
+  webpack: (config) => {
     // Handle potential module resolution issues
     config.resolve.fallback = {
       ...config.resolve.fallback,

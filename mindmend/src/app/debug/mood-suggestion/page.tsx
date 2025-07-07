@@ -26,7 +26,7 @@ export default function MoodSuggestionDebug() {
       } else {
         setReflection(data.reflection);
       }
-    } catch (err) {
+    } catch {
       setError('Network or server error');
     }
     setLoading(false);

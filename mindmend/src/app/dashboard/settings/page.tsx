@@ -138,9 +138,9 @@ export default function SettingsPage() {
           phone: profile.phone || '',
           timezone: profile.timezone || 'UTC',
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error:', err);
-        setError('Failed to load profile');
+        setError(err instanceof Error && 'message' in err ? err.message : 'Failed to load profile');
       } finally {
         setLoading(false);
       }
@@ -201,14 +201,12 @@ export default function SettingsPage() {
       } else {
         throw new Error('No data returned from update');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating profile:', err);
-      if (err.code === 'PGRST116') {
-        setError('Profile not found. Please refresh the page and try again.');
-      } else if (err.message?.includes('RLS')) {
+      if (err instanceof Error && 'message' in err && err.message?.includes('RLS')) {
         setError('Permission denied. Please check your account status.');
       } else {
-        setError(`Failed to update profile: ${err.message || 'Unknown error'}`);
+        setError(`Failed to update profile: ${err instanceof Error && 'message' in err ? err.message : 'Unknown error'}`);
       }
     } finally {
       setSaving(false);
@@ -247,9 +245,9 @@ export default function SettingsPage() {
         confirm_password: '',
       });
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating password:', err);
-      setError('Failed to update password');
+      setError(err instanceof Error && 'message' in err ? err.message : 'Failed to update password');
     } finally {
       setSaving(false);
     }
@@ -259,9 +257,9 @@ export default function SettingsPage() {
     try {
       await supabase.auth.signOut();
       router.push('/login');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error signing out:', err);
-      setError('Failed to sign out');
+      setError(err instanceof Error && 'message' in err ? err.message : 'Failed to sign out');
     }
   };
 
@@ -290,9 +288,9 @@ export default function SettingsPage() {
       }
 
       router.push('/');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error deleting account:', err);
-      setError('Failed to delete account');
+      setError(err instanceof Error && 'message' in err ? err.message : 'Failed to delete account');
       setSaving(false);
     }
   };
@@ -319,7 +317,7 @@ export default function SettingsPage() {
       
       console.log('Database profile:', data);
       console.log('Database error:', error);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Debug error:', err);
     }
   };

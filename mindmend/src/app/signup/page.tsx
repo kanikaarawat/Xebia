@@ -50,57 +50,11 @@ export default function SignupPage() {
   };
 
   // Function to get user-friendly error message
-  const getErrorMessage = (error: any): string => {
+  const getErrorMessage = (error: unknown): string => {
     if (!error) return 'An error occurred';
-    
-    const message = error.message || error.toString();
-    console.log('🔍 Error message:', message);
-    
-    // Check for specific Supabase auth errors
-    if (message.includes('User already registered')) {
-      return 'This email is already registered. Please try signing in instead.';
-    }
-    
-    if (message.includes('duplicate key value violates unique constraint')) {
-      return 'This email is already registered. Please try signing in instead.';
-    }
-    
-    if (message.includes('Invalid email')) {
-      return 'Please enter a valid email address.';
-    }
-    
-    if (message.includes('Password should be at least')) {
-      return 'Password must be at least 6 characters long.';
-    }
-    
-    if (message.includes('Unable to validate email address')) {
-      return 'Please enter a valid email address.';
-    }
-    
-    // Check for Supabase Auth specific errors
-    if (message.includes('Signup disabled')) {
-      return 'Registration is currently disabled. Please try again later.';
-    }
-    
-    if (message.includes('Email not confirmed')) {
-      return 'Please check your email and confirm your account before signing in.';
-    }
-    
-    // Check for more specific auth errors
-    if (message.includes('already been registered')) {
-      return 'This email is already registered. Please try signing in instead.';
-    }
-    
-    if (message.includes('already exists')) {
-      return 'This email is already registered. Please try signing in instead.';
-    }
-    
-    if (message.includes('already in use')) {
-      return 'This email is already registered. Please try signing in instead.';
-    }
-    
-    // Return the original message if no specific match
-    return message;
+    if (error instanceof Error && error.message) return error.message;
+    if (typeof error === 'string') return error;
+    return 'An error occurred';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -139,7 +93,7 @@ export default function SignupPage() {
       
       console.log('✅ Registration successful');
       setEmailSent(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.log('❌ Caught error in registration:', err);
       const friendlyMessage = getErrorMessage(err);
       setError(friendlyMessage);
@@ -157,7 +111,7 @@ export default function SignupPage() {
         options: { redirectTo: `${window.location.origin}/auth/callback` },
       });
       if (error) throw error;
-    } catch (err: any) {
+    } catch (err: unknown) {
       const friendlyMessage = getErrorMessage(err);
       setError(friendlyMessage);
     } finally {

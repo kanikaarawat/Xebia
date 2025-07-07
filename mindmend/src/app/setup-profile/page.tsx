@@ -17,13 +17,23 @@ import {
 import { Heart } from 'lucide-react';
 import Link from 'next/link';
 
+interface Profile {
+  id: string;
+  email: string;
+  role: string;
+  first_name?: string;
+  last_name?: string;
+  bio?: string;
+  avatar_url?: string;
+}
+
 export default function SetupProfile() {
   const router = useRouter();
   const user = useUser();
   const session = useSession();
   const supabase = useSupabaseClient();
 
-  const [profile, setProfile] = useState<unknown>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [bio, setBio] = useState('');
@@ -118,7 +128,7 @@ export default function SetupProfile() {
                 console.log('✅ Basic profile created:', newProfile);
                 setProfile(newProfile);
               }
-            } catch (createError: any) {
+            } catch (createError: unknown) {
               console.error('❌ Unexpected error creating profile:', createError);
               // Don't throw error, just set profile to null
               setProfile(null);
@@ -145,7 +155,7 @@ export default function SetupProfile() {
           setBio(data.bio || '');
           setAvatarUrl(data.avatar_url || '');
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('❌ Unexpected error in fetchProfile:', error);
         // Don't throw error, just set profile to null
         setProfile(null);
@@ -155,7 +165,7 @@ export default function SetupProfile() {
     };
 
     fetchProfile();
-  }, [user, supabase]);
+  }, [user, supabase, checkDatabaseConnection]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,7 +180,7 @@ export default function SetupProfile() {
       console.log('🔍 Form data:', { firstName, lastName, bio, avatarUrl, specialization, licenseNumber });
 
       // Update profiles table with basic info
-      const profileUpdates: any = {
+      const profileUpdates: Record<string, unknown> = {
         first_name: firstName,
         last_name: lastName,
         bio,
@@ -190,7 +200,7 @@ export default function SetupProfile() {
 
       if (updateError) {
         console.error('❌ Profile update error:', updateError);
-        setError(updateError.message);
+        setError(updateError instanceof Error ? updateError.message : String(updateError));
         setLoading(false);
         return;
       }
@@ -218,7 +228,7 @@ export default function SetupProfile() {
 
         if (therapistError) {
           console.error('❌ Therapist save error:', therapistError);
-          setError(therapistError.message);
+          setError(therapistError instanceof Error ? therapistError.message : String(therapistError));
           setLoading(false);
           return;
         }
@@ -230,9 +240,9 @@ export default function SetupProfile() {
 
       console.log('✅ Profile setup completed, redirecting to dashboard');
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Unexpected error during profile setup:', error);
-      setError(error.message || 'An error occurred while saving your profile');
+      setError(error instanceof Error ? error.message : String(error) || 'An error occurred while saving your profile');
     } finally {
       setLoading(false);
     }
