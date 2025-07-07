@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CreditCard, Smartphone, Building2, Wallet, Globe, HelpCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, CreditCard, Smartphone, Globe, HelpCircle, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 interface RazorpayPaymentProps {
@@ -136,9 +136,9 @@ export default function RazorpayPayment({
 
       const razorpayInstance = new window.Razorpay(options);
       razorpayInstance.open();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Razorpay payment error:', err);
-      setError(err.message || 'Failed to initialize Razorpay payment');
+      setError(err instanceof Error ? err.message : 'Failed to initialize Razorpay payment');
       onFailure(err);
     } finally {
       setLoading(false);

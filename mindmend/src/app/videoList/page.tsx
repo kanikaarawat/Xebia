@@ -11,7 +11,7 @@ export default function PersonalizedVideos() {
   useEffect(() => {
     const fetchPersonalizedVideos = async () => {
       // Step 1: Get latest mood note from Supabase
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("mood_logs")
         .select("notes")
         .order("created_at", { ascending: false })

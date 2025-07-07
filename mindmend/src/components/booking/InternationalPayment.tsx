@@ -129,17 +129,16 @@ export default function InternationalPayment({
         },
       }
 
-      // @ts-expect-error
       const rzp = new window.Razorpay(options)
       rzp.open()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('UPI payment error:', error)
       toast({
         title: "Payment Error",
-        description: error.message || "Failed to initiate UPI payment",
+        description: error instanceof Error ? error.message : "Failed to initiate UPI payment",
         variant: "destructive",
       })
-      onPaymentFailure?.(error.message)
+      onPaymentFailure?.(error instanceof Error ? error.message : "Failed to initiate UPI payment")
     } finally {
       setLoading(false)
     }
@@ -175,14 +174,14 @@ export default function InternationalPayment({
       } else {
         throw new Error(data.error || 'Failed to send support request')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Support request error:', error)
       toast({
         title: "Error",
-        description: error.message || "Failed to send support request",
+        description: error instanceof Error ? error.message : "Failed to send support request",
         variant: "destructive",
       })
-      onPaymentFailure?.(error.message)
+      onPaymentFailure?.(error instanceof Error ? error.message : "Failed to send support request")
     } finally {
       setLoading(false)
     }

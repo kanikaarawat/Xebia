@@ -22,7 +22,7 @@ interface AlternativePaymentProps {
 
 export default function AlternativePayment({
   sessionId,
-  userId,
+  // userId,
   amount,
   therapistName = 'Therapist',
   sessionDate,

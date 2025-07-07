@@ -16,7 +16,7 @@ import {
 import { useRouter } from 'next/navigation';
 import {
   CallingState,
-  StreamCall,
+  // StreamCall,
   StreamVideo,
   StreamVideoClient,
   useCallStateHooks,

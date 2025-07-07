@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,33 +25,33 @@ import {
 import {
   Heart,
   Calendar,
-  MessageCircle,
+  // MessageCircle,
   BookOpen,
   Users,
   TrendingUp,
-  Smile,
-  Meh,
-  Frown,
+  // Smile,
+  // Meh,
+  // Frown,
   Bell,
   Settings,
   Video,
-  Phone,
+  // Phone,
   Search,
   Clock,
   Star,
-  MapPin,
+  // MapPin,
   User,
   Plus,
   CheckCircle,
   AlertCircle,
-  FileText,
-  Video as VideoIcon,
-  MessageCircle as MessageIcon,
+  // FileText,
+  // Video as VideoIcon,
+  // MessageCircle as MessageIcon,
   LogOut,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AppointmentsList from "@/components/booking/AppointmentsList";
-import UserSessionStats from "@/components/booking/UserSessionStats";
+// import UserSessionStats from "@/components/booking/UserSessionStats";
 import { useSessionCounts } from "@/lib/hooks/useSessionCounts";
 import { Textarea } from "@/components/ui/textarea";
 import { format, subDays } from 'date-fns';
@@ -142,7 +142,7 @@ const MoodFaces = [
 
 export default function UserDashboard() {
   const user = useUser();
-  const session = useSession();
+  // const session = useSession(); 
   const supabase = useSupabaseClient();
   const router = useRouter();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -175,27 +175,27 @@ export default function UserDashboard() {
 
   // Weekly mood analysis state
   const [weeklyAnalysis, setWeeklyAnalysis] = useState<string | null>(null);
-  const [weeklyStats, setWeeklyStats] = useState<any>(null);
+  const [weeklyStats, setWeeklyStats] = useState<Record<string, unknown> | null>(null);
   const [weeklyLoading, setWeeklyLoading] = useState(false);
   const [weeklyError, setWeeklyError] = useState<string | null>(null);
 
   // Notification state
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Record<string, unknown>[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Calculate mood improvement percent (last 7 days vs previous 7 days)
-  let moodImprovementPercent = 0;
-  if (moodData.length >= 14) {
-    const prev7 = moodData.slice(0, 7).map(d => d.mood ?? 0);
-    const last7 = moodData.slice(7, 14).map(d => d.mood ?? 0);
-    const prevAvg = prev7.reduce((a, b) => a + b, 0) / 7;
-    const lastAvg = last7.reduce((a, b) => a + b, 0) / 7;
-    if (prevAvg > 0) {
-      moodImprovementPercent = Math.round(((lastAvg - prevAvg) / prevAvg) * 100);
-    } else {
-      moodImprovementPercent = 0;
-    }
-  }
+  // let moodImprovementPercent = 0;
+  // if (moodData.length >= 14) {
+  //   const prev7 = moodData.slice(0, 7).map(d => d.mood ?? 0);
+  //   const last7 = moodData.slice(7, 14).map(d => d.mood ?? 0);
+  //   const prevAvg = prev7.reduce((a, b) => a + b, 0) / 7;
+  //   const lastAvg = last7.reduce((a, b) => a + b, 0) / 7;
+  //   if (prevAvg > 0) {
+  //     moodImprovementPercent = Math.round(((lastAvg - prevAvg) / prevAvg) * 100);
+  //   } else {
+  //     moodImprovementPercent = 0;
+  //   }
+  // }
   // Calculate current streak (consecutive days with mood logged)
   let currentStreak = 0;
   for (let i = moodData.length - 1; i >= 0; i--) {
@@ -228,14 +228,14 @@ export default function UserDashboard() {
           const dayLabel = format(date, 'EEE');
           const dateStr = format(date, 'yyyy-MM-dd');
           console.log(`Checking date ${dateStr} for day ${dayLabel}`);
-          const entry = moods?.find((d: any) => d.logged_at && d.logged_at.slice(0, 10) === dateStr);
+          const entry = moods?.find((d: Record<string, unknown>) => d.logged_at && typeof d.logged_at === 'string' && d.logged_at.slice(0, 10) === dateStr);
           console.log(`Found entry for ${dateStr}:`, entry);
           return { day: dayLabel, mood: entry ? entry.mood_score : null };
         });
         console.log('Final moodData:', days);
         setMoodData(days);
-      } catch (err: any) {
-        setMoodError(err.message || 'Could not load mood data');
+        } catch (err: unknown) {
+        setMoodError(err instanceof Error ? err.message : 'Could not load mood data');
       } finally {
         setMoodLoading(false);
       }
@@ -262,11 +262,11 @@ export default function UserDashboard() {
       const data = await res.json();
       setWeeklyAnalysis(data.analysis);
       setWeeklyStats(data.statistics);
-    } catch (err: any) {
-      setWeeklyError(err.message || 'Could not load weekly analysis');
+    } catch (err: unknown ) {
+      setWeeklyError(err instanceof Error ? err.message : 'Could not load weekly analysis');
     } finally {
       setWeeklyLoading(false);
-    }
+    } 
   };
 
   useEffect(() => {
@@ -274,25 +274,25 @@ export default function UserDashboard() {
   }, [user]);
 
   // Map mood to score
-  const moodToScore = (mood: "happy" | "neutral" | "sad") => {
-    switch (mood) {
-      case "happy": return 8;
-      case "neutral": return 5;
-      case "sad": return 2;
-      default: return 5;
-    }
-  };
+  // const moodToScore = (mood: "happy" | "neutral" | "sad") => {
+  //   switch (mood) {
+  //     case "happy": return 8;
+  //     case "neutral": return 5;
+  //     case "sad": return 2;
+  //     default: return 5;
+  //   }
+  // };
 
-  // Utility function to properly display error objects
-  const logError = (prefix: string, error: any) => {
-    console.log(`${prefix} - Message:`, error?.message || 'No message');
-    console.log(`${prefix} - Details:`, error?.details || 'No details');
-    console.log(`${prefix} - Hint:`, error?.hint || 'No hint');
-    console.log(`${prefix} - Code:`, error?.code || 'No code');
-    console.log(`${prefix} - Stack:`, error?.stack || 'No stack');
-    console.log(`${prefix} - Name:`, error?.name || 'No name');
-    console.log(`${prefix} - Full object:`, error);
-  };
+  // // Utility function to properly display error objects
+  // const logError = (prefix: string, error: Record<string, unknown>) => {
+  //   console.log(`${prefix} - Message:`, error?.message || 'No message');
+  //   console.log(`${prefix} - Details:`, error?.details || 'No details');
+  //   console.log(`${prefix} - Hint:`, error?.hint || 'No hint');
+  //   console.log(`${prefix} - Code:`, error?.code || 'No code');
+  //   console.log(`${prefix} - Stack:`, error?.stack || 'No stack');
+  //   console.log(`${prefix} - Name:`, error?.name || 'No name');
+  //   console.log(`${prefix} - Full object:`, error);
+  // };
 
   // Fetch user profile data
   useEffect(() => {
@@ -497,7 +497,7 @@ export default function UserDashboard() {
       if (res.ok) {
         const { notifications } = await res.json();
         setNotifications(notifications);
-        setUnreadCount(notifications.filter((n: any) => !n.read).length);
+        setUnreadCount(notifications.filter((n: Record<string, unknown>) => !n.read).length);
       }
     };
     fetchNotifications();
@@ -514,7 +514,7 @@ export default function UserDashboard() {
     setUnreadCount(0);
   };
 
-  const markOneAsRead = async (id: string) => {
+  const markOneAsRead = async (id: string | number) => {
     await fetch('/api/notifications', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },

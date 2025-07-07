@@ -1,16 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+// import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Calendar, Clock, User, AlertCircle, CheckCircle, XCircle, Video, Phone } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import AppointmentActions from './AppointmentActions';
-import { isToday, isThisWeek, isThisMonth, addDays } from 'date-fns';
 
 interface Appointment {
   id: string;
@@ -182,9 +181,9 @@ export default function AppointmentsList({
         console.log('✅ Combined appointments with therapists:', appointmentsWithTherapists);
         setAppointments(appointmentsWithTherapists);
         
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('❌ Unexpected error fetching appointments:', err);
-        setError(`Failed to fetch appointments: ${err.message || 'Unknown error'}`);
+        setError(err instanceof Error ? err.message : 'Failed to fetch appointments');
         setAppointments([]);
       } finally {
         setLoading(false);

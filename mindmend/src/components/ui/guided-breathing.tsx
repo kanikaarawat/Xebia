@@ -246,7 +246,7 @@ export default function GuidedBreathing({ duration = 60 }: GuidedBreathingProps)
     // Initialize audio context
     useEffect(() => {
         if (typeof window !== "undefined") {
-            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+            audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
         }
         return () => {
             if (audioContextRef.current) {

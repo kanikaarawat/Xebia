@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useSupabaseClient, useSession } from '@supabase/auth-helpers-react';
+import {  useSupabaseClient } from '@supabase/auth-helpers-react';
 
 import {
   Card,
@@ -30,8 +30,8 @@ export default function LoginForm() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const supabase = useSupabaseClient();
-  const user = useUser();
-  const session = useSession();
+  // const user = useUser();
+  // const session = useSession();
 
   useEffect(() => {
     setMounted(true);
@@ -82,9 +82,9 @@ export default function LoginForm() {
       const { data: { user }, error: userErr } = await supabase.auth.getUser();
       if (userErr || !user) throw new Error('Login failed');
       await redirectBasedOnProfile(user.id, user.email!);
-    } catch (err: any) {
-      setError(err.message ?? 'An error occurred during sign-in');
-    } finally {
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred during sign-in');
+    } finally { 
       setLoading(false);
     }
   };
@@ -104,16 +104,16 @@ export default function LoginForm() {
       const { data: { user }, error: userErr } = await supabase.auth.getUser();
       if (userErr || !user) throw new Error(userErr?.message || 'Google login failed');
       await redirectBasedOnProfile(user.id, user.email!);
-    } catch (err: any) {
-      setError(err.message ?? 'An error occurred during Google sign-in');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred during Google sign-in');
     } finally {
       setLoading(false);
     }
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
+  // const signOut = async () => {
+  //   await supabase.auth.signOut();
+  // };  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 p-6">

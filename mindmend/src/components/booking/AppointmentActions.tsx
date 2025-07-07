@@ -60,6 +60,7 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
           setAvailableSlots(result.available);
         })
         .catch((err) => {
+          console.log('Error fetching slots:', err);
           setAvailableSlots([]);
         })
         .finally(() => setFetchingSlots(false));

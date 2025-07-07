@@ -340,7 +340,7 @@ export default function CloudThoughts() {
   const [showCompletion, setShowCompletion] = useState(false)
   const [isInputFocused, setIsInputFocused] = useState(false)
   const [soundEnabled, setSoundEnabled] = useState(true)
-  const [screenHeight, setScreenHeight] = useState(800)
+  // const [screenHeight, setScreenHeight] = useState(800)
   const [previewCloudColor, setPreviewCloudColor] = useState(CLOUD_COLORS[0])
 
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -369,7 +369,7 @@ export default function CloudThoughts() {
   // Initialize audio context
   useEffect(() => {
     if (typeof window !== "undefined") {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
     }
     return () => {
       if (audioContextRef.current) {

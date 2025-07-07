@@ -40,7 +40,7 @@ export async function getAllUnavailabilityData() {
   try {
     // 1. First try a simple query to check if table exists and is accessible
     console.log('🔍 Testing table access...');
-    const { data: testData, error: testError } = await supabase
+    const { error: testError } = await supabase
       .from("therapist_unavailability")
       .select('id')
       .limit(1);

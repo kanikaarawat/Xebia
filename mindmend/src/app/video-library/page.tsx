@@ -19,6 +19,15 @@ interface Video {
   created_at: string | null
 }
 
+interface DatabaseVideo {
+  id: number
+  title: string | null
+  description: string | null
+  url: string | null
+  category: string | null
+  created_at: string | null
+}
+
 const PAGE_SIZE = 8;
 
 function VideoSkeleton() {
@@ -62,7 +71,7 @@ export default function VideoLibraryPage() {
         .select("category")
         .neq("category", null)
       if (!error && data) {
-        const cats = Array.from(new Set(data.map((v: any) => v.category).filter(Boolean)))
+        const cats = Array.from(new Set(data.map((v: { category: string | null }) => v.category).filter(Boolean))) as string[]
         setAllCategories(cats)
       }
     }
@@ -84,7 +93,7 @@ export default function VideoLibraryPage() {
       if (category) query = query.eq("category", category)
       const { data, error } = await query
       if (!error && data) {
-        setVideos(data.map((v: any) => ({ ...v, type: null })))
+        setVideos(data.map((v: DatabaseVideo) => ({ ...v, type: null })))
         setHasMore(data.length === PAGE_SIZE)
       }
       setLoading(false)
@@ -107,7 +116,7 @@ export default function VideoLibraryPage() {
     if (!error && data) {
       setVideos((prev) => [
         ...prev,
-        ...data.map((v: any) => ({ ...v, type: null }))
+        ...data.map((v: DatabaseVideo) => ({ ...v, type: null }))
       ])
       setHasMore(data.length === PAGE_SIZE)
       setPage((p) => p + 1)
