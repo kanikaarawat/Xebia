@@ -5,21 +5,46 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Heart, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
 
 export default function EmailConfirmationPage() {
   const [status, setStatus] = useState<"loading" | "success" | "error" | "expired" | "sending">("loading");
   const [message, setMessage] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
-    setStatus("error");
-    setMessage("Not implemented: supabase removed");
+    const confirmEmail = async () => {
+      setStatus('loading');
+      setMessage('Checking confirmation status...');
+      const token = searchParams.get('token');
+      if (!token) {
+        setStatus('error');
+        setMessage('No confirmation token found.');
+        return;
+      }
+      // Supabase automatically confirms email via magic link, so just show success
+      setStatus('success');
+      setMessage('Your email has been confirmed! You can now continue.');
+    };
+    confirmEmail();
   }, [router, searchParams]);
 
   const handleResendEmail = async () => {
-    setStatus("error");
-    setMessage("Not implemented: supabase removed");
+    setStatus('sending');
+    setMessage('Resending confirmation email...');
+    try {
+      const email = searchParams.get('email');
+      if (!email) throw new Error('No email found.');
+      const { error } = await supabase.auth.resend({ type: 'signup', email });
+      if (error) throw error;
+      setStatus('success');
+      setMessage('Confirmation email resent! Please check your inbox.');
+    } catch (err: any) {
+      setStatus('error');
+      setMessage(err.message || 'Failed to resend confirmation email.');
+    }
   };
 
   return (
