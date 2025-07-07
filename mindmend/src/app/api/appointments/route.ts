@@ -1,10 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // GET - List appointments for a user
 export async function GET(req: NextRequest) {
@@ -152,12 +146,12 @@ export async function POST(req: NextRequest) {
             { status: 500 }
           );
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Unexpected error creating Daily room:', err);
         // Optionally, you can delete the appointment if room creation fails
         // await supabase.from('appointments').delete().eq('id', appointment.id);
         return NextResponse.json(
-          { error: 'Failed to create video call room', details: err },
+          { error: 'Failed to create video call room', details: err instanceof Error ? err.message : err },
           { status: 500 }
         );
       }
@@ -233,7 +227,7 @@ export async function PUT(req: NextRequest) {
     }
 
     // Update the appointment
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (scheduled_at) updateData.scheduled_at = scheduled_at;
     if (duration) updateData.duration = duration;
     if (type) updateData.type = type;

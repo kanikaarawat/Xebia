@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Video, Clock, User, Shield } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { AlertCircle, Clock } from "lucide-react";
 import StreamVideoCall from "@/components/ui/stream-video-call";
 
 interface Appointment {
@@ -52,7 +51,7 @@ export default function VideoCallPage() {
     }
 
     fetchAppointmentDetails();
-  }, [user, appointmentId]);
+  }, [user, appointmentId, router]);
 
   const fetchAppointmentDetails = async () => {
     try {

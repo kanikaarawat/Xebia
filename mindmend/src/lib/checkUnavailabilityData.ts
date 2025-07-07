@@ -102,7 +102,7 @@ export async function getAllUnavailabilityData() {
     // 4. Get therapist names separately to avoid join issues
     console.log('🔍 Fetching therapist profiles...');
     const therapistIds = [...new Set(unavailabilityRecords?.map(r => r.therapist_id) || [])];
-    let therapistProfiles: any = {};
+    let therapistProfiles: Record<string, unknown> = {};
     
     if (therapistIds.length > 0) {
       const { data: profiles, error: profilesError } = await supabase
@@ -116,7 +116,7 @@ export async function getAllUnavailabilityData() {
         therapistProfiles = profiles?.reduce((acc, profile) => {
           acc[profile.id] = profile;
           return acc;
-        }, {} as Record<string, any>) || {};
+        }, {} as Record<string, unknown>) || {};
       }
     }
 
@@ -130,7 +130,7 @@ export async function getAllUnavailabilityData() {
       return {
         ...record,
         therapist_name: profile 
-          ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown Therapist'
+          ? `${(profile as { first_name?: string; last_name?: string }).first_name || ''} ${(profile as { first_name?: string; last_name?: string }).last_name || ''}`.trim() || 'Unknown Therapist'
           : 'Unknown Therapist'
       };
     });
@@ -252,7 +252,7 @@ export async function getUnavailabilityForDateRange(
 
     // Get therapist names separately
     const therapistIds = [...new Set(data?.map(r => r.therapist_id) || [])];
-    let therapistProfiles: any = {};
+    let therapistProfiles: Record<string, unknown> = {};
     
     if (therapistIds.length > 0) {
       const { data: profiles, error: profilesError } = await supabase
@@ -264,7 +264,7 @@ export async function getUnavailabilityForDateRange(
         therapistProfiles = profiles.reduce((acc, profile) => {
           acc[profile.id] = profile;
           return acc;
-        }, {} as Record<string, any>);
+        }, {} as Record<string, unknown>);
       }
     }
 
@@ -273,7 +273,7 @@ export async function getUnavailabilityForDateRange(
       return {
         ...record,
         therapist_name: profile 
-          ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown Therapist'
+          ? `${(profile as { first_name?: string; last_name?: string }).first_name || ''} ${(profile as { first_name?: string; last_name?: string }).last_name || ''}`.trim() || 'Unknown Therapist'
           : 'Unknown Therapist'
       };
     });

@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // GET /api/video/rooms - List all video call rooms
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const dailyApiKey = process.env.DAILY_API_KEY;
     
@@ -34,7 +28,7 @@ export async function GET(req: NextRequest) {
     const rooms = await response.json();
     
     // Filter rooms that belong to our appointments
-    const appointmentRooms = rooms.data?.filter((room: any) => 
+    const appointmentRooms = rooms.data?.filter((room: unknown) => 
       room.name && room.name.length > 0
     ) || [];
 

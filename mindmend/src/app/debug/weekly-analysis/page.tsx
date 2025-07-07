@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 export default function WeeklyAnalysisDebug() {
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -26,24 +26,6 @@ export default function WeeklyAnalysisDebug() {
     }
     setLoading(false);
   };
-
-  // Sample cleaned text for demonstration
-  const sampleCleanedText = `Mood Summary
-You've maintained a consistently positive mood this week, averaging 4/5! Your mood shows excellent stability with minimal fluctuations.
-
-Key Insights
-• Strong positive baseline with consistent high ratings
-• Good mood tracking consistency (71% of days)
-• Stable emotional state with low variance
-
-Recommendations
-• Continue your current positive routines and habits
-• Try 5-minute daily meditation to maintain this energy
-• Schedule a therapy session to build on your progress
-• Practice gratitude journaling to reinforce positive patterns
-
-Encouragement
-You're doing fantastic! Your consistent positive mood shows strong emotional well-being. Keep up the great work!`;
 
   return (
     <div style={{ padding: 32 }}>

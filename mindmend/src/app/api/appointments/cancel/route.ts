@@ -1,10 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // POST - Cancel an appointment
 export async function POST(req: NextRequest) {
@@ -72,7 +66,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Cancel the appointment (soft delete by updating status)
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       status: "cancelled",
       updated_at: new Date().toISOString()
     };
@@ -116,11 +110,6 @@ export async function POST(req: NextRequest) {
       .select('id, first_name, last_name')
       .eq('id', currentAppointment.patient_id)
       .single();
-    const { data: therapistProfile } = await supabase
-      .from('profiles')
-      .select('id, first_name, last_name')
-      .eq('id', currentAppointment.therapist_id)
-      .single();
 
     // Prepare notification payloads
     const appointmentTime = new Date(currentAppointment.scheduled_at).toLocaleString();
@@ -157,10 +146,10 @@ export async function POST(req: NextRequest) {
       cancelled_at: new Date().toISOString(),
       original_time: currentAppointment.scheduled_at
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Unexpected error:', err);
     return NextResponse.json(
-      { error: err.message || "Failed to cancel appointment" },
+      { error: err instanceof Error ? err.message : "Failed to cancel appointment" },
       { status: 500 }
     );
   }
@@ -212,10 +201,10 @@ export async function GET(req: NextRequest) {
         message: "Appointments must be cancelled at least 24 hours in advance"
       }
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Unexpected error:', err);
     return NextResponse.json(
-      { error: err.message || "Failed to get cancellation info" },
+      { error: err instanceof Error ? err.message : "Failed to get cancellation info" },
       { status: 500 }
     );
   }

@@ -1,12 +1,18 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import RazorpayPayment from '@/components/booking/RazorpayPayment'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, CreditCard } from 'lucide-react'
+
+// Define a type for Razorpay response
+interface RazorpayPaymentResponse {
+  razorpay_payment_id: string;
+  // add other fields if needed
+}
 
 export default function TestPaymentPage() {
   const [orderId, setOrderId] = useState<string | null>(null)
@@ -48,12 +54,12 @@ export default function TestPaymentPage() {
       } else {
         throw new Error(data.error || 'Failed to create test order')
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Test order creation error:', err)
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'An error occurred')
       toast({
         title: "❌ Order Creation Failed",
-        description: err.message,
+        description: err instanceof Error ? err.message : 'An error occurred',
         variant: "destructive",
       })
     } finally {
@@ -61,17 +67,18 @@ export default function TestPaymentPage() {
     }
   }
 
-  const handlePaymentSuccess = (response: any) => {
+  const handlePaymentSuccess = (response: unknown) => {
+    const payment = response as RazorpayPaymentResponse;
     toast({
       title: "🎉 Payment Test Successful!",
-      description: `Payment ID: ${response.razorpay_payment_id}`,
+      description: `Payment ID: ${payment.razorpay_payment_id}`,
     })
   }
 
-  const handlePaymentFailure = (error: any) => {
+  const handlePaymentFailure = (error: unknown) => {
     toast({
       title: "❌ Payment Test Failed",
-      description: error.message || 'Payment failed',
+      description: error instanceof Error ? error.message : 'Payment failed',
       variant: "destructive",
     })
   }

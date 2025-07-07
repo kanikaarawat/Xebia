@@ -1,10 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // POST - Mark appointment as complete
 export async function POST(req: NextRequest) {
@@ -74,7 +68,7 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     console.error('Unexpected error:', err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to complete appointment" },
+      { error: err instanceof Error ? err.message || "Failed to complete appointment" : "Failed to complete appointment" },
       { status: 500 }
     );
   }

@@ -1,7 +1,6 @@
-import type { NextRequest } from "next/server"
 import { getChatManager } from "@/lib/socket-manager"
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     try {
         const manager = getChatManager()
         const stats = manager.getRoomStats()

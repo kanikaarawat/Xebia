@@ -40,7 +40,7 @@ export default function ContactSupportPage() {
         setSubmitted(true)
         toast({
           title: "Message Sent!",
-          description: "We'll get back to you within 24 hours with payment alternatives.",
+          description: "We&apos;ll get back to you within 24 hours with payment alternatives.",
         })
       } else {
         throw new Error('Failed to send message')
@@ -99,7 +99,7 @@ export default function ContactSupportPage() {
             International Payment Support
           </h1>
           <p className="text-gray-600">
-            We understand RazorpayX doesn't support international cards. Let us help you with alternative payment methods.
+            We understand RazorpayX doesn&apos;t support international cards. Let us help you with alternative payment methods.
           </p>
         </div>
 

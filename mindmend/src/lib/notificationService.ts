@@ -11,7 +11,7 @@ export interface Notification {
   type: 'appointment_reminder' | 'mood_reminder' | 'weekly_report' | 'system' | 'therapist_message';
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   read: boolean;
   created_at: string;
   scheduled_for?: string;
@@ -36,7 +36,7 @@ export class NotificationService {
     type: Notification['type'],
     title: string,
     message: string,
-    data?: Record<string, any>,
+    data?: Record<string, unknown>,
     scheduledFor?: Date
   ): Promise<Notification | null> {
     try {
@@ -380,7 +380,7 @@ export class NotificationService {
   private static async sendEmailNotification(
     userId: string,
     type: string,
-    data: Record<string, any>
+    data: Record<string, unknown>
   ): Promise<boolean> {
     try {
       // Get user email
@@ -414,7 +414,7 @@ export class NotificationService {
   }
 
   // Get email subject based on notification type
-  private static getEmailSubject(type: string, data: Record<string, any>): string {
+  private static getEmailSubject(type: string, data: Record<string, unknown>): string {
     switch (type) {
       case 'appointment_reminder':
         return `Appointment Reminder - ${data.therapist_name}`;

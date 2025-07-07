@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ reflection: text });
   } catch (err: unknown) {
-    console.error('Gemini API Error:', err instanceof Error ? err.message : 'Unknown error');
+    console.error('Gemini API Error:', err);
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Gemini API call failed' }, { status: 500 });
   }
 }

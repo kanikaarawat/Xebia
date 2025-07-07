@@ -59,7 +59,7 @@ export function useNotifications(userId: string | undefined): UseNotificationsRe
         setPreferences(data.preferences);
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch notification preferences');
+      console.error('Error fetching notification preferences:', err instanceof Error ? err.message : 'Unknown error');
     }
   }, [userId]);
 

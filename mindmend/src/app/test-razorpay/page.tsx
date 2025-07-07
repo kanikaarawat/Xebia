@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 export default function TestRazorpayPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<unknown>(null);
 
   useEffect(() => {
     fetch('/api/test-razorpay', {

@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ notification: data }, { status: 201 });
   } catch (err: unknown) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'An error occurred' }, { status: 500 });
   }
 }
 
@@ -76,6 +76,6 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Missing notification_id or user_id for mark_all' }, { status: 400 });
     }
   } catch (err: unknown) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'An error occurred' }, { status: 500 });
   }
 } 

@@ -131,7 +131,7 @@ Keep the tone warm and conversational. Use bullet points (•) for easy reading.
     });
 
   } catch (err: unknown) {
-    console.error('Weekly mood analysis error:', err instanceof Error ? err.message : 'Unknown error');
+    console.error('Weekly mood analysis error:', err);
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Weekly analysis failed' }, { status: 500 });
   }
 } 

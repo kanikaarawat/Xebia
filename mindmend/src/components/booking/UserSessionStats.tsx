@@ -44,9 +44,9 @@ export default function UserSessionStats({ userId, className }: UserSessionStats
           setUpcomingCount(upcoming ?? 0);
           setCompletedCount(completed ?? 0);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.log("[UserSessionStats] catch error:", err);
-        setError(err.message || "Failed to fetch session stats");
+        setError(err instanceof Error ? err.message : "Failed to fetch session stats");
       } finally {
         setLoading(false);
       }
@@ -63,9 +63,9 @@ export default function UserSessionStats({ userId, className }: UserSessionStats
           .select("*")
           .eq("patient_id", userId);
         console.log("All appointments for user:", allAppointments, allError);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.log("[UserSessionStats] catch error:", err);
-        setError(err.message || "Failed to fetch all appointments");
+        setError(err instanceof Error ? err.message : "Failed to fetch all appointments");
       }
     };
     fetchAllAppointments();

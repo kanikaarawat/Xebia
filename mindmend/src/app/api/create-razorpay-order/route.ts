@@ -42,10 +42,10 @@ export async function POST(req: NextRequest) {
         receipt: order.receipt,
       },
     });
-  } catch (err: unknown) {
-    console.error('Razorpay order creation error:', err instanceof Error ? err.message : 'Unknown error');
+  } catch (error: unknown) {
+    console.error('Razorpay order creation error:', error);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Failed to create payment order' },
+      { error: error instanceof Error ? error.message : 'Failed to create payment order' },
       { status: 500 }
     );
   }

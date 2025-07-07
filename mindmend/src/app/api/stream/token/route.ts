@@ -4,16 +4,15 @@ import { cookies } from 'next/headers';
 
 // Stream configuration
 const STREAM_API_KEY = process.env.STREAM_API_KEY || 'mmhfdzb5evj2';
-const STREAM_API_SECRET = process.env.STREAM_API_SECRET || 'your-stream-api-secret';
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, userName, userRole, appointmentId } = await req.json();
+    const { appointmentId } = await req.json();
 
     // Validate required fields
-    if (!userId || !userName || !userRole || !appointmentId) {
+    if (!appointmentId) {
       return NextResponse.json(
-        { error: 'Missing required fields: userId, userName, userRole, appointmentId' },
+        { error: 'Missing required field: appointmentId' },
         { status: 400 }
       );
     }
@@ -30,14 +29,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate Stream token
-    const token = generateStreamToken(userId, userName);
+    const token = generateStreamToken();
 
     return NextResponse.json({
       token,
       apiKey: STREAM_API_KEY,
-      userId,
-      userName,
-      userRole
+      appointmentId
     });
 
   } catch (error) {
@@ -49,7 +46,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function generateStreamToken(userId: string, userName: string): string {
+function generateStreamToken(): string {
   // For demo purposes, using a test token
   // In production, you should use the Stream server SDK to generate tokens
   // const stream = require('stream-chat');

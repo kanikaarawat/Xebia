@@ -18,12 +18,12 @@ export default function DebugPage() {
   const user = useUser();
   const session = useSession();
   const supabase = useSupabaseClient();
-  const [debugInfo, setDebugInfo] = useState<any>({});
+  const [debugInfo, setDebugInfo] = useState<unknown>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const runDebugChecks = async () => {
-      const info: any = {};
+      const info: unknown = {};
 
       // Check authentication
       info.auth = {
@@ -130,7 +130,7 @@ export default function DebugPage() {
     };
 
     runDebugChecks();
-  }, [user]);
+  }, [user, supabase]);
 
   const addTestTherapist = async () => {
     if (!user) return;
@@ -160,8 +160,8 @@ export default function DebugPage() {
       if (therapistError) throw therapistError;
 
       alert('Test therapist added! Refresh the page to see changes.');
-    } catch (err: any) {
-      alert(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      alert(`Error: ${err}`);
     }
   };
 

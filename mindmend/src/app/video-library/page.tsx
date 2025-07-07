@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react"
 import { createClient } from "@supabase/supabase-js"
 import { Card, CardContent } from "@/components/ui/card"
-import { Select } from "@/components/ui/select"
-import { useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
@@ -92,7 +90,6 @@ export default function VideoLibraryPage() {
       setLoading(false)
     }
     fetchVideos()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category])
 
   // Load more videos
@@ -116,29 +113,6 @@ export default function VideoLibraryPage() {
       setPage((p) => p + 1)
     }
     setLoading(false)
-  }
-
-  // Memoized categories for dropdown
-  const categoryOptions = useMemo(() => ["", ...allCategories], [allCategories])
-
-  // Remove and replace specific video
-  let processedVideos = videos.filter(
-    v => v.title !== 'A toddlers themed video entry #4'
-  )
-  // If the removed video existed, add a new calming video entry
-  if (videos.some(v => v.title === 'A toddlers themed video entry #4')) {
-    processedVideos = [
-      {
-        id: -999,
-        title: 'Gentle Rainfall in Forest',
-        description: 'Listen to the soothing sound of rain falling in a peaceful green forest. Let your mind relax and drift.',
-        type: null,
-        url: 'https://www.youtube.com/watch?v=1ZYbU82GVz4',
-        category: 'Nature',
-        created_at: null,
-      },
-      ...processedVideos,
-    ]
   }
 
   // Filter videos by search

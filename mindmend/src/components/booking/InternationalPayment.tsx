@@ -93,7 +93,7 @@ export default function InternationalPayment({
             }
           }
         },
-        handler: async function (response: any) {
+        handler: async function (response: unknown) {
           try {
             const verifyResponse = await fetch('/api/verify-razorpay-payment', {
               method: 'POST',
@@ -113,7 +113,7 @@ export default function InternationalPayment({
                 title: "Payment Successful!",
                 description: "Your session has been confirmed.",
               })
-              onPaymentSuccess?.(response.razorpay_payment_id)
+              onPaymentSuccess?.(response.razorpay_payment_id as string)
             } else {
               throw new Error(verifyData.error || 'Payment verification failed')
             }
@@ -129,7 +129,7 @@ export default function InternationalPayment({
         },
       }
 
-      // @ts-ignore
+      // @ts-expect-error
       const rzp = new window.Razorpay(options)
       rzp.open()
     } catch (error: any) {

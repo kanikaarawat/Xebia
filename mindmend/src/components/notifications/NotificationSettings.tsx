@@ -171,7 +171,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
                   </div>
                   <Switch
                     id={notification.key}
-                    checked={isEnabled}
+                    checked={!!isEnabled}
                     onCheckedChange={(checked) => handleToggle(notification.key, checked)}
                   />
                 </div>

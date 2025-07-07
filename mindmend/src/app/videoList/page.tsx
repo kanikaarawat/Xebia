@@ -5,7 +5,7 @@ import { fetchYouTubeVideos } from "@/lib/youtubeClient";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function PersonalizedVideos() {
-  const [videos, setVideos] = useState<any[]>([]);
+  const [videos, setVideos] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

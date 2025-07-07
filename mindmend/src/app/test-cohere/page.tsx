@@ -23,8 +23,8 @@ export default function TestCoherePage() {
       } else {
         setError(data.error || "Unknown error");
       }
-    } catch (err: any) {
-      setError(err.message || "Unknown error");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unknown error");
     }
     setLoading(false);
   };

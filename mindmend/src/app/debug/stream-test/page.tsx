@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Video, Users, Clock } from 'lucide-react';
+import { Video } from 'lucide-react';
 import StreamVideoCall from '@/components/ui/stream-video-call';
 
 export default function StreamTestPage() {

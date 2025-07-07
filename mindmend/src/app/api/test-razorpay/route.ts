@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 
 const razorpay = new Razorpay({
@@ -6,7 +6,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET!,
 });
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     // Create a test order
     const order = await razorpay.orders.create({
@@ -23,12 +23,12 @@ export async function POST(req: NextRequest) {
       success: true,
       order: order,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Razorpay test error:', error);
     return NextResponse.json(
       { 
         success: false,
-        error: error.message || 'Failed to create test order' 
+        error: error instanceof Error ? error.message : 'Failed to create test order' 
       },
       { status: 500 }
     );

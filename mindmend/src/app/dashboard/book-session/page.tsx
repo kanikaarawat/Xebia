@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import {
   Card, CardHeader, CardTitle, CardContent,
 } from '@/components/ui/card';
@@ -10,19 +10,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import {
-  Select, SelectTrigger, SelectValue,
-  SelectContent, SelectItem,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { supabase } from '@/lib/supabaseClient';
-import { getFreeSlotsFixed as getFreeSlots } from '@/lib/freeSlotsFixed';
-import { debugTimeConversion } from '@/lib/timeTest';
-import { Calendar, Clock, User, MessageSquare, Star, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import RazorpayPayment from '@/components/booking/RazorpayPayment';
+import { getFreeSlotsFixed as getFreeSlots } from '@/lib/freeSlotsFixed';
+import { Calendar, User, Clock, Phone, MessageSquare } from 'lucide-react';
 
 interface Therapist {
   id: string;
@@ -39,7 +33,6 @@ interface TimeSlot {
 
 export default function BookSessionPage() {
   const user = useUser();
-  const session = useSession();
   const supabase = useSupabaseClient();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -64,7 +57,7 @@ export default function BookSessionPage() {
   const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null);
   const [therapistSearch, setTherapistSearch] = useState('');
   const [showPayment, setShowPayment] = useState(false);
-  const [bookedAppointment, setBookedAppointment] = useState<any>(null);
+  const [bookedAppointment, setBookedAppointment] = useState<unknown>(null);
   const [paymentAmount, setPaymentAmount] = useState(30000); // Default 30 mins = ₹300
 
   // Calculate payment amount based on duration
@@ -276,9 +269,9 @@ export default function BookSessionPage() {
 
       // Show payment gateway
       setShowPayment(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ Validation error:', err);
-      setError(err.message ?? 'Validation failed');
+      setError(err instanceof Error ? err.message : 'Validation failed');
     }
   };
 
@@ -287,15 +280,6 @@ export default function BookSessionPage() {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { weekday: 'long' });
-  };
-
-  // Calculate time duration between start and end times
-  const getTimeDuration = (startTime: string, endTime: string) => {
-    const start = new Date(`2000-01-01T${startTime}:00`);
-    const end = new Date(`2000-01-01T${endTime}:00`);
-    const diffMs = end.getTime() - start.getTime();
-    const diffMinutes = Math.round(diffMs / (1000 * 60));
-    return `${diffMinutes} min`;
   };
 
   // Get session end time based on start time and duration
@@ -308,7 +292,7 @@ export default function BookSessionPage() {
   };
 
   // Payment handlers
-  const handlePaymentSuccess = async (response: any) => {
+  const handlePaymentSuccess = async (response: unknown) => {
     const paymentId = response.razorpay_payment_id;
     try {
       setBooking(true);
@@ -404,10 +388,10 @@ export default function BookSessionPage() {
       setTimeout(() => {
         router.push('/dashboard/appointments');
       }, 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ Error creating appointment after payment:', err);
-      console.error('❌ Error stack:', err.stack);
-      setError(`Payment successful but appointment creation failed: ${err.message}`);
+      console.error('❌ Error stack:', err instanceof Error ? err.stack : 'Unknown error');
+      setError(`Payment successful but appointment creation failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setShowPayment(false);
     } finally {
       setBooking(false);
@@ -490,7 +474,7 @@ export default function BookSessionPage() {
                     Session Booked Successfully!
                   </h3>
                   <p className="text-slate-600 mb-6">
-                    Your appointment has been scheduled. You'll receive a confirmation email shortly.
+                    Your appointment has been scheduled. You&apos;ll receive a confirmation email shortly.
                   </p>
                   <Button 
                     className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-8 py-3"
@@ -639,8 +623,6 @@ export default function BookSessionPage() {
                     )}
                   </div>
 
-
-
                   {/* Time Slot Selection */}
                   <div className="space-y-3 sm:space-y-4">
                     <Label className="text-base sm:text-lg font-semibold text-slate-700 flex items-center gap-2 mt-6 sm:mt-8">
@@ -651,7 +633,7 @@ export default function BookSessionPage() {
                     {duration > 30 && (
                       <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <p className="text-xs sm:text-sm text-blue-700">
-                          <strong>Note:</strong> You've selected a {duration}-minute session. 
+                          <strong>Note:</strong> You&apos;ve selected a {duration}-minute session. 
                           The system will automatically block the required time slots to accommodate your session.
                         </p>
                       </div>
@@ -872,40 +854,10 @@ export default function BookSessionPage() {
                     <Textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Anything you'd like your therapist to know before the session?"
+                      placeholder="Anything you&apos;d like your therapist to know before the session?"
                       className="min-h-[100px] text-lg"
                     />
                   </div>
-
-                  {/* Debug Info */}
-                  {/* {process.env.NODE_ENV === 'development' && (
-                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <h4 className="font-semibold text-yellow-700 mb-2">Debug Info</h4>
-                      <div className="text-xs text-yellow-600 space-y-1">
-                        <p>Loading therapists: {loadingTherapists ? 'Yes' : 'No'}</p>
-                        <p>Therapists count: {therapists.length}</p>
-                        <p>Selected therapist ID: {therapistId || 'None'}</p>
-                        <p>Selected therapist: {selectedTherapist ? JSON.stringify(selectedTherapist) : 'None'}</p>
-                        {therapists.length > 0 && (
-                          <div>
-                            <p>Available therapists:</p>
-                            <ul className="ml-4">
-                              {therapists.map((t, i) => (
-                                <li key={i}>- {t.name} ({t.specialization}) - ID: {t.id}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                      <Button 
-                        onClick={() => debugTimeConversion()}
-                        className="mt-2 text-xs"
-                        variant="outline"
-                      >
-                        Test Time Conversion
-                      </Button>
-                    </div>
-                  )} */}
 
                   {/* Price Display */}
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6 shadow-lg">
@@ -1027,7 +979,7 @@ export default function BookSessionPage() {
                               </div>
                               <div className="flex items-start gap-2">
                                 <span className="text-green-600 font-bold">✓</span>
-                                <span><strong>Net Banking:</strong> Use your Indian bank's net banking</span>
+                                <span><strong>Net Banking:</strong> Use your Indian bank&apos;s net banking</span>
                               </div>
                               <div className="flex items-start gap-2">
                                 <span className="text-green-600 font-bold">✓</span>

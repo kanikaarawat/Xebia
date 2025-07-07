@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
-import { Loader2, Phone, Mail, CreditCard } from 'lucide-react'
+import { Loader2, Mail, CreditCard } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -76,14 +76,14 @@ export default function AlternativePayment({
       } else {
         throw new Error(data.error || 'Failed to send payment request')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Alternative payment error:', error)
       toast({
         title: "Error",
-        description: error.message || "Failed to send payment request",
+        description: error instanceof Error ? error.message : "Failed to send payment request",
         variant: "destructive",
       })
-      onPaymentFailure?.(error.message)
+      onPaymentFailure?.(error instanceof Error ? error.message : "Failed to send payment request")
     } finally {
       setLoading(false)
     }
