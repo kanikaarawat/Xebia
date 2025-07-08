@@ -9,12 +9,11 @@ import {
   getAllUnavailabilityData, 
   checkUnavailabilityDataIntegrity,
   getUnavailabilityStats,
-  type UnavailabilityRecord,
-  type UnavailabilitySummary
+  type UnavailabilityRecord
 } from '@/lib/checkUnavailabilityData';
 
 export default function UnavailabilityDataViewer() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -161,10 +160,10 @@ export default function UnavailabilityDataViewer() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {data.byReason.map((item: any) => (
-                    <div key={item.reason} className="flex justify-between items-center">
-                      <span className="text-sm">{item.reason}</span>
-                      <Badge variant="secondary">{item.count}</Badge>
+                  {(data.byReason as Array<Record<string, unknown>>).map((item: Record<string, unknown>) => (
+                    <div key={item.reason as string} className="flex justify-between items-center">
+                      <span className="text-sm">{item.reason as string}</span>
+                      <Badge variant="secondary">{item.count as number}</Badge>
                     </div>
                   ))}
                 </div>
@@ -177,10 +176,10 @@ export default function UnavailabilityDataViewer() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {data.byTherapist.map((item: any) => (
-                    <div key={item.therapist_name} className="flex justify-between items-center">
-                      <span className="text-sm">{item.therapist_name}</span>
-                      <Badge variant="secondary">{item.count}</Badge>
+                  {(data.byTherapist as Array<Record<string, unknown>>).map((item: Record<string, unknown>) => (
+                    <div key={item.therapist_name as string} className="flex justify-between items-center">
+                      <span className="text-sm">{item.therapist_name as string}</span>
+                      <Badge variant="secondary">{item.count as number}</Badge>
                     </div>
                   ))}
                 </div>
@@ -349,10 +348,10 @@ export default function UnavailabilityDataViewer() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {data.stats.reasons.map((item: any) => (
-                    <div key={item.reason} className="flex justify-between items-center">
-                      <span className="text-sm">{item.reason}</span>
-                      <Badge variant="secondary">{item.count}</Badge>
+                  {(data.stats.reasons as Array<Record<string, unknown>>).map((item: Record<string, unknown>) => (
+                    <div key={item.reason as string} className="flex justify-between items-center">
+                      <span className="text-sm">{item.reason as string}</span>
+                      <Badge variant="secondary">{item.count as number}</Badge>
                     </div>
                   ))}
                 </div>

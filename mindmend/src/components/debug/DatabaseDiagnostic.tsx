@@ -17,7 +17,7 @@ export default function DatabaseDiagnostic() {
     try {
       // Test 1: Basic connection
       console.log('🔍 Testing basic connection...');
-      const { data: connectionTest, error: connectionError } = await supabase
+      const { error: connectionError } = await supabase
         .from('profiles')
         .select('count')
         .limit(1);

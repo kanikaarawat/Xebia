@@ -380,7 +380,7 @@ export default function UserDashboard() {
 
     try {
       // 1. Get Supabase session (to optionally use access_token)
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       console.log("session", session);
       // 2. Build headers safely
       const headers: HeadersInit = {
@@ -432,8 +432,12 @@ export default function UserDashboard() {
 
       setSelectedMoodScore(null);
       setMoodNotes("");
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || 'Something went wrong');
+      } else {
+        setError('Something went wrong');
+      }
     } finally {
       setLoading(false);
     }
@@ -475,19 +479,19 @@ export default function UserDashboard() {
   );
 
   // Utility function to get therapist name by ID
-  const getTherapistName = (therapistId: string) => {
-    const therapist = therapists.find(t => t.id === therapistId);
-    if (therapist) {
-      return `${therapist.first_name} ${therapist.last_name}`;
-    }
-    return 'Unknown Therapist';
-  };
+  // const getTherapistName = (therapistId: string) => {
+  //   const therapist = therapists.find(t => t.id === therapistId);
+  //   if (therapist) {
+  //     return `${therapist.first_name} ${therapist.last_name}`;
+  //   }
+  //   return 'Unknown Therapist';
+  // };
 
   // Utility function to get therapist specialization by ID
-  const getTherapistSpecialization = (therapistId: string) => {
-    const therapist = therapists.find(t => t.id === therapistId);
-    return therapist?.specialization || 'General Therapy';
-  };
+  // const getTherapistSpecialization = (therapistId: string) => {
+  //   const therapist = therapists.find(t => t.id === therapistId);
+  //   return therapist?.specialization || 'General Therapy';
+  // };
 
   // Fetch notifications
   useEffect(() => {

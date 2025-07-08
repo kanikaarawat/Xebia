@@ -69,6 +69,7 @@ import {
   AvailabilitySlot,
   TimeSlot,
 } from '@/lib/types';
+import React from 'react';
 
 
 
@@ -156,9 +157,6 @@ export default function TherapistDashboard() {
   const supabase = useSupabaseClient();
   const user = useUser();
   const router = useRouter();
-
-  // Add after other useState declarations:
-  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
 
   // Helper functions for patient statistics
   const getPatientSessionCount = (patientId: string) => {
@@ -519,7 +517,7 @@ export default function TherapistDashboard() {
         console.log('📝 No availability data found, initializing defaults');
         initializeAvailabilitySlots();
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error loading availability:', error);
       console.log('🔄 Initializing default availability slots due to error');
       initializeAvailabilitySlots();
@@ -609,7 +607,7 @@ export default function TherapistDashboard() {
           });
         }, 100);
 
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('❌ Unexpected error in fetchTherapistData:', error);
       } finally {
         setLoading(false);
@@ -642,7 +640,7 @@ export default function TherapistDashboard() {
     try {
       await supabase.auth.signOut();
       router.push('/login');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error signing out:', error);
     }
   };
@@ -663,7 +661,7 @@ export default function TherapistDashboard() {
         setNotifications(data || []);
         setUnreadCount(data?.filter(n => !n.read).length || 0);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching notifications:', error);
     }
   };
@@ -682,7 +680,7 @@ export default function TherapistDashboard() {
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
         setUnreadCount(0);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error marking notifications as read:', error);
     }
   };
@@ -699,7 +697,7 @@ export default function TherapistDashboard() {
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error marking notification as read:', error);
     }
   };
@@ -768,7 +766,7 @@ export default function TherapistDashboard() {
         setRejectReason('');
         setRejectError(null);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error rejecting appointment:', error);
       setRejectError('Failed to reject appointment');
     } finally {
@@ -815,9 +813,13 @@ export default function TherapistDashboard() {
 
       setCompleteDialogOpen(false);
       setSelectedCompleteAppointmentId(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error completing appointment:', error);
-      setCompleteError(error.message);
+      if (error instanceof Error) {
+        setCompleteError(error.message);
+      } else {
+        setCompleteError(String(error));
+      }
     } finally {
       setCompleteLoading(false);
     }
@@ -855,7 +857,7 @@ export default function TherapistDashboard() {
 
       setAutoCompleteDialogOpen(false);
       setAutoCompleteAppointmentId(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error completing appointment:', error);
       setCompleteError(error.message);
     } finally {
@@ -869,7 +871,6 @@ export default function TherapistDashboard() {
     
     const now = new Date();
     const appointmentStart = new Date(appointment.scheduled_at);
-    const appointmentEnd = new Date(appointmentStart.getTime() + appointment.duration * 60000);
     
     // Show button from start time until end of day
     return now >= appointmentStart && now <= new Date(appointmentStart.setHours(23, 59, 59, 999));
@@ -928,7 +929,7 @@ export default function TherapistDashboard() {
     try {
       const { available } = await getFreeSlots(user.id, scheduleDate, 30, scheduleDuration);
       setAvailableSlots(available);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading slots:', err);
       setScheduleError('Failed to load available time slots');
     } finally {
@@ -976,20 +977,16 @@ export default function TherapistDashboard() {
 
       setScheduleDialogOpen(false);
       setSelectedPatient(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error scheduling session:', err);
-      setScheduleError(err.message || 'Failed to schedule session');
+      if (err instanceof Error) {
+        setScheduleError(err.message || 'Failed to schedule session');
+      } else {
+        setScheduleError('Failed to schedule session');
+      }
     } finally {
       setScheduleLoading(false);
     }
-  };
-
-  const getSessionEndTime = (startTime: string, duration: number) => {
-    const start = new Date(`2000-01-01T${startTime}:00`);
-    const end = new Date(start.getTime() + duration * 60 * 1000);
-    const hours = String(end.getHours()).padStart(2, '0');
-    const minutes = String(end.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
   };
 
   // Enhanced availability functions
@@ -1001,7 +998,6 @@ export default function TherapistDashboard() {
       return;
     }
     
-    setLoadingAnalytics(true);
     try {
       // Get today's date range
       const today = new Date();
@@ -1111,10 +1107,8 @@ export default function TherapistDashboard() {
       setThisWeekUnavailability(thisWeekUnavail);
       console.log('📅 This week unavailability:', thisWeekUnavail);
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error loading unavailability data:', error);
-    } finally {
-      setLoadingAnalytics(false);
     }
   };
 
@@ -1125,7 +1119,6 @@ export default function TherapistDashboard() {
       return;
     }
     
-    setLoadingAnalytics(true);
     try {
       // Calculate analytics from availability slots and appointments
       const availableDays = availabilitySlots.filter(slot => slot.is_available);
@@ -1184,10 +1177,8 @@ export default function TherapistDashboard() {
         averageSessionDuration: Math.round(averageSessionDuration)
       });
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error loading availability analytics:', error);
-    } finally {
-      setLoadingAnalytics(false);
     }
   };
 
@@ -1195,7 +1186,6 @@ export default function TherapistDashboard() {
   const loadAnalyticsData = async (timePeriod = 30) => {
     if (!therapistProfile) return;
     
-    setLoadingAnalytics(true);
     try {
       const startDate = new Date(Date.now() - timePeriod * 24 * 60 * 60 * 1000).toISOString();
       
@@ -1413,10 +1403,8 @@ export default function TherapistDashboard() {
         timePeriod: timePeriod.toString()
       });
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error loading analytics data:', error);
-    } finally {
-      setLoadingAnalytics(false);
     }
   };
 
@@ -1435,7 +1423,7 @@ export default function TherapistDashboard() {
       } else {
         setNextAvailableSlot(null);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error finding next available slot:', error);
       setNextAvailableSlot(null);
     }
@@ -1602,7 +1590,7 @@ export default function TherapistDashboard() {
         // No conflicts, proceed with blocking
         await createUnavailabilityBlock(startDateTime, endDateTime, manualUnavailabilityReason);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error checking conflicts:', error);
     }
   };
@@ -1634,7 +1622,7 @@ export default function TherapistDashboard() {
         setManualUnavailabilityReason('');
         setBlockType('specific-time');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error adding unavailability:', error);
     }
   };
@@ -1674,7 +1662,7 @@ export default function TherapistDashboard() {
       setConflictDialogOpen(false);
       setConflictingAppointments([]);
       setPendingBlockData(null);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error handling conflict resolution:', error);
     }
   };
@@ -1709,7 +1697,7 @@ export default function TherapistDashboard() {
         setManualUnavailabilityEndTime('');
         setManualUnavailabilityReason('');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error adding unavailability:', error);
     }
   };
@@ -1747,18 +1735,9 @@ export default function TherapistDashboard() {
         await loadUnavailabilityData();
         await loadAvailabilitySlots();
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error removing unavailability:', error);
     }
-  };
-
-  const copyScheduleToDay = (sourceDay: string, targetDay: string) => {
-    // TODO: Implement schedule copying functionality
-    console.log(`Copying schedule from ${sourceDay} to ${targetDay}`);
-  };
-
-  const formatDateTime = (iso: string) => {
-    return new Date(iso).toLocaleString();
   };
 
   const statusBadge = (status: string) => {
@@ -3430,12 +3409,6 @@ export default function TherapistDashboard() {
                 // Average Rating (placeholder - would need rating system)
                 const avgRating = analyticsData.topPatients.length > 0 ? "4.8" : "0.0";
                 
-                // Calculate changes (simplified - would need historical data)
-                const sessionsChange = totalSessions > 0 ? "+" + Math.round(totalSessions * 0.1) : "0";
-                const patientsChange = activePatients > 0 ? "+" + Math.round(activePatients * 0.2) : "0";
-                const hoursChange = totalHours > 0 ? "+" + Math.round(totalHours * 0.15) : "0";
-                const ratingChange = avgRating !== "0.0" ? "+0.1" : "0";
-                
                 return [
                   {
                     icon: Calendar,
@@ -3589,7 +3562,7 @@ export default function TherapistDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-end justify-between gap-2">
-                    {analyticsData.sessionTrends.map((trend, i) => {
+                    {analyticsData.sessionTrends.map((trend) => {
                       const maxHeight = 200;
                       const height = (trend.count / Math.max(...analyticsData.sessionTrends.map(t => t.count), 1)) * maxHeight;
                       

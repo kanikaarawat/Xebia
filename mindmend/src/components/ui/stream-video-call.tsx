@@ -44,8 +44,18 @@ interface StreamVideoCallProps {
 const STREAM_API_KEY = process.env.NEXT_PUBLIC_STREAM_API_KEY || 'mmhfdzb5evj2';
 
 interface Call {
-  camera: any;
-  microphone: any;
+  camera: {
+    isEnabled: boolean;
+    enable: () => Promise<void>;
+    disable: () => Promise<void>;
+    toggle: () => Promise<void>;
+  };
+  microphone: {
+    isEnabled: boolean;
+    enable: () => Promise<void>;
+    disable: () => Promise<void>;
+    toggle: () => Promise<void>;
+  };
   leave: () => void;
 }
 
@@ -120,7 +130,7 @@ export default function StreamVideoCall({
         console.log('🔍 Stream - User role:', userRole);
 
         // Generate token
-        const token = await generateStreamToken(user.id);
+        const token = await generateStreamToken();
 
         // Create Stream client
         const streamClient = new StreamVideoClient({ 
@@ -250,15 +260,10 @@ export default function StreamVideoCall({
     };
   }, [call, client]);
 
-  // Format duration
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+  // Format duration - removed unused function
 
   // Generate Stream token - using a working test token for demo
-  const generateStreamToken = async (userId: string): Promise<string> => {
+  const generateStreamToken = async (): Promise<string> => {
     // For demo purposes, using a working test token
     // In production, this should be generated server-side with proper JWT signing
     // Note: This token works for any user ID in demo mode

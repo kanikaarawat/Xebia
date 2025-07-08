@@ -55,8 +55,8 @@ export default function FreeSlotsTester() {
 
         const therapistList = data?.map(t => ({
           id: t.id,
-          first_name: (t.profiles as any)?.first_name || '',
-          last_name: (t.profiles as any)?.last_name || ''
+          first_name: (t.profiles as unknown as Record<string, unknown>)?.first_name as string || '',
+          last_name: (t.profiles as unknown as Record<string, unknown>)?.last_name as string || ''
         })) || [];
 
         setTherapists(therapistList);
