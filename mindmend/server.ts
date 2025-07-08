@@ -22,7 +22,7 @@ app.prepare().then(() => {
         })
 
         // Store the HTTP server globally so Socket.IO can access it
-    ;(global as any).httpServer = server
+    ;(global as unknown as { httpServer: typeof server }).httpServer = server
 
     server.listen(port, () => {
         console.log(`> Ready on http://${hostname}:${port}`)

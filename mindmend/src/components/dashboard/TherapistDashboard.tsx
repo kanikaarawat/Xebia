@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useSupabaseClient, useUser, useSession } from '@supabase/auth-helpers-react';
+import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +54,7 @@ import {
   PieChart,
   DollarSign,
   BarChart3,
-  Timer,
+
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -70,17 +70,14 @@ import {
   TimeSlot,
 } from '@/lib/types';
 
-// Add at the top level (after imports, before component):
-function updateAvailabilitySlot(day: string, field: string, value: unknown) {
-  // TODO: Implement this function
-}
+
 
 /* ---------- Component ---------- */
 export default function TherapistDashboard() {
   const [loading, setLoading] = useState(true);
   const [therapistProfile, setTherapistProfile] = useState<TherapistProfile | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; created_at: string; read: boolean }>>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -158,7 +155,6 @@ export default function TherapistDashboard() {
   
   const supabase = useSupabaseClient();
   const user = useUser();
-  const session = useSession();
   const router = useRouter();
 
   // Add after other useState declarations:
@@ -193,7 +189,7 @@ export default function TherapistDashboard() {
     const totalSessions = patientAppointments.length;
     const cancelledSessions = patientAppointments.filter(a => a.status === 'cancelled').length;
     const rejectedSessions = patientAppointments.filter(a => a.status === 'rejected').length;
-    const upcomingSessions = patientAppointments.filter(a => a.status === 'upcoming').length;
+    // const upcomingSessions = patientAppointments.filter(a => a.status === 'upcoming').length;
     const expiredSessions = patientAppointments.filter(a => 
       a.status === 'upcoming' && new Date(a.scheduled_at) < new Date()
     ).length;
@@ -266,7 +262,7 @@ export default function TherapistDashboard() {
     const headers = Object.keys(csvData[0] || {});
     const csvContent = [
       headers.join(','),
-      ...csvData.map(row => headers.map(header => `"${(row as any)[header]}"`).join(','))
+      ...csvData.map(row => headers.map(header => `"${String((row as Record<string, unknown>)[header])}"`).join(','))
     ].join('\n');
 
     // Create and download file
@@ -283,12 +279,12 @@ export default function TherapistDashboard() {
 
   // Export Analytics CSV
   const exportAnalyticsCSV = () => {
-    const sessionTrendsRows = analyticsData.sessionTrends.map((trend: any) => ({
+    const sessionTrendsRows = analyticsData.sessionTrends.map((trend: { week: string; count: number; completed: number }) => ({
       Period: trend.week,
       'Total Sessions': trend.count,
       'Completed Sessions': trend.completed
     }));
-    const sessionTypeRows = analyticsData.sessionTypeDistribution.map((type: any) => ({
+    const sessionTypeRows = analyticsData.sessionTypeDistribution.map((type: { type: string; count: number; percentage: number }) => ({
       'Session Type': type.type,
       Count: type.count,
       Percentage: type.percentage + '%'
@@ -296,13 +292,13 @@ export default function TherapistDashboard() {
     const csvRows = [
       ['Session Trends'],
       ...([Object.keys(sessionTrendsRows[0] || {})]),
-      ...sessionTrendsRows.map((row: any) => Object.values(row)),
+      ...sessionTrendsRows.map((row: Record<string, string | number>) => Object.values(row)),
       [],
       ['Session Type Distribution'],
       ...([Object.keys(sessionTypeRows[0] || {})]),
-      ...sessionTypeRows.map((row: any) => Object.values(row)),
+      ...sessionTypeRows.map((row: Record<string, string | number>) => Object.values(row)),
     ];
-    const csvContent = csvRows.map((row: any) => row.join(',')).join('\n');
+    const csvContent = csvRows.map((row: (string | number)[]) => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -323,7 +319,7 @@ export default function TherapistDashboard() {
       ['Outstanding Payments', metrics.outstandingPayments],
       ['Revenue Growth (%)', metrics.revenueGrowth],
     ];
-    const csvContent = rows.map((row: any) => row.join(',')).join('\n');
+    const csvContent = rows.map((row: (string | number)[]) => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -335,7 +331,7 @@ export default function TherapistDashboard() {
 
   // Export Patient Summary CSV
   const exportPatientSummaryCSV = () => {
-    const patientRows = Object.entries(analyticsData.patientProgress).map(([id, p]: [string, any]) => {
+    const patientRows = Object.entries(analyticsData.patientProgress).map(([id, p]: [string, { compliance: number; totalSessions: number; completedSessions: number; lastSession: string | null }]) => {
       // Find patient name from appointments
       const patientAppointment = appointments.find(apt => apt.patient?.id === id);
       const patientName = patientAppointment?.patient 
@@ -353,9 +349,9 @@ export default function TherapistDashboard() {
     });
     const csvRows = [
       Object.keys(patientRows[0] || {}),
-      ...patientRows.map((row: any) => Object.values(row)),
+      ...patientRows.map((row: Record<string, string | number>) => Object.values(row)),
     ];
-    const csvContent = csvRows.map((row: any) => row.join(',')).join('\n');
+    const csvContent = csvRows.map((row: (string | number)[]) => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -1757,12 +1753,8 @@ export default function TherapistDashboard() {
   };
 
   const copyScheduleToDay = (sourceDay: string, targetDay: string) => {
-    const sourceSlot = availabilitySlots.find(slot => slot.day_of_week === sourceDay);
-    if (sourceSlot) {
-      updateAvailabilitySlot(targetDay, 'start_time', sourceSlot.start_time);
-      updateAvailabilitySlot(targetDay, 'end_time', sourceSlot.end_time);
-      updateAvailabilitySlot(targetDay, 'is_available', sourceSlot.is_available);
-    }
+    // TODO: Implement schedule copying functionality
+    console.log(`Copying schedule from ${sourceDay} to ${targetDay}`);
   };
 
   const formatDateTime = (iso: string) => {

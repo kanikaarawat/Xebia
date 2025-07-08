@@ -11,14 +11,14 @@ interface RazorpayPaymentProps {
   orderId: string;
   amount: number;
   currency: string;
-  onSuccess: (response: any) => void;
-  onFailure: (error: any) => void;
+  onSuccess: (response: unknown) => void;
+  onFailure: (error: unknown) => void;
   onClose: () => void;
 }
 
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: unknown;
   }
 }
 
@@ -73,7 +73,7 @@ export default function RazorpayPayment({
         name: 'MindMend',
         description: 'Therapy Session Payment',
         order_id: orderId,
-        handler: function (response: any) {
+        handler: function (response: unknown) {
           console.log('Razorpay payment success:', response);
           onSuccess(response);
           toast({
@@ -134,7 +134,7 @@ export default function RazorpayPayment({
         }
       };
 
-      const razorpayInstance = new window.Razorpay(options);
+      const razorpayInstance = new (window.Razorpay as new (options: unknown) => { open: () => void })(options);
       razorpayInstance.open();
     } catch (err: unknown) {
       console.error('Razorpay payment error:', err);

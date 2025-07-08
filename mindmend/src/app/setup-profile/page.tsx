@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser, useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Input } from '@/components/ui/input';
@@ -53,10 +53,10 @@ export default function SetupProfile() {
   });
 
   // Database connectivity check
-  const checkDatabaseConnection = async () => {
+  const checkDatabaseConnection = useCallback(async () => {
     try {
       console.log('🔍 Checking database connection...');
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .select('count')
         .limit(1);
@@ -72,7 +72,7 @@ export default function SetupProfile() {
       console.error('❌ Database check failed:', error);
       return false;
     }
-  };
+  }, [supabase]);
 
   useEffect(() => {
     if (!user) {

@@ -95,36 +95,43 @@ export default function InternationalPayment({
         },
         handler: async function (response: unknown) {
           try {
+            const razorpayResponse = response as {
+              razorpay_order_id: string;
+              razorpay_payment_id: string;
+              razorpay_signature: string;
+            };
+            
             const verifyResponse = await fetch('/api/verify-razorpay-payment', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
+                razorpay_order_id: razorpayResponse.razorpay_order_id,
+                razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+                razorpay_signature: razorpayResponse.razorpay_signature,
                 sessionId,
               }),
             })
 
-            const verifyData = await verifyResponse.json()
+            const verifyData = await verifyResponse.json() as { success: boolean; error?: string };
 
             if (verifyData.success) {
               toast({
                 title: "Payment Successful!",
                 description: "Your session has been confirmed.",
               })
-              onPaymentSuccess?.(response.razorpay_payment_id as string)
+              onPaymentSuccess?.(razorpayResponse.razorpay_payment_id)
             } else {
               throw new Error(verifyData.error || 'Payment verification failed')
             }
-          } catch (error: any) {
+          } catch (error: unknown) {
             console.error('Payment verification error:', error)
+            const errorMessage = error instanceof Error ? error.message : "Failed to verify payment"
             toast({
               title: "Payment Error",
-              description: error.message || "Failed to verify payment",
+              description: errorMessage,
               variant: "destructive",
             })
-            onPaymentFailure?.(error.message)
+            onPaymentFailure?.(errorMessage)
           }
         },
       }

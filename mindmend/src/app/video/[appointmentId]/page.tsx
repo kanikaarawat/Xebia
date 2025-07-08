@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Button } from "@/components/ui/button";
@@ -44,16 +44,7 @@ export default function VideoCallPage() {
   const [error, setError] = useState<string | null>(null);
   const [canJoin, setCanJoin] = useState(false);
 
-  useEffect(() => {
-    if (!user || !appointmentId) {
-      router.push('/login');
-      return;
-    }
-
-    fetchAppointmentDetails();
-  }, [user, appointmentId, router]);
-
-  const fetchAppointmentDetails = async () => {
+  const fetchAppointmentDetails = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -169,7 +160,16 @@ export default function VideoCallPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, appointmentId, supabase]);
+
+  useEffect(() => {
+    if (!user || !appointmentId) {
+      router.push('/login');
+      return;
+    }
+
+    fetchAppointmentDetails();
+  }, [user, appointmentId, router, fetchAppointmentDetails]);
 
   const handleCallEnd = async () => {
     // Optionally mark appointment as completed

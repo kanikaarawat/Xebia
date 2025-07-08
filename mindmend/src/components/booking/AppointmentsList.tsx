@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, Clock, User, AlertCircle, CheckCircle, XCircle, Video, Phone } from 'lucide-react';
+import { Calendar, Clock, User, AlertCircle, Video, Phone } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import AppointmentActions from './AppointmentActions';
@@ -191,21 +191,9 @@ export default function AppointmentsList({
     };
 
     fetchAppointments();
-  }, [user, statusFilter, dateFilter]);
+  }, [user, statusFilter, dateFilter, supabase]);
 
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'cancelled':
-        return <XCircle className="w-4 h-4 text-red-600" />;
-      case 'upcoming':
-      case 'scheduled':
-        return <Clock className="w-4 h-4 text-blue-600" />;
-      default:
-        return <AlertCircle className="w-4 h-4 text-yellow-600" />;
-    }
-  };
+
 
   const getStatusBadge = (status: string) => {
     if (!status) return <Badge className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5">Unknown</Badge>;
@@ -320,27 +308,7 @@ export default function AppointmentsList({
   // Apply limit if specified
   const displayAppointments = limit ? sortedAppointments.slice(0, limit) : sortedAppointments;
 
-  function formatTimeFromUTC(dateString: string) {
-    // This will convert the UTC timestamp to the user's local time
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  }
 
-  function formatDateTimeFromUTC(dateString: string) {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  }
 
   function formatUTCDateTime(dateString: string) {
     const date = new Date(dateString);
@@ -471,7 +439,7 @@ export default function AppointmentsList({
       <div className={`${showCard ? 'p-6' : ''} w-full overflow-hidden max-w-full`}>
         <div className="space-y-4 max-h-96 overflow-y-auto overflow-x-hidden custom-scrollbar">
           {displayAppointments.map((appointment) => {
-            const { date, dateShort, time } = formatDateTime(appointment.scheduled_at);
+            const { dateShort } = formatDateTime(appointment.scheduled_at);
             const isUpcoming = new Date(appointment.scheduled_at) > new Date();
             
             return (
