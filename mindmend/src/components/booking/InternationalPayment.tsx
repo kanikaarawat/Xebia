@@ -136,7 +136,7 @@ export default function InternationalPayment({
         },
       }
 
-      const rzp = new window.Razorpay(options)
+      const rzp = new (window.Razorpay as new (options: unknown) => { open: () => void })(options)
       rzp.open()
     } catch (error: unknown) {
       console.error('UPI payment error:', error)

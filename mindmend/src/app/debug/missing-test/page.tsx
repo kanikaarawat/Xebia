@@ -85,9 +85,9 @@ export default function MissingTest() {
     );
   }
 
-  const isTherapist = profile.role === 'therapist';
-  const first_name_missing = missing(profile.first_name);
-  const last_name_missing = missing(profile.last_name);
+  const isTherapist = (profile as { role: string }).role === 'therapist';
+  const first_name_missing = missing((profile as { first_name: string }).first_name);
+  const last_name_missing = missing((profile as { last_name: string }).last_name);
   const incomplete = first_name_missing || last_name_missing;
 
   return (
@@ -107,9 +107,9 @@ export default function MissingTest() {
           <div>
             <h3 className="font-semibold mb-2">Missing Function Results:</h3>
             <ul className="space-y-1 text-sm">
-              <li>✅ First Name:  &quot;{profile.first_name}&quot; - Missing: {first_name_missing ? 'YES' : 'NO'}</li>
-              <li>✅ Last Name: &quot;{profile.last_name}&quot; - Missing: {last_name_missing ? 'YES' : 'NO'}</li>
-              <li>✅ Role: {profile.role}</li>
+              <li>✅ First Name:  &quot;{(profile as { first_name: string }).first_name}&quot; - Missing: {first_name_missing ? 'YES' : 'NO'}</li>
+              <li>✅ Last Name: &quot;{(profile as { last_name: string }).last_name}&quot; - Missing: {last_name_missing ? 'YES' : 'NO'}</li>
+              <li>✅ Role: {(profile as { role: string }).role}</li>
               <li>✅ Is Therapist: {isTherapist ? 'YES' : 'NO'}</li>
             </ul>
           </div>

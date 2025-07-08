@@ -102,9 +102,9 @@ export default function DebugPage() {
       }
 
         // Test getFreeSlots function
-  if (info.therapists?.data?.length > 0) {
+  if ((info.therapists as { data: { id: string }[] })?.data?.length > 0) {
     try {
-      const testTherapistId = info.therapists.data[0].id;
+      const testTherapistId = (info.therapists as { data: { id: string }[] }).data[0].id;
       const testDate = new Date().toISOString().split('T')[0]; // Today
       const { getFreeSlotsFixed: getFreeSlots } = await import('@/lib/freeSlotsFixed');
       const freeSlots = await getFreeSlots(testTherapistId, testDate);

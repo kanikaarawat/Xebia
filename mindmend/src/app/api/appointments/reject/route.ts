@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
+import { supabase } from "@/lib/supabaseClient";  
 // POST - Therapist rejects an appointment
 export async function POST(req: NextRequest) {
   try {

@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 
+type YouTubeVideo = {
+  id: { videoId: string };
+  snippet: { title: string; description: string };
+};
+
 export function PersonalizedVideos({ userId }: { userId: string }) {
-  const [videos, setVideos] = useState<unknown[]>([]);
+  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

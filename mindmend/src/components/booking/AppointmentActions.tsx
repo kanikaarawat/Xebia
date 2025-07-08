@@ -30,12 +30,18 @@ interface AppointmentActionsProps {
   onActionComplete?: () => void;
 }
 
+type CancellationInfo = {
+  can_cancel: boolean;
+  cancellation_policy: { message: string };
+  hours_until_appointment: number;
+};
+
 export default function AppointmentActions({ appointment, onActionComplete }: AppointmentActionsProps) {
   const { actions, loading, error } = useAppointments();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
-  const [cancellationInfo, setCancellationInfo] = useState<unknown>(null);
+  const [cancellationInfo, setCancellationInfo] = useState<CancellationInfo | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [availableSlots, setAvailableSlots] = useState<{ start_time: string; end_time: string }[]>([]);
@@ -77,7 +83,7 @@ export default function AppointmentActions({ appointment, onActionComplete }: Ap
 
   const handleCancelClick = async () => {
     const info = await actions.getCancellationInfo(appointment.id);
-    setCancellationInfo(info);
+    setCancellationInfo(info as unknown as CancellationInfo);
     setShowCancelDialog(true);
   };
 

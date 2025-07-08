@@ -28,7 +28,7 @@ export async function GET() {
     const rooms = await response.json();
     
     // Filter rooms that belong to our appointments
-    const appointmentRooms = rooms.data?.filter((room: unknown) => 
+    const appointmentRooms = rooms.data?.filter((room: { name: string }) => 
       room.name && room.name.length > 0
     ) || [];
 

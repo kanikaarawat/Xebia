@@ -626,23 +626,23 @@ export default function UserDashboard() {
                     <div className="divide-y divide-indigo-100">
                       {notifications.slice(0, 5).map((notification) => (
                         <div
-                          key={notification.id}
+                          key={String(notification.id)}
                           className={`p-2 sm:p-3 lg:p-4 cursor-pointer hover:bg-indigo-50/50 transition-colors ${!notification.read ? 'bg-gradient-to-r from-indigo-50 to-pink-50' : ''
                             }`}
-                          onClick={() => markOneAsRead(notification.id)}
+                          onClick={() => markOneAsRead(String(notification.id))}
                         >
                           <div className="flex items-start gap-2 sm:gap-3">
                             <div className={`w-2 h-2 rounded-full mt-2 ${!notification.read ? 'bg-indigo-500' : 'bg-indigo-300'
                               }`} />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs sm:text-sm font-medium text-indigo-900 truncate">
-                                {notification.title}
+                                {String(notification.title)}
                               </p>
                               <p className="text-xs text-indigo-600 mt-1 line-clamp-2">
-                                {notification.message}
+                                {String(notification.message)}
                               </p>
                               <p className="text-xs text-indigo-400 mt-2">
-                                {new Date(notification.created_at).toLocaleDateString()}
+                                {notification.created_at ? new Date(String(notification.created_at)).toLocaleDateString() : ""}
                               </p>
                             </div>
                           </div>
@@ -1343,19 +1343,27 @@ export default function UserDashboard() {
                           {weeklyStats && (
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 p-3 sm:p-4 bg-white/60 rounded-lg border border-indigo-100">
                               <div className="text-center">
-                                <div className="text-sm sm:text-lg font-semibold text-blue-700">{weeklyStats.averageMood}/5</div>
+                                <div className="text-sm sm:text-lg font-semibold text-blue-700">
+                                  {String(weeklyStats.averageMood)}/5
+                                </div>
                                 <div className="text-xs text-slate-600">Avg Mood</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-sm sm:text-lg font-semibold text-purple-700">{weeklyStats.daysTracked}/7</div>
+                                <div className="text-sm sm:text-lg font-semibold text-purple-700">
+                                  {String(weeklyStats.daysTracked)}/7
+                                </div>
                                 <div className="text-xs text-slate-600">Days Tracked</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-sm sm:text-lg font-semibold text-pink-700">{weeklyStats.consistency}%</div>
+                                <div className="text-sm sm:text-lg font-semibold text-pink-700">
+                                  {String(weeklyStats.consistency)}%
+                                </div>
                                 <div className="text-xs text-slate-600">Consistency</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-sm sm:text-lg font-semibold text-indigo-700">{weeklyStats.moodVariance}</div>
+                                <div className="text-sm sm:text-lg font-semibold text-indigo-700">
+                                  {String(weeklyStats.moodVariance)}
+                                </div>
                                 <div className="text-xs text-slate-600">Variance</div>
                               </div>
                             </div>

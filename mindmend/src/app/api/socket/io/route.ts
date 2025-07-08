@@ -8,7 +8,7 @@ let io: SocketIOServer | undefined
 export async function GET() {
     if (!io) {
         // Initialize Socket.IO server
-        const httpServer = (global as unknown).httpServer
+        const httpServer = (global as unknown as { httpServer: unknown }).httpServer
         if (!httpServer) {
             return NextResponse.json({ error: "HTTP server not available" }, { status: 500 })
         }

@@ -6,13 +6,52 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+interface Diagnostics {
+  connection?: {
+    success: boolean;
+    error?: string;
+    details?: unknown;
+  };
+  unavailabilityTable?: {
+    exists: boolean;
+    error?: string;
+    details?: unknown;
+    recordCount: number;
+  };
+  therapistsTable?: {
+    success: boolean;
+    error?: string;
+    count: number;
+  };
+  profilesTable?: {
+    success: boolean;
+    error?: string;
+    count: number;
+    therapists?: number;
+  };
+  appointmentsTable?: {
+    success: boolean;
+    error?: string;
+    count: number;
+  };
+  insertTest?: {
+    success: boolean;
+    error?: string;
+    details?: unknown;
+  };
+  generalError?: {
+    message: string;
+    details?: unknown;
+  };
+}
+
 export default function DatabaseDiagnostic() {
-  const [diagnostics, setDiagnostics] = useState<unknown>({});
+  const [diagnostics, setDiagnostics] = useState<Diagnostics>({});
   const [loading, setLoading] = useState(false);
 
   const runDiagnostics = async () => {
     setLoading(true);
-    const results: unknown = {};
+    const results: Diagnostics = {};
 
     try {
       // Test 1: Basic connection

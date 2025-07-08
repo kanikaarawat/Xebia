@@ -90,8 +90,8 @@ export default function VideoCallManager() {
         status: appointment.status === 'in_progress' ? 'active' : 'waiting',
         created_at: appointment.created_at as string,
         participants: [
-          appointment.therapist?.name || 'Unknown Therapist',
-          appointment.patient?.full_name || 'Unknown Patient'
+          (appointment.therapist as { name?: string })?.name || 'Unknown Therapist',
+          (appointment.patient as { full_name?: string })?.full_name || 'Unknown Patient'
         ],
         therapist_name: (appointment.therapist as { name?: string })?.name,
         patient_name: (appointment.patient as { full_name?: string })?.full_name

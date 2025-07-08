@@ -94,7 +94,7 @@ export default function EmailConfirmationPage() {
                 <Button onClick={() => router.push("/login")}>Back to Login</Button>
               </div>
             )}
-            {status === "expired" && (
+            {(status === "expired" || status === "sending") && (
               <div className="flex flex-col items-center space-y-4">
                 <AlertCircle className="w-8 h-8 text-yellow-500" />
                 <div className="text-yellow-700 font-medium">{message}</div>

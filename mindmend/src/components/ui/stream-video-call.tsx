@@ -16,7 +16,6 @@ import {
 import { useRouter } from 'next/navigation';
 import {
   CallingState,
-  // StreamCall,
   StreamVideo,
   StreamVideoClient,
   useCallStateHooks,
@@ -26,6 +25,7 @@ import {
   StreamVideoParticipant,
   StreamCallProvider,
 } from '@stream-io/video-react-sdk';
+import type { Call } from '@stream-io/video-client';
 
 import '@stream-io/video-react-sdk/dist/css/styles.css';
 import { useSession } from '@supabase/auth-helpers-react'; // or your auth method
@@ -42,22 +42,6 @@ interface StreamVideoCallProps {
 
 // Stream configuration
 const STREAM_API_KEY = process.env.NEXT_PUBLIC_STREAM_API_KEY || 'mmhfdzb5evj2';
-
-interface Call {
-  camera: {
-    isEnabled: boolean;
-    enable: () => Promise<void>;
-    disable: () => Promise<void>;
-    toggle: () => Promise<void>;
-  };
-  microphone: {
-    isEnabled: boolean;
-    enable: () => Promise<void>;
-    disable: () => Promise<void>;
-    toggle: () => Promise<void>;
-  };
-  leave: () => void;
-}
 
 export default function StreamVideoCall({ 
   appointmentId, 
@@ -196,10 +180,10 @@ export default function StreamVideoCall({
         try {
           if (call) {
             // Disable camera and microphone
-            if (call.camera.isEnabled) {
+            if (call.camera.enabled) {
               await call.camera.disable();
             }
-            if (call.microphone.isEnabled) {
+            if (call.microphone.enabled) {
               await call.microphone.disable();
             }
             
@@ -237,10 +221,10 @@ export default function StreamVideoCall({
     const handleBeforeUnload = () => {
       if (call) {
         // Disable camera and microphone
-        if (call.camera.isEnabled) {
+        if (call.camera.enabled) {
           call.camera.disable();
         }
-        if (call.microphone.isEnabled) {
+        if (call.microphone.enabled) {
           call.microphone.disable();
         }
         
@@ -260,7 +244,12 @@ export default function StreamVideoCall({
     };
   }, [call, client]);
 
-  // Format duration - removed unused function
+  // Format duration
+  // const formatDuration = (seconds: number) => {
+  //   const mins = Math.floor(seconds / 60);
+  //   const secs = seconds % 60;
+  //   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  // };
 
   // Generate Stream token - using a working test token for demo
   const generateStreamToken = async (): Promise<string> => {
@@ -280,10 +269,10 @@ export default function StreamVideoCall({
 
       // Disable camera and microphone before leaving
       if (call) {
-        if (call.camera.isEnabled) {
+        if (call.camera.enabled) {
           await call.camera.disable();
         }
-        if (call.microphone.isEnabled) {
+        if (call.microphone.enabled) {
           await call.microphone.disable();
         }
         
@@ -414,8 +403,8 @@ function VideoCallUI({ call, callDuration, userRole, onLeaveCall }: VideoCallUIP
   const [isLeaving, setIsLeaving] = useState(false);
 
   // Get camera/mic state from call controls
-  const isVideoEnabled = call && call.camera && call.camera.isEnabled;
-  const isAudioEnabled = call && call.microphone && call.microphone.isEnabled;
+  const isVideoEnabled = call && call.camera && call.camera.enabled;
+  const isAudioEnabled = call && call.microphone && call.microphone.enabled;
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

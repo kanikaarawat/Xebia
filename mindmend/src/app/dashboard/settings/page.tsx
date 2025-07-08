@@ -176,10 +176,10 @@ export default function SettingsPage() {
 
       // Only include phone and timezone if they exist in the database
       if (formData.phone.trim()) {
-        (updateData as unknown).phone = formData.phone.trim();
+        (updateData as { phone?: string }).phone = formData.phone.trim();
       }
       if (formData.timezone) {
-        (updateData as unknown).timezone = formData.timezone;
+        (updateData as { timezone?: string }).timezone = formData.timezone;
       }
 
       const { data, error: updateError } = await supabase

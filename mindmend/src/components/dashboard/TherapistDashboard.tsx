@@ -859,7 +859,7 @@ export default function TherapistDashboard() {
       setAutoCompleteAppointmentId(null);
     } catch (error: unknown) {
       console.error('Error completing appointment:', error);
-      setCompleteError(error.message);
+      setCompleteError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setCompleteLoading(false);
     }

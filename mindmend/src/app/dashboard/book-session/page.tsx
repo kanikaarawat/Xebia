@@ -292,7 +292,7 @@ export default function BookSessionPage() {
   };
 
   // Payment handlers
-  const handlePaymentSuccess = async (response: unknown) => {
+  const handlePaymentSuccess = async (response: { razorpay_payment_id: string }) => {
     const paymentId = response.razorpay_payment_id;
     try {
       setBooking(true);
@@ -398,8 +398,8 @@ export default function BookSessionPage() {
     }
   };
 
-  const handlePaymentFailure = (error: string) => {
-    setError(`Payment failed: ${error}`);
+  const handlePaymentFailure = (error: unknown) => {
+    setError(`Payment failed: ${typeof error === "string" ? error : "Unknown error"}`);
     setShowPayment(false);
   };
 
@@ -995,10 +995,10 @@ export default function BookSessionPage() {
                           {/* Payment Component */}
                           <div className="bg-white border border-gray-200 rounded-xl p-6">
                             <RazorpayPayment
-                              orderId={bookedAppointment?.orderId || ''}
+                              orderId={(bookedAppointment as { orderId: string }).orderId || ''}
                               amount={paymentAmount}
                               currency="INR"
-                              onSuccess={handlePaymentSuccess}
+                              onSuccess={handlePaymentSuccess}  
                               onFailure={handlePaymentFailure}
                               onClose={() => setShowPayment(false)}
                             />

@@ -12,6 +12,27 @@ import {
   type UnavailabilityRecord
 } from '@/lib/checkUnavailabilityData';
 
+type Summary = {
+  totalRecords: number;
+  uniqueTherapists: number;
+  withAppointments: number;
+  withoutAppointments: number;
+  orphanedRecords: number;
+  missingUnavailability: number;
+};
+
+type Integrity = {
+  orphanedRecords: { count: number; ids: string[] };
+  missingUnavailability: { count: number; ids: string[] };
+};
+
+type Stats = {
+  totalRecords: number;
+  uniqueTherapists: number;
+  averageDuration: number;
+  reasons: Array<Record<string, unknown>>;
+};
+
 export default function UnavailabilityDataViewer() {
   const [data, setData] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -103,7 +124,7 @@ export default function UnavailabilityDataViewer() {
                 <CardTitle className="text-sm">Total Records</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.summary.totalRecords}</div>
+                <div className="text-2xl font-bold">{(data.summary as Summary).totalRecords}</div>
               </CardContent>
             </Card>
             
@@ -112,7 +133,7 @@ export default function UnavailabilityDataViewer() {
                 <CardTitle className="text-sm">Unique Therapists</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.summary.uniqueTherapists}</div>
+                <div className="text-2xl font-bold">{(data.summary as Summary).uniqueTherapists}</div>
               </CardContent>
             </Card>
             
@@ -121,7 +142,7 @@ export default function UnavailabilityDataViewer() {
                 <CardTitle className="text-sm">With Appointments</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.summary.withAppointments}</div>
+                <div className="text-2xl font-bold">{(data.summary as Summary).withAppointments}</div>
               </CardContent>
             </Card>
             
@@ -130,7 +151,7 @@ export default function UnavailabilityDataViewer() {
                 <CardTitle className="text-sm">Without Appointments</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.summary.withoutAppointments}</div>
+                <div className="text-2xl font-bold">{(data.summary as Summary).withoutAppointments}</div>
               </CardContent>
             </Card>
             
@@ -139,7 +160,7 @@ export default function UnavailabilityDataViewer() {
                 <CardTitle className="text-sm">Orphaned Records</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{data.summary.orphanedRecords}</div>
+                <div className="text-2xl font-bold text-red-600">{(data.summary as Summary).orphanedRecords}</div>
               </CardContent>
             </Card>
             
@@ -148,7 +169,7 @@ export default function UnavailabilityDataViewer() {
                 <CardTitle className="text-sm">Missing Unavailability</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-orange-600">{data.summary.missingUnavailability}</div>
+                <div className="text-2xl font-bold text-orange-600">{(data.summary as Summary).missingUnavailability}</div>
               </CardContent>
             </Card>
           </div>
@@ -195,7 +216,7 @@ export default function UnavailabilityDataViewer() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4 max-h-96 overflow-y-auto">
-                {data.records.map((record: UnavailabilityRecord) => (
+                {(data.records as UnavailabilityRecord[]).map((record: UnavailabilityRecord) => (
                   <div key={record.id} className="border rounded-lg p-4">
                     <div className="flex justify-between items-start">
                       <div>
@@ -228,10 +249,10 @@ export default function UnavailabilityDataViewer() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {data.todayUnavailability.length === 0 ? (
+                {(data.todayUnavailability as UnavailabilityRecord[]).length === 0 ? (
                   <div className="text-center text-gray-500">No unavailability records for today</div>
                 ) : (
-                  data.todayUnavailability.map((record: UnavailabilityRecord) => (
+                  (data.todayUnavailability as UnavailabilityRecord[]).map((record: UnavailabilityRecord) => (
                     <div key={record.id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-center">
                         <div>
@@ -264,14 +285,14 @@ export default function UnavailabilityDataViewer() {
                   <div>
                     <div className="flex justify-between items-center">
                       <span>Orphaned Records</span>
-                      <Badge variant={data.integrity.orphanedRecords.count > 0 ? "destructive" : "secondary"}>
-                        {data.integrity.orphanedRecords.count}
+                      <Badge variant={(data.integrity as Integrity).orphanedRecords.count > 0 ? "destructive" : "secondary"}>
+                        {(data.integrity as Integrity).orphanedRecords.count}
                       </Badge>
                     </div>
-                    {data.integrity.orphanedRecords.count > 0 && (
+                    {(data.integrity as Integrity).orphanedRecords.count > 0 && (
                       <div className="text-xs text-gray-600 mt-1">
-                        IDs: {data.integrity.orphanedRecords.ids.slice(0, 5).join(', ')}
-                        {data.integrity.orphanedRecords.ids.length > 5 && '...'}
+                        IDs: {(data.integrity as Integrity).orphanedRecords.ids.slice(0, 5).join(', ')}
+                        {(data.integrity as Integrity).orphanedRecords.ids.length > 5 && '...'}
                       </div>
                     )}
                   </div>
@@ -279,14 +300,14 @@ export default function UnavailabilityDataViewer() {
                   <div>
                     <div className="flex justify-between items-center">
                       <span>Missing Unavailability</span>
-                      <Badge variant={data.integrity.missingUnavailability.count > 0 ? "destructive" : "secondary"}>
-                        {data.integrity.missingUnavailability.count}
+                      <Badge variant={(data.integrity as Integrity).missingUnavailability.count > 0 ? "destructive" : "secondary"}>
+                        {(data.integrity as Integrity).missingUnavailability.count}
                       </Badge>
                     </div>
-                    {data.integrity.missingUnavailability.count > 0 && (
+                    {(data.integrity as Integrity).missingUnavailability.count > 0 && (
                       <div className="text-xs text-gray-600 mt-1">
-                        IDs: {data.integrity.missingUnavailability.ids.slice(0, 5).join(', ')}
-                        {data.integrity.missingUnavailability.ids.length > 5 && '...'}
+                        IDs: {(data.integrity as Integrity).missingUnavailability.ids.slice(0, 5).join(', ')}
+                        {(data.integrity as Integrity).missingUnavailability.ids.length > 5 && '...'}
                       </div>
                     )}
                   </div>
@@ -300,10 +321,10 @@ export default function UnavailabilityDataViewer() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {data.thisWeekUnavailability.length === 0 ? (
+                  {(data.thisWeekUnavailability as UnavailabilityRecord[]).length === 0 ? (
                     <div className="text-center text-gray-500">No unavailability this week</div>
                   ) : (
-                    data.thisWeekUnavailability.map((record: UnavailabilityRecord) => (
+                    (data.thisWeekUnavailability as UnavailabilityRecord[]).map((record: UnavailabilityRecord) => (
                       <div key={record.id} className="text-sm">
                         <div className="font-medium">{record.therapist_name}</div>
                         <div className="text-gray-600">
@@ -328,15 +349,15 @@ export default function UnavailabilityDataViewer() {
                 <div className="space-y-4">
                   <div>
                     <div className="text-sm font-medium">Total Records</div>
-                    <div className="text-2xl font-bold">{data.stats.totalRecords}</div>
+                    <div className="text-2xl font-bold">{(data.stats as Stats).totalRecords}</div>
                   </div>
                   <div>
                     <div className="text-sm font-medium">Unique Therapists</div>
-                    <div className="text-2xl font-bold">{data.stats.uniqueTherapists}</div>
+                    <div className="text-2xl font-bold">{(data.stats as Stats).uniqueTherapists}</div>
                   </div>
                   <div>
                     <div className="text-sm font-medium">Average Duration (minutes)</div>
-                    <div className="text-2xl font-bold">{Math.round(data.stats.averageDuration)}</div>
+                    <div className="text-2xl font-bold">{Math.round((data.stats as Stats).averageDuration)}</div>
                   </div>
                 </div>
               </CardContent>
@@ -348,7 +369,7 @@ export default function UnavailabilityDataViewer() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {(data.stats.reasons as Array<Record<string, unknown>>).map((item: Record<string, unknown>) => (
+                  {((data.stats as Stats).reasons as Array<Record<string, unknown>>).map((item: Record<string, unknown>) => (
                     <div key={item.reason as string} className="flex justify-between items-center">
                       <span className="text-sm">{item.reason as string}</span>
                       <Badge variant="secondary">{item.count as number}</Badge>

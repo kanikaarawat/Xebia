@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
+import { supabase } from '@/lib/supabaseClient';
 // GET /api/therapists/appointments?therapist_id=xxx
 export async function GET(req: NextRequest) {
   const therapistId = req.nextUrl?.searchParams?.get('therapist_id');

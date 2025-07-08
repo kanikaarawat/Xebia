@@ -5,8 +5,18 @@ import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
+type DebugData = {
+  user: string;
+  tableExists: boolean;
+  availabilityCount: number;
+  unavailabilityCount: number;
+  appointmentsCount: number;
+  errors: Record<string, unknown>;
+  error?: string;
+};
+
 export default function DatabaseDebug() {
-  const [debugData, setDebugData] = useState<unknown>(null);
+  const [debugData, setDebugData] = useState<DebugData | null>(null);
   const [loading, setLoading] = useState(false);
   const supabase = useSupabaseClient();
   const user = useUser();
@@ -64,9 +74,17 @@ export default function DatabaseDebug() {
           }
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Database test error:', error);
-      setDebugData({ error: error instanceof Error ? error.message : 'Unknown error' });
+      setDebugData({ 
+        user: user?.id || '',
+        tableExists: false,
+        availabilityCount: 0,
+        unavailabilityCount: 0,
+        appointmentsCount: 0,
+        errors: {},
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     } finally {
       setLoading(false);
     }

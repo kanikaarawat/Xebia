@@ -3,13 +3,19 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { SupabaseClient, useSupabaseClient } from '@supabase/auth-helpers-react';
-import { NextRouter } from 'next/router';
+
+type RouterType = ReturnType<typeof useRouter>;
 
 // Helper for missing fields (copied from LoginForm)
 const missing = (v: unknown) => typeof v !== 'string' ? !v : v.trim().length === 0;
 
 // Reusable redirect logic (copied from LoginForm)
-async function redirectBasedOnProfile(supabase: SupabaseClient, router: NextRouter, userId: string, userEmail: string) {
+async function redirectBasedOnProfile(
+  supabase: SupabaseClient,
+  router: RouterType,
+  userId: string,
+  email: string
+) {
   const { data: profile, error: profileErr } = await supabase
     .from('profiles')
     .select('*')
@@ -19,7 +25,7 @@ async function redirectBasedOnProfile(supabase: SupabaseClient, router: NextRout
   if (profileErr || !profile) {
     await supabase.from('profiles').insert({
       id: userId,
-      email: userEmail,
+      email: email,
       role: 'user',
     });
     // Wait for the insert to propagate

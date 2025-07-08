@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
+import { supabase } from "@/lib/supabaseClient";  
 // GET - List appointments for a user
 export async function GET(req: NextRequest) {
   const userId = req.nextUrl.searchParams.get("userId");

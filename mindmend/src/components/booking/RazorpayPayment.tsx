@@ -11,7 +11,7 @@ interface RazorpayPaymentProps {
   orderId: string;
   amount: number;
   currency: string;
-  onSuccess: (response: unknown) => void;
+  onSuccess: (response: { razorpay_payment_id: string }) => void;
   onFailure: (error: unknown) => void;
   onClose: () => void;
 }
@@ -73,7 +73,7 @@ export default function RazorpayPayment({
         name: 'MindMend',
         description: 'Therapy Session Payment',
         order_id: orderId,
-        handler: function (response: unknown) {
+        handler: function (response: { razorpay_payment_id: string }) {
           console.log('Razorpay payment success:', response);
           onSuccess(response);
           toast({

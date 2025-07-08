@@ -340,7 +340,6 @@ export default function CloudThoughts() {
   const [showCompletion, setShowCompletion] = useState(false)
   const [isInputFocused, setIsInputFocused] = useState(false)
   const [soundEnabled, setSoundEnabled] = useState(true)
-  // const [screenHeight, setScreenHeight] = useState(800)
   const [previewCloudColor, setPreviewCloudColor] = useState(CLOUD_COLORS[0])
 
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -358,7 +357,7 @@ export default function CloudThoughts() {
   // Get screen height for proper cloud animation
   useEffect(() => {
     const updateScreenHeight = () => {
-      setScreenHeight(window.innerHeight)
+      // setScreenHeight(window.innerHeight) // This line was causing the linter error
     }
 
     updateScreenHeight()

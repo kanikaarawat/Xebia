@@ -170,7 +170,8 @@ export function initializeSocketServer(httpServer: HTTPServer) {
                         id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     })
                 }
-            } catch  {
+            } catch (error: unknown) {
+                console.error("Error sending message:", error instanceof Error ? error.message : "Unknown error")
                 socket.emit("error", { message: "Failed to send message" })
             }
         })
@@ -189,8 +190,8 @@ export function initializeSocketServer(httpServer: HTTPServer) {
                     }
                 }
                 console.log("User disconnected:", socket.id)
-            } catch  {
-                console.error("Error handling disconnect:", error)
+            } catch (error: unknown) {
+                console.error("Error handling disconnect:", error instanceof Error ? error.message : "Unknown error")
             }
         })
     })

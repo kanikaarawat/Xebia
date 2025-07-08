@@ -4,8 +4,13 @@ import { useEffect, useState } from "react";
 import { fetchYouTubeVideos } from "@/lib/youtubeClient";
 import { supabase } from "@/lib/supabaseClient";
 
+type YouTubeVideo = {
+  id: { videoId: string };
+  snippet: { title: string };
+};
+
 export default function PersonalizedVideos() {
-  const [videos, setVideos] = useState<unknown[]>([]);
+  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
