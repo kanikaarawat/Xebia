@@ -31,11 +31,13 @@ interface YarnBall {
 type CatState = "awake" | "sleeping" | "playing"
 
 const CAT_COLORS = {
-    primary: "#D4A574", // Warm golden brown
-    secondary: "#E8C4A0", // Lighter golden cream
-    accent: "#F5E6D8", // Soft cream
-    nose: "#FFB6C1", // Soft pink
-    eyes: "#6BB6FF", // Bright sky blue
+    primary: "#FFB6C1", // Soft pink
+    secondary: "#FFC0CB", // Light pink
+    accent: "#FFE4E1", // Misty rose
+    nose: "#FF69B4", // Hot pink
+    eyes: "#87CEEB", // Sky blue
+    whiskers: "#D3D3D3", // Light gray
+    paws: "#FFB6C1", // Soft pink
 }
 
 export default function CalmCat() {
@@ -534,27 +536,27 @@ export default function CalmCat() {
 
                             {/* Body */}
                             <div
-                                className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-32 h-20 rounded-full"
+                                className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-36 h-24 rounded-full"
                                 style={{
                                     background: `linear-gradient(135deg, ${CAT_COLORS.primary} 0%, ${CAT_COLORS.secondary} 100%)`,
-                                    boxShadow: "0 8px 24px rgba(212, 165, 116, 0.3)",
+                                    boxShadow: "0 8px 24px rgba(255, 182, 193, 0.4)",
                                 }}
                             />
 
                             {/* Head */}
                             <div
-                                className="absolute top-4 left-1/2 transform -translate-x-1/2 w-24 h-24 rounded-full relative"
+                                className="absolute top-2 left-1/2 transform -translate-x-1/2 w-28 h-28 rounded-full relative"
                                 style={{
                                     background: `linear-gradient(135deg, ${CAT_COLORS.primary} 0%, ${CAT_COLORS.accent} 100%)`,
-                                    boxShadow: "0 12px 32px rgba(212, 165, 116, 0.3)",
+                                    boxShadow: "0 12px 32px rgba(255, 182, 193, 0.4)",
                                 }}
                             >
                                 {/* Ears */}
                                 <motion.div
-                                    className="absolute -top-2 left-4 w-6 h-8 rounded-t-full transform -rotate-12"
+                                    className="absolute -top-3 left-6 w-7 h-10 rounded-t-full transform -rotate-15"
                                     style={{ backgroundColor: CAT_COLORS.primary }}
                                     animate={{
-                                        rotate: catState === "sleeping" ? -8 : catState === "playing" ? [-12, -8, -12] : -12,
+                                        rotate: catState === "sleeping" ? -10 : catState === "playing" ? [-15, -8, -15] : -15,
                                     }}
                                     transition={{
                                         duration: catState === "playing" ? 1 : 0.5,
@@ -562,16 +564,20 @@ export default function CalmCat() {
                                     }}
                                 />
                                 <motion.div
-                                    className="absolute -top-2 right-4 w-6 h-8 rounded-t-full transform rotate-12"
+                                    className="absolute -top-3 right-6 w-7 h-10 rounded-t-full transform rotate-15"
                                     style={{ backgroundColor: CAT_COLORS.primary }}
                                     animate={{
-                                        rotate: catState === "sleeping" ? 8 : catState === "playing" ? [12, 8, 12] : 12,
+                                        rotate: catState === "sleeping" ? 10 : catState === "playing" ? [15, 8, 15] : 15,
                                     }}
                                     transition={{
                                         duration: catState === "playing" ? 1 : 0.5,
                                         repeat: catState === "playing" ? Number.POSITIVE_INFINITY : 0,
                                     }}
                                 />
+
+                                {/* Inner ears */}
+                                <div className="absolute -top-2 left-7 w-4 h-6 rounded-t-full transform -rotate-15" style={{ backgroundColor: CAT_COLORS.accent }} />
+                                <div className="absolute -top-2 right-7 w-4 h-6 rounded-t-full transform rotate-15" style={{ backgroundColor: CAT_COLORS.accent }} />
 
                                 {/* Eyes */}
                                 <motion.div
