@@ -45,8 +45,8 @@ import {
   // FileText,
   // Video as VideoIcon,
   // MessageCircle as MessageIcon,
-  LogOut,
   TrendingUp,
+  LogOut, MessageCircle, Brain,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AppointmentsList from "@/components/booking/AppointmentsList";
@@ -1083,12 +1083,28 @@ export default function UserDashboard() {
                         View All Appointments
                       </Button>
                       <Button
+                          variant="outline"
+                          className="w-full border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 transition-colors text-xs sm:text-sm lg:text-base"
+                          onClick={() => window.open("https://finalworkingchatroom-production.up.railway.app/", "_blank")}
+                      >
+                        <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                        Join Chatroom
+                      </Button>
+                      <Button
                         variant="outline"
                         className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition-colors text-xs sm:text-sm lg:text-base"
                         onClick={() => router.push('/dashboard/book-session')}
                       >
                         <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                         Book New Session
+                      </Button>
+                      <Button
+                          variant="outline"
+                          className="w-full border-teal-200 text-teal-700 hover:bg-teal-50 hover:border-teal-300 transition-colors text-xs sm:text-sm lg:text-base"
+                          onClick={() => router.push("/mindmend-hub")}
+                      >
+                        <Brain className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                        Go to MindMend Hub
                       </Button>
                     </div>
                   </CardContent>
