@@ -1,13 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Brain, MessageCircle } from 'lucide-react';
+import { Brain, MessageCircle, BookOpen } from 'lucide-react';
 
 export default function MentalHealthCards() {
     const router = useRouter();
 
     return (
-        <div className="flex flex-col sm:flex-row gap-8">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-8">
             {/* MindMend Hub Card */}
             <div className="group relative bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-3xl p-8 flex-1 text-center shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100/50 hover:border-blue-200/50 hover:-translate-y-1">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -52,6 +52,30 @@ export default function MentalHealthCards() {
                         className="group/btn inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white font-medium rounded-full hover:from-teal-600 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-teal-500/25 hover:scale-105"
                     >
                         Join Community
+                        <div className="w-2 h-2 bg-white rounded-full group-hover/btn:animate-pulse" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Blogs Card */}
+            <div className="group relative bg-gradient-to-br from-pink-50 via-white to-purple-50 rounded-3xl p-8 flex-1 text-center shadow-lg hover:shadow-xl transition-all duration-300 border border-pink-100/50 hover:border-pink-200/50 hover:-translate-y-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-purple-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative z-10">
+                    <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-pink-500/25 group-hover:scale-105 transition-all duration-300">
+                        <BookOpen className="w-10 h-10 text-white" />
+                    </div>
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                        MindMend Blogs
+                    </h2>
+                    <p className="text-gray-600 mb-8 leading-relaxed text-sm">
+                        Explore real mental health stories, expert tips, and insights to guide your personal wellness journey
+                    </p>
+                    <button
+                        onClick={() => window.location.href = 'https://blogpageformindmend-1.vercel.app/'}
+
+                        className="group/btn inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white font-medium rounded-full hover:from-pink-600 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 hover:scale-105"
+                    >
+                        Read Blogs
                         <div className="w-2 h-2 bg-white rounded-full group-hover/btn:animate-pulse" />
                     </button>
                 </div>
