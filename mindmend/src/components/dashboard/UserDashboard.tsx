@@ -27,8 +27,6 @@ import {
   Calendar,
   // MessageCircle,
   BookOpen,
-  Users,
-  TrendingUp,
   // Smile,
   // Meh,
   // Frown,
@@ -48,6 +46,7 @@ import {
   // Video as VideoIcon,
   // MessageCircle as MessageIcon,
   LogOut,
+  TrendingUp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AppointmentsList from "@/components/booking/AppointmentsList";
@@ -58,6 +57,7 @@ import { format, subDays } from 'date-fns';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { PersonalizedVideos } from "@/components/booking/PersonalizedVideos";
 import MentalHealthCards from "@/components/ui/mental-health-cards";
+// import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 
 interface UserProfile {
   id: string;
@@ -760,20 +760,49 @@ export default function UserDashboard() {
           </div>
         </div>
 
+        {/* Mobile full-width collapsible nav bar */}
+        <div className="lg:hidden w-full sticky top-0 z-40 bg-gradient-to-r from-white via-indigo-50 to-pink-50 shadow-md border-b border-indigo-100">
+          <div className="flex justify-between items-center px-2 py-1">
+            {[
+              { value: "overview", label: "Overview", icon: Calendar },
+              { value: "appointments", label: "Appointments", icon: Clock },
+              { value: "therapists", label: "Therapists", icon: User },
+              { value: "mood", label: "Mood", icon: Heart },
+              { value: "progress", label: "Progress", icon: TrendingUp },
+              { value: "resources", label: "Resources", icon: BookOpen },
+            ].map(tab => (
+              <button
+                key={tab.value}
+                className={`flex flex-col items-center justify-center px-1 py-1 flex-1 transition-all ${activeTab === tab.value ? "text-indigo-700" : "text-slate-400 hover:text-indigo-500"}`}
+                onClick={() => setActiveTab(tab.value)}
+                aria-label={tab.label}
+              >
+                <tab.icon className={`h-6 w-6 mb-0.5 ${activeTab === tab.value ? "" : "opacity-70"}`} />
+                <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Tabs */}
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
           className="w-full max-w-7xl mx-auto"
         >
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 rounded-xl bg-white/70 backdrop-blur p-1 h-10 sm:h-12 lg:h-14 xl:h-16">
-  <TabsTrigger value="overview" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium">Overview</TabsTrigger>
-  <TabsTrigger value="appointments" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium">Appointments</TabsTrigger>
-  <TabsTrigger value="therapists" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden sm:block">Find Therapists</TabsTrigger>
-  <TabsTrigger value="mood" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden lg:block">Mood</TabsTrigger>
-  <TabsTrigger value="progress" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden lg:block">Progress</TabsTrigger>
-  <TabsTrigger value="resources" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden xl:block">Resources</TabsTrigger>
-</TabsList>
+          {/* Wrap TabsList in a div that is hidden on mobile */}
+          <div className="hidden lg:block">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 rounded-xl bg-white/70 backdrop-blur p-1 h-10 sm:h-12 lg:h-14 xl:h-16">
+              <TabsTrigger value="overview" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium">Overview</TabsTrigger>
+              <TabsTrigger value="appointments" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium">Appointments</TabsTrigger>
+              <TabsTrigger value="therapists" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden sm:block">Find Therapists</TabsTrigger>
+              <TabsTrigger value="mood" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden lg:block">Mood</TabsTrigger>
+              <TabsTrigger value="progress" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden lg:block">Progress</TabsTrigger>
+              <TabsTrigger value="resources" className="rounded-lg text-sm sm:text-base lg:text-lg font-medium hidden xl:block">Resources</TabsTrigger>
+            </TabsList>
+          </div>
+
+        
 
           <TabsContent value="resources">
   <div className="p-4">
@@ -782,12 +811,12 @@ export default function UserDashboard() {
   </div>
 </TabsContent>
           {/* ── Overview tab ── */}
-          <TabsContent value="overview" className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8">
-            <div className="grid gap-3 sm:gap-4 lg:gap-6 xl:gap-8 xl:grid-cols-3">
-              {/* Left (2 cols on large screens, 1 col on smaller) */}
-              <div className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8 xl:col-span-2">
+          <TabsContent value="overview" className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:items-stretch">
+              {/* Main Cards (2/3 width) */}
+              <div className="lg:col-span-2 flex flex-col gap-8 h-full">
                 {/* Stats Cards */}
-                <div className="grid gap-2 sm:gap-3 lg:gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   {[
                     {
                       icon: Calendar,
@@ -853,44 +882,44 @@ export default function UserDashboard() {
                     </Card>
                   ))}
                 </div>
-
-                {/* Quick Action Cards - Mobile Only */}
-                <div className="grid gap-2 sm:gap-3 lg:gap-4 grid-cols-1 sm:hidden">
-                  <Card className="border-indigo-100 bg-gradient-to-r from-indigo-50 to-pink-50 shadow-md">
+                {/* Quick Actions Card - should come before Mood Logs */}
+                <div id="quick-actions" className="grid gap-2 sm:gap-3 lg:gap-4 grid-cols-1 lg:hidden">
+                  <Card className="bg-gradient-to-br from-white/80 via-indigo-50/60 to-pink-50/60 shadow-xl rounded-3xl border-0">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-semibold text-indigo-800">Quick Actions</CardTitle>
+                      <CardTitle className="text-lg font-semibold text-indigo-800">Quick Actions</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-3 sm:p-4 pt-0">
-                      <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                        <Button
-                          variant="outline"
-                          className="flex flex-col items-center gap-1 p-2 sm:p-3 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
-                          onClick={() => setActiveTab('therapists')}
-                        >
-                          <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span className="text-xs sm:text-sm font-medium">Find Therapists</span>
+                    <CardContent className="p-4 pt-0">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                        
+                       
+                        <Button variant="outline" className="w-full min-h-[72px] max-h-[90px] flex flex-col items-center justify-center gap-1 py-3 rounded-xl border-2 border-green-100 bg-white/70 hover:bg-green-50 hover:border-green-300 transition-all shadow-sm overflow-hidden" style={{ aspectRatio: '1/1' }} onClick={() => setActiveTab('therapists')}>
+                          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-50 mb-1 overflow-hidden">
+                            <User className="h-5 w-5 text-green-500" />
+                          </span>
+                          <span className="text-xs font-medium text-green-800">Therapists</span>
                         </Button>
-                        <Button
-                          variant="outline"
-                          className="flex flex-col items-center gap-1 p-2 sm:p-3 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
-                          onClick={() => setActiveTab('mood')}
-                        >
-                          <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span className="text-xs sm:text-sm font-medium">Mood Tracking</span>
+                        <Button variant="outline" className="w-full min-h-[72px] max-h-[90px] flex flex-col items-center justify-center gap-1 py-3 rounded-xl border-2 border-yellow-100 bg-white/70 hover:bg-yellow-50 hover:border-yellow-300 transition-all shadow-sm overflow-hidden" style={{ aspectRatio: '1/1' }} onClick={() => setActiveTab('mood')}>
+                          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-50 mb-1 overflow-hidden">
+                            <Heart className="h-5 w-5 text-yellow-500" />
+                          </span>
+                          <span className="text-xs font-medium text-yellow-800">Mood</span>
                         </Button>
-                        <Button
-                          variant="outline"
-                          className="flex flex-col items-center gap-1 p-2 sm:p-3 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
-                          onClick={() => setActiveTab('progress')}
-                        >
-                          <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span className="text-xs sm:text-sm font-medium">Progress</span>
+                        <Button variant="outline" className="w-full min-h-[72px] max-h-[90px] flex flex-col items-center justify-center gap-1 py-3 rounded-xl border-2 border-blue-100 bg-white/70 hover:bg-blue-50 hover:border-blue-300 transition-all shadow-sm overflow-hidden" style={{ aspectRatio: '1/1' }} onClick={() => setActiveTab('progress')}>
+                          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 mb-1 overflow-hidden">
+                            <TrendingUp className="h-5 w-5 text-blue-500" />
+                          </span>
+                          <span className="text-xs font-medium text-blue-800">Progress</span>
+                        </Button>
+                        <Button variant="outline" className="w-full min-h-[72px] max-h-[90px] flex flex-col items-center justify-center gap-1 py-3 rounded-xl border-2 border-purple-100 bg-white/70 hover:bg-purple-50 hover:border-purple-300 transition-all shadow-sm overflow-hidden" style={{ aspectRatio: '1/1' }} onClick={() => setActiveTab('resources')}>
+                          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-50 mb-1 overflow-hidden">
+                            <BookOpen className="h-5 w-5 text-purple-500" />
+                          </span>
+                          <span className="text-xs font-medium text-purple-800">Resources</span>
                         </Button>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
-
                 {/* Quick Mood Check */}
                 <Card className="border-indigo-100 bg-white/80 shadow-md">
                   <CardHeader className="pb-2 sm:pb-3 lg:pb-4 xl:pb-6">
@@ -971,35 +1000,32 @@ export default function UserDashboard() {
                 </Card>
 
                 {/* Mood Tracking Card (Mood Trends) */}
-                <Card className="border-indigo-100 bg-white/80 shadow-md">
+                <Card className="border-indigo-100 bg-white/80 shadow-md h-full flex flex-col">
                   <CardHeader className="pb-2 sm:pb-3 lg:pb-4 xl:pb-6">
                     <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-sm sm:text-base lg:text-lg xl:text-xl">
                       <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-indigo-600" />
                       Your Mood This Week
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="flex-1 flex flex-col justify-between">
                     {moodLoading ? (
-                      <div className="flex items-center justify-center h-16 sm:h-20 lg:h-24 xl:h-32">
+                      <div className="flex items-center justify-center h-20 sm:h-28 md:h-40 lg:h-52 xl:h-64 2xl:h-72">
                         <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 border-b-2 border-indigo-600"></div>
                       </div>
                     ) : moodError ? (
                       <div className="text-center text-red-600 text-xs sm:text-sm lg:text-base">{moodError}</div>
                     ) : (
                       <>
-                        <div className="flex items-end justify-between h-16 sm:h-20 lg:h-24 xl:h-32 space-x-1 sm:space-x-2">
+                        <div className="flex items-end justify-between h-20 sm:h-28 md:h-40 lg:h-52 xl:h-64 2xl:h-72 space-x-1 sm:space-x-2">
                           {moodData.map((data, index) => {
-                            const maxHeight = 80; // Reduced max height for better mobile view
+                            const maxHeight = 120; // Increased max height for desktop
                             const height = typeof data.mood === 'number' ? (data.mood / 5) * maxHeight : 12;
                             const minHeight = typeof data.mood === 'number' ? Math.max(height, 12) : 12;
                             return (
                               <div key={index} className="flex flex-col items-center space-y-1 sm:space-y-2 flex-1">
                                 <div
                                   className={`w-full rounded-t-md sm:rounded-t-lg transition-all duration-300 ${typeof data.mood === 'number' ? 'bg-gradient-to-t from-indigo-400 to-pink-400' : 'bg-slate-200'}`}
-                                  style={{
-                                    height: `${minHeight}px`,
-                                    backgroundColor: typeof data.mood === 'number' ? '#8b5cf6' : '#e2e8f0'
-                                  }}
+                                  style={{ height: `${minHeight}px` }}
                                 />
                                 <span className="text-xs text-slate-600 font-medium">{data.day}</span>
                               </div>
@@ -1015,10 +1041,12 @@ export default function UserDashboard() {
                     )}
                   </CardContent>
                 </Card>
-              </div>
 
-              {/* Right sidebar */}
-              <div className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8">
+                {/* Emergency Contact Card */}
+                {/* ... existing code ... */}
+              </div>
+              {/* Sidebar (1/3 width) */}
+              <div className="flex flex-col gap-8 h-full">
                 {/* Upcoming Appointments */}
                 <Card className="border-indigo-100 bg-gradient-to-br from-white to-indigo-50/30 shadow-lg hover:shadow-xl transition-all duration-300">
                   <CardHeader className="pb-2 sm:pb-3 lg:pb-4 xl:pb-6">
@@ -1067,14 +1095,14 @@ export default function UserDashboard() {
                 </Card>
 
                 {/* Progress Summary */}
-                <Card className="border-indigo-100 bg-white/80 shadow-md">
+                <Card className="border-indigo-100 bg-white/80 shadow-md h-full flex flex-col">
                   <CardHeader className="pb-2 sm:pb-3 lg:pb-4 xl:pb-6">
                     <CardTitle className="flex items-center gap-2 sm:gap-3 text-indigo-800 text-sm sm:text-base lg:text-lg xl:text-xl">
                       <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-indigo-600" />
                       Your Progress
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2 sm:space-y-3 lg:space-y-4 xl:space-y-6">
+                  <CardContent className="flex-1 flex flex-col justify-between">
                     {/* Mood Improvement */}
                     <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                       <div className="flex justify-between items-center">
@@ -1093,7 +1121,6 @@ export default function UserDashboard() {
                       </div>
                       <Progress value={Math.min((completedCount || 0) * 20, 100)} className="h-2 lg:h-3" />
                     </div>
-
                     {/* Mood Tracking Streak */}
                     <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                       <div className="flex justify-between items-center">
@@ -1104,8 +1131,18 @@ export default function UserDashboard() {
                       </div>
                       <Progress value={Math.min((moodData.filter(d => typeof d.mood === 'number').length / 7) * 100, 100)} className="h-2 lg:h-3" />
                     </div>
+                    {/* Motivational Section */}
+                    <div className="mt-4 pt-4 border-t border-indigo-100 flex flex-col items-center">
+                      <div className="flex items-center gap-2 mb-1">
+                        <svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5 text-yellow-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M6.343 17.657l-1.414 1.414M17.657 17.657l-1.414-1.414M6.343 6.343L4.929 7.757' /></svg>
+                        <span className="text-xs sm:text-sm font-semibold text-indigo-700 uppercase tracking-wide">Keep Going!</span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-indigo-500 text-center italic">Small progress is still progress. Celebrate every step forward!</p>
+                    </div>
                   </CardContent>
                 </Card>
+
+                {/* ... existing code ... */}
               </div>
             </div>
           </TabsContent>
@@ -1266,38 +1303,40 @@ export default function UserDashboard() {
               <CardContent>
                 <div className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8">
                   {/* Mood Chart (Bar Graph) */}
-                  <div className="bg-slate-50 rounded-xl p-2 sm:p-3 lg:p-4 xl:p-6">
+                  <div className="bg-slate-50 rounded-xl p-2 sm:p-3 lg:p-4 xl:p-6 overflow-x-auto max-w-full">
                     <h3 className="text-xs sm:text-sm lg:text-base xl:text-lg font-semibold text-indigo-800 mb-2 sm:mb-3 lg:mb-4">Weekly Mood Chart</h3>
-                    {moodLoading ? (
-                      <div className="flex items-center justify-center h-16 sm:h-20 lg:h-24 xl:h-32">
-                        <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 border-b-2 border-indigo-600"></div>
-                      </div>
-                    ) : moodError ? (
-                      <div className="text-center text-red-600 text-xs sm:text-sm lg:text-base">{moodError}</div>
-                    ) : (
-                      <div className="flex items-end justify-between h-16 sm:h-20 lg:h-24 xl:h-32 space-x-1 sm:space-x-2">
-                        {moodData.map((data, index) => {
-                          const maxHeight = 80; // Reduced max height for better mobile view
-                          const height = typeof data.mood === 'number' ? (data.mood / 5) * maxHeight : 12;
-                          const minHeight = typeof data.mood === 'number' ? Math.max(height, 12) : 12;
-                          return (
-                            <div key={index} className="flex flex-col items-center space-y-1 sm:space-y-2 flex-1">
-                              <div
-                                className={`w-full rounded-t-md sm:rounded-t-lg transition-all duration-300 ${typeof data.mood === 'number' ? 'bg-gradient-to-t from-indigo-400 to-pink-400' : 'bg-slate-200'}`}
-                                style={{ height: `${minHeight}px` }}
-                              />
-                              <span className="text-xs text-slate-600 font-medium">{data.day}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                    <div className="min-w-[340px]">
+                      {moodLoading ? (
+                        <div className="flex items-center justify-center h-16 sm:h-20 lg:h-24 xl:h-32">
+                          <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 border-b-2 border-indigo-600"></div>
+                        </div>
+                      ) : moodError ? (
+                        <div className="text-center text-red-600 text-xs sm:text-sm lg:text-base">{moodError}</div>
+                      ) : (
+                        <div className="flex items-end justify-between h-16 sm:h-20 lg:h-24 xl:h-32 space-x-1 sm:space-x-2">
+                          {moodData.map((data, index) => {
+                            const maxHeight = 80; // Reduced max height for better mobile view
+                            const height = typeof data.mood === 'number' ? (data.mood / 5) * maxHeight : 12;
+                            const minHeight = typeof data.mood === 'number' ? Math.max(height, 12) : 12;
+                            return (
+                              <div key={index} className="flex flex-col items-center space-y-1 sm:space-y-2 flex-1 min-w-[32px]">
+                                <div
+                                  className={`w-full rounded-t-md sm:rounded-t-lg transition-all duration-300 ${typeof data.mood === 'number' ? 'bg-gradient-to-t from-indigo-400 to-pink-400' : 'bg-slate-200'}`}
+                                  style={{ height: `${minHeight}px` }}
+                                />
+                                <span className="text-[10px] sm:text-xs text-slate-600 font-medium">{data.day}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Weekly Mood Analysis */}
                   <Card className="border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50">
                     <CardHeader>
-                      <CardTitle className="flex items-center justify-between text-indigo-800 text-base sm:text-lg lg:text-xl">
+                      <CardTitle className="flex items-center justify-between text-indigo-800 text-sm sm:text-lg lg:text-xl">
                         <div className="flex items-center gap-2 sm:gap-3">
                           <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-indigo-600" />
                           AI Weekly Analysis
@@ -1318,7 +1357,7 @@ export default function UserDashboard() {
                           )}
                         </Button>
                       </CardTitle>
-                      <CardDescription className="text-sm sm:text-base">Personalized insights and recommendations based on your mood patterns</CardDescription>
+                      <CardDescription className="text-xs sm:text-base">Personalized insights and recommendations based on your mood patterns</CardDescription>
                     </CardHeader>
                     <CardContent>
                       {weeklyLoading ? (
@@ -1327,7 +1366,7 @@ export default function UserDashboard() {
                         </div>
                       ) : weeklyError ? (
                         <div className="text-center p-4 sm:p-6">
-                          <div className="text-slate-500 mb-2 text-sm sm:text-base">{weeklyError}</div>
+                          <div className="text-slate-500 mb-2 text-xs sm:text-base">{weeklyError}</div>
                           <Button
                             variant="outline"
                             size="sm"
@@ -1341,37 +1380,29 @@ export default function UserDashboard() {
                         <div className="space-y-3 sm:space-y-4">
                           {/* Weekly Statistics */}
                           {weeklyStats && (
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 p-3 sm:p-4 bg-white/60 rounded-lg border border-indigo-100">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 p-3 sm:p-4 bg-white/60 rounded-lg border border-indigo-100">
                               <div className="text-center">
-                                <div className="text-sm sm:text-lg font-semibold text-blue-700">
-                                  {String(weeklyStats.averageMood)}/5
-                                </div>
+                                <div className="text-xs sm:text-lg font-semibold text-blue-700">{String(weeklyStats.averageMood)}/5</div>
                                 <div className="text-xs text-slate-600">Avg Mood</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-sm sm:text-lg font-semibold text-purple-700">
-                                  {String(weeklyStats.daysTracked)}/7
-                                </div>
+                                <div className="text-xs sm:text-lg font-semibold text-purple-700">{String(weeklyStats.daysTracked)}/7</div>
                                 <div className="text-xs text-slate-600">Days Tracked</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-sm sm:text-lg font-semibold text-pink-700">
-                                  {String(weeklyStats.consistency)}%
-                                </div>
+                                <div className="text-xs sm:text-lg font-semibold text-pink-700">{String(weeklyStats.consistency)}%</div>
                                 <div className="text-xs text-slate-600">Consistency</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-sm sm:text-lg font-semibold text-indigo-700">
-                                  {String(weeklyStats.moodVariance)}
-                                </div>
+                                <div className="text-xs sm:text-lg font-semibold text-indigo-700">{String(weeklyStats.moodVariance)}</div>
                                 <div className="text-xs text-slate-600">Variance</div>
                               </div>
                             </div>
                           )}
 
                           {/* AI Analysis */}
-                          <div className="bg-white/80 rounded-xl p-4 sm:p-6 border border-indigo-100 shadow-sm">
-                            <div className="space-y-4 sm:space-y-6">
+                          <div className="bg-white/80 rounded-xl p-3 sm:p-6 border border-indigo-100 shadow-sm">
+                            <div className="space-y-3 sm:space-y-6">
                               {weeklyAnalysis.split('\n\n').map((section, index) => {
                                 const lines = section.split('\n');
                                 const title = lines[0];
@@ -1399,7 +1430,7 @@ export default function UserDashboard() {
 
                                 return (
                                   <div key={index}>
-                                    <h4 className={`font-semibold text-base sm:text-lg mb-2 sm:mb-3 ${styles.text}`}>
+                                    <h4 className={`font-semibold text-xs sm:text-lg mb-2 sm:mb-3 ${styles.text}`}>
                                       {title}
                                     </h4>
                                     <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-slate-700 leading-relaxed">
@@ -1424,7 +1455,7 @@ export default function UserDashboard() {
                           </div>
                         </div>
                       ) : (
-                        <div className="text-center p-4 sm:p-6 text-slate-500 text-sm sm:text-base">
+                        <div className="text-center p-4 sm:p-6 text-slate-500 text-xs sm:text-base">
                           No weekly analysis available
                         </div>
                       )}
@@ -1432,10 +1463,10 @@ export default function UserDashboard() {
                   </Card>
 
                   {/* Mood Insights */}
-                  <div className="grid gap-3 sm:gap-4 lg:gap-6 md:grid-cols-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
                     <Card className="border-green-100 bg-green-50/50">
                       <CardContent className="p-3 sm:p-4 lg:p-6">
-                        <h4 className="font-semibold text-green-800 mb-1 sm:mb-2 text-sm sm:text-base">Positive Trends</h4>
+                        <h4 className="font-semibold text-green-800 mb-1 sm:mb-2 text-xs sm:text-base">Positive Trends</h4>
                         <ul className="text-xs sm:text-sm text-green-700 space-y-1">
                           <li>• Your mood improved by 15% this week</li>
                           <li>• Consistent sleep patterns detected</li>
@@ -1446,7 +1477,7 @@ export default function UserDashboard() {
 
                     <Card className="border-blue-100 bg-blue-50/50">
                       <CardContent className="p-3 sm:p-4 lg:p-6">
-                        <h4 className="font-semibold text-blue-800 mb-1 sm:mb-2 text-sm sm:text-base">Recommendations</h4>
+                        <h4 className="font-semibold text-blue-800 mb-1 sm:mb-2 text-xs sm:text-base">Recommendations</h4>
                         <ul className="text-xs sm:text-sm text-blue-700 space-y-1">
                           <li>• Try meditation for stress relief</li>
                           <li>• Consider scheduling a session</li>

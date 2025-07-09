@@ -158,6 +158,8 @@ export default function TherapistDashboard() {
   const user = useUser();
   const router = useRouter();
 
+
+
   // Helper functions for patient statistics
   const getPatientSessionCount = (patientId: string) => {
     return appointments.filter(a => a.patient?.id === patientId).length;
@@ -2157,25 +2159,47 @@ export default function TherapistDashboard() {
                 </div>
               </div>
 
+        {/* Mobile full-width minimal nav bar */}
+        <div className="lg:hidden w-full sticky top-0 z-40 bg-gradient-to-r from-white via-indigo-50 to-pink-50 shadow-md border-b border-indigo-100">
+          <div className="flex justify-between items-center px-1 py-1">
+            {[
+              { value: "overview", icon: Calendar },
+              { value: "appointments", icon: Clock },
+              { value: "patients", icon: Users },
+              { value: "availability", icon: Clock },
+              { value: "analytics", icon: BarChart3 },
+            ].map(tab => (
+              <button
+                key={tab.value}
+                className={`flex flex-col items-center justify-center flex-1 transition-all mx-1 ${activeTab === tab.value ? "text-indigo-700" : "text-slate-400 hover:text-indigo-500"}`}
+                onClick={() => setActiveTab(tab.value)}
+                aria-label={tab.value}
+              >
+                <tab.icon className={`h-5 w-5 ${activeTab === tab.value ? "" : "opacity-70"}`} />
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Tabs */}
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
           className="w-full max-w-7xl mx-auto"
         >
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 rounded-xl bg-white/70 backdrop-blur p-2 h-10 sm:h-12 lg:h-14 xl:h-16 gap-1">
-            <TabsTrigger value="overview" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium px-3 sm:px-4 lg:px-6">Overview</TabsTrigger>
-            <TabsTrigger value="appointments" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium px-3 sm:px-4 lg:px-6">Appointments</TabsTrigger>
-            <TabsTrigger value="patients" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium hidden sm:block px-3 sm:px-4 lg:px-6">Patients</TabsTrigger>
-            <TabsTrigger value="availability" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium hidden lg:block px-3 sm:px-4 lg:px-6">Availability</TabsTrigger>
-            <TabsTrigger value="analytics" className="rounded-lg text-xs sm:text-sm lg:text-base font-medium hidden lg:block px-3 sm:px-4 lg:px-6">Analytics</TabsTrigger>
+          <TabsList className="hidden lg:grid w-full grid-cols-5 rounded-xl bg-white/70 backdrop-blur p-2 h-14 xl:h-16 gap-1">
+            <TabsTrigger value="overview" className="rounded-lg text-sm lg:text-base font-medium px-4 lg:px-6">Overview</TabsTrigger>
+            <TabsTrigger value="appointments" className="rounded-lg text-sm lg:text-base font-medium px-4 lg:px-6">Appointments</TabsTrigger>
+            <TabsTrigger value="patients" className="rounded-lg text-sm lg:text-base font-medium px-4 lg:px-6">Patients</TabsTrigger>
+            <TabsTrigger value="availability" className="rounded-lg text-sm lg:text-base font-medium px-4 lg:px-6">Availability</TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-lg text-sm lg:text-base font-medium px-4 lg:px-6">Analytics</TabsTrigger>
           </TabsList>
 
           {/* ── Overview tab ── */}
           <TabsContent value="overview" className="space-y-8">
-            <div className="grid gap-8 lg:grid-cols-3">
+            <div className="grid gap-8 lg:grid-cols-3 items-stretch">
               {/* Left (2 cols) */}
-              <div className="space-y-8 lg:col-span-2">
+              <div className="space-y-8 lg:col-span-2 flex flex-col">
                 {/* Quick stats */}
                 <div className="grid gap-4 sm:gap-6 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
                   {[
@@ -2219,44 +2243,7 @@ export default function TherapistDashboard() {
                   ))}
                 </div>
 
-                {/* Mobile Quick Actions Card - Only visible on mobile */}
-                <div className="block lg:hidden">
-                  <Card className="border-indigo-100 bg-white/80 backdrop-blur-sm shadow-md">
-                    <CardHeader className="pb-4">
-                      <CardTitle className="text-indigo-800 text-lg">
-                        Quick Actions
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="grid grid-cols-3 gap-3">
-                        <Button 
-                          variant="outline"
-                          className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 text-sm"
-                          onClick={() => setActiveTab("patients")}
-                        >
-                          <Users className="mr-2 h-4 w-4" />
-                          Patients
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 text-sm"
-                          onClick={() => setActiveTab("availability")}
-                        >
-                          <Clock className="mr-2 h-4 w-4" />
-                          Availability
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 text-sm"
-                          onClick={() => setActiveTab("analytics")}
-                        >
-                          <BarChart3 className="mr-2 h-4 w-4" />
-                          Analytics
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+
 
                 {/* Today's Appointments Card */}
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -2442,8 +2429,8 @@ export default function TherapistDashboard() {
               </div>
 
               {/* Right sidebar */}
-              <div className="space-y-6">
-                <Card className="border-indigo-100 bg-white/80">
+              <div className="space-y-6 flex flex-col">
+                <Card className="border-indigo-100 bg-white/80 flex flex-col">
                   <CardHeader>
                     <CardTitle className="text-indigo-800">
                       Recent Patients
@@ -2484,7 +2471,20 @@ export default function TherapistDashboard() {
                   </CardContent>
                 </Card>
 
+                {/* Motivational Card for Therapists */}
+                <Card className="border-yellow-100 bg-yellow-50/60 shadow-md flex flex-col">
+                  <CardContent className="flex flex-col items-center p-5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg xmlns='http://www.w3.org/2000/svg' className='h-6 w-6 text-yellow-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M6.343 17.657l-1.414 1.414M17.657 17.657l-1.414-1.414M6.343 6.343L4.929 7.757' /></svg>
+                      <span className="text-sm font-semibold text-indigo-700 uppercase tracking-wide">You Make a Difference</span>
+                    </div>
+                    <p className="text-sm text-indigo-600 text-center italic">Every session is a step toward healing. Thank you for being a guiding light for your patients!      </p>
+                    <p className="text-xs text-yellow-700 text-center mt-1">Remember to care for yourself as you care for others.</p>
+                  </CardContent>
+                </Card>
 
+                {/* Therapist Self-Care Card (moved from right) */}
+                
               </div>
             </div>
           </TabsContent>
@@ -3127,7 +3127,8 @@ export default function TherapistDashboard() {
                         Manage Unavailability
                       </CardTitle>
                       <p className="text-slate-600 text-xs sm:text-sm">
-                        View and remove your blocked time slots. You can only remove manual blocks, not appointment blocks.
+                        View and remove your blocked time slots. You can only remove manual blocks, not appointment blocks. 
+                        Manual blocks are times you have set aside for personal reasons, such as vacation, sick days, or other commitments. 
                       </p>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -3283,12 +3284,7 @@ export default function TherapistDashboard() {
                           Set realistic hours that you can consistently maintain
                         </p>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <p className="text-xs sm:text-sm text-slate-600">
-                          Consider your energy levels throughout the day
-                        </p>
-                      </div>
+                      
                       <div className="flex items-start gap-3">
                         <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
                         <p className="text-xs sm:text-sm text-slate-600">
@@ -3717,9 +3713,9 @@ export default function TherapistDashboard() {
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-slate-600">Outstanding Payments</span>
                       <span className="text-lg font-bold text-orange-600">₹{analyticsData.financialMetrics.outstandingPayments.toLocaleString()}</span>
-                    </div>
+                    </div> 
                   </div>
-                  <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                  <div className="mt-4 p-2 g-green-50 rounded-lg">
                     <p className="text-sm text-green-700">
                       <strong>Revenue Growth:</strong> +{analyticsData.financialMetrics.revenueGrowth}% compared to last month
                     </p>
@@ -4114,6 +4110,7 @@ export default function TherapistDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
