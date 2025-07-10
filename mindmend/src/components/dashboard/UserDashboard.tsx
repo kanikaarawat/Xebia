@@ -760,25 +760,24 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* Mobile full-width collapsible nav bar */}
+        {/* Mobile full-width minimal nav bar */}
         <div className="lg:hidden w-full sticky top-0 z-40 bg-gradient-to-r from-white via-indigo-50 to-pink-50 shadow-md border-b border-indigo-100">
-          <div className="flex justify-between items-center px-2 py-1">
+          <div className="flex justify-between items-center px-1 py-1">
             {[
-              { value: "overview", label: "Overview", icon: Calendar },
-              { value: "appointments", label: "Appointments", icon: Clock },
-              { value: "therapists", label: "Therapists", icon: User },
-              { value: "mood", label: "Mood", icon: Heart },
-              { value: "progress", label: "Progress", icon: TrendingUp },
-              { value: "resources", label: "Resources", icon: BookOpen },
+              { value: "overview", icon: Calendar },
+              { value: "appointments", icon: Clock },
+              { value: "therapists", icon: User },
+              { value: "mood", icon: Heart },
+              { value: "progress", icon: TrendingUp },
+              { value: "resources", icon: BookOpen },
             ].map(tab => (
               <button
                 key={tab.value}
-                className={`flex flex-col items-center justify-center px-1 py-1 flex-1 transition-all ${activeTab === tab.value ? "text-indigo-700" : "text-slate-400 hover:text-indigo-500"}`}
+                className={`flex flex-col items-center justify-center flex-1 transition-all mx-1 ${activeTab === tab.value ? "text-indigo-700" : "text-slate-400 hover:text-indigo-500"}`}
                 onClick={() => setActiveTab(tab.value)}
-                aria-label={tab.label}
+                aria-label={tab.value}
               >
-                <tab.icon className={`h-6 w-6 mb-0.5 ${activeTab === tab.value ? "" : "opacity-70"}`} />
-                <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+                <tab.icon className={`h-5 w-5 ${activeTab === tab.value ? "" : "opacity-70"}`} />
               </button>
             ))}
           </div>
